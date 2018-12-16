@@ -368,7 +368,7 @@ def main(argv):
     OutputArray = []
 
     # for debugging purposes only - this allows running the tool outside of slicer
-    fname = "/Users/tomvandeneede/Desktop/Lego.gcode"
+    #fname = "/Users/tomvandeneede/Desktop/Lego.gcode"
 
     #read the input file
     ####################
