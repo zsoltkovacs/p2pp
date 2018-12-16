@@ -108,10 +108,15 @@ LastPing = -100
 PingInterval   = 350
 PingExp        = 1.03
 
+
 #currenttool/lastLocation are variables required to generate O30 splice info.   splice info is generated at the end of the tool path
 # and not at the start hance the reauirement to keep the toolhead and lastlocation to perform the magic
 currenttool    = -1
 LastLocation = 0
+
+
+# Capture layer inbformation for short splice texts
+Layer = "No Layer Info"
 
 #Extrusionmultiplier keeps track of M221 commands during the print.  Default is 0.95 as this is the default value in the
 # prusa MK3 firmware.   You can change here if needed
@@ -157,7 +162,7 @@ def Algorithms():
 
 # keep track of the filament changes and generate the corresponding O30 commands that go in the header of the file
 def SwitchColor( newTool , Location):
-    global O30Table, O30TableTxt,  currenttool, LastLocation, SpliceCount, SpliceOffset, FilamentUsed
+    global O30Table, O30TableTxt,  currenttool, LastLocation, SpliceCount, SpliceOffset, FilamentUsed, Layer
 
     Location += SpliceOffset
 
@@ -184,7 +189,7 @@ def SwitchColor( newTool , Location):
             O30TableTxt += ";       ERROR: Short first splice (<100mm)\n"
     elif SpliceCount>2:
         if SpliceLength < 80:
-            O30TableTxt += ";       ERROR: Short splice (<80mm)\n"
+            O30TableTxt += ";       ERROR: Short splice (<80mm) Length:{} Layer:{} Tool:{}\n".format(SpliceLength, Layer, currenttool)
 
     currenttool = newTool
 
@@ -242,7 +247,7 @@ def OmegaHeader(Name):
 
 # G Code parsing routine
 def ParseGCodeLine(gcodeFullLine):
-    global TotalExtrusion,extrusionMultiplier
+    global TotalExtrusion,extrusionMultiplier, Layer
     global LastPing, PingExp, PingInterval, PingCount
     global PingText, ToolChange, CurrentTool, ToolChange, FilInfo
 
@@ -329,6 +334,9 @@ def ParseGCodeLine(gcodeFullLine):
             return ";P2PP removed "+gcodeFullLine
 
 
+    # Layer Information
+    if gcodeFullLine.startswith(";LAYER "):
+        Layer = gcodeFullLine[7:].strip("\n")
     # return the original line if no change required
     ################################################
     return gcodeFullLine
