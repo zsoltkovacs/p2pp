@@ -22,6 +22,8 @@ import getopt
 # Variable default values
 #########################################
 
+DEBUG_MODE = False
+DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/Lego.gcode'
 
 # Filament Transition Table
 # encode filament type in your GCode for Filament
@@ -368,7 +370,8 @@ def main(argv):
     OutputArray = []
 
     # for debugging purposes only - this allows running the tool outside of slicer
-    #fname = "/Users/tomvandeneede/Desktop/Lego.gcode"
+    if DEBUG_MODE:
+        fname = DEBUG_MODE_INPUT_FILE
 
     #read the input file
     ####################
