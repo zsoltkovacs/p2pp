@@ -17,7 +17,6 @@ import getopt
 
 
 
-
 #########################################
 # Variable default values
 #########################################
@@ -154,9 +153,9 @@ def Algorithms():
     for Filament_In  in range(0 , len(FilamentTransition)):
         for Filament_Out in range(0 ,len(FilamentTransition[Filament_In])):
             if FilamentTransition[Filament_In][Filament_Out]:
-                  O32Table += "O32 D{}{} {} {} {}\n".format(Filament_In+1, Filament_Out+1, \
-                                                            FilamentHeat[Filament_In][Filament_Out], \
-                                                            FilamentCompression[Filament_In][Filament_Out] , \
+                  O32Table += "O32 D{}{} {} {} {}\n".format(Filament_In+1, Filament_Out+1,
+                                                            FilamentHeat[Filament_In][Filament_Out],
+                                                            FilamentCompression[Filament_In][Filament_Out] ,
                                                             FilamentCooling[Filament_In][Filament_Out])
                   AlgorithmCount+=1
 
@@ -165,6 +164,10 @@ def Algorithms():
 # keep track of the filament changes and generate the corresponding O30 commands that go in the header of the file
 def SwitchColor( newTool , Location):
     global O30Table, O30TableTxt,  currenttool, LastLocation, SpliceCount, SpliceOffset, FilamentUsed, Layer
+
+    # some commands are generated at the end to unload filament, they appear as a reload of current filament - messing up things
+    if newTool == currenttool:
+        return
 
     Location += SpliceOffset
 
@@ -204,7 +207,7 @@ def FilamentUsage():
     for i in range(4):
         if FilamentUsed[i]:
             ftype = FilamentType[i]-1
-            result +="D{}{}{}_{} ".format(FilamentType[i], FilamentColor[ftype],FilamentColor[ftype], FilamentNames[ftype])
+            result +="D{}{}{}_{} ".format(FilamentType[i], FilamentColor[i],FilamentColor[i], FilamentNames[ftype])
         else:
          result += "D0 "
     return result+"\n"
