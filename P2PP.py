@@ -16,12 +16,15 @@ import os
 import getopt
 
 
+
 #########################################
 # Variable default values
 #########################################
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/Lego.gcode'
+
+graphicalUserInterface = True
 
 # Filament Transition Table
 # encode filament type in your GCode for Filament
@@ -30,7 +33,22 @@ DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/Lego.gcode'
 # this will tell the post processor that this is filament of type 1 (you can add as many numbers as you want
 
 FilamentType    = [ 1,1,1,1 ]
-FilamentNames   = [ "PLA"  , "PVA" , "PETG", "FLEX"]
+
+
+FilamentTypeConversion   = {
+    'PVA'   : 1,
+    'SCAFF' : 1,
+    'NGEN'  : 1,
+    'PVA'   : 2,
+    'PET'  : 3,
+    'FLEX'  : 4,
+    'ABS'   : 4,
+    'HIPS'  : 4,
+    'EDGE'  : 4
+}
+
+FilamentName    = [ "Unnamed", "Unnamed" ,  "Unnamed", "Unnamed"]
+
 FilamentColor   = [ "FFFF00" , "FF00FF" , "00FFFF", "FF0000"]  #default colors when not set, Yellow, Purple, Cyan, Red
 
 FilamentTransition = [
@@ -205,8 +223,7 @@ def FilamentUsage():
     # all filament is type 1 for now, need to work on including type info in Slic3r
     for i in range(4):
         if FilamentUsed[i]:
-            ftype = FilamentType[i]-1
-            result +="D{}{}{}_{} ".format(FilamentType[i], FilamentColor[i],FilamentColor[i], FilamentNames[ftype])
+            result +="D{}{}{} ".format(FilamentType[i], FilamentColor[i],FilamentName[i])
         else:
          result += "D0 "
     return result+"\n"
@@ -306,14 +323,23 @@ def ParseGCodeLine(gcodeFullLine):
 
     # Build up the O32 table with Algo info
     #######################################
-    if gcodeFullLine.startswith(";P2PP FT%") and FilInfo :  #filament type information
+    if gcodeFullLine.startswith(";P2PP FT=") and FilInfo :  #filament type information
         p2ppinfo = gcodeFullLine[9:].rstrip("\n")
-        FilamentType[currenttool] = int(p2ppinfo)
+        try:
+            FilamentType[currenttool] = FilamentTypeConversion[p2ppinfo]
+        except:
+             FilamentType[currenttool] = 1   #default profile = 1
 
-    if gcodeFullLine.startswith(";P2PP FC#") and FilInfo :  #filament color information
-        p2ppinfo = gcodeFullLine[9:].rstrip("\n")
+
+    if gcodeFullLine.startswith(";P2PP FN=") and FilInfo :  #filament color information
+        p2ppinfo = gcodeFullLine[9:].strip("\n-+!@#$%^&*(){}[];:\"\',.<>/?").replace(" ", "_")
+        FilamentName[currenttool] = p2ppinfo
+        print("{} = {}".format(currenttool, p2ppinfo))
+
+    if gcodeFullLine.startswith(";P2PP FC=#") and FilInfo :  #filament color information
+        p2ppinfo = gcodeFullLine[10:].rstrip("\n")
         FilamentColor[currenttool] = p2ppinfo
-        FilInfo = False
+
 
 
     # Other configuration information
@@ -329,6 +355,7 @@ def ParseGCodeLine(gcodeFullLine):
     # specially the rather violent unload/reload reauired for the MMU2
     ###################################################################
     if "TOOLCHANGE START" in gcodeFullLine:
+        FilInfo = False
         ToolChange = True
     if "TOOLCHANGE END" in gcodeFullLine:
         ToolChange = False
@@ -360,7 +387,7 @@ def ParseGCodeLine(gcodeFullLine):
 #################### MAIN ROUTINE #######################
 #########################################################
 def main(argv):
-    global SpliceOffset, PrinterProfile, O30TableTxt
+    global SpliceOffset, PrinterProfile, O30TableTxt, graphicalUserInterface
     fname = ""
     _taskName = "NoName"
 
@@ -373,6 +400,7 @@ def main(argv):
             ##################
             #do gui stuff here
             ##################
+            graphicalUserInterface = True
         if opt == "-i":
             fname = arg
             basename = os.path.basename(fname)
