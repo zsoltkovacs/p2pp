@@ -36,6 +36,13 @@ Add the Printer Profile ID and Splice Offset to the Printer Start GCode:
 
 ;P2PP MINSPLICE=70
 
+
+If you want the splice length warnings to contain layer information you also need to add the following information to the AFTER LAYER CHANGE GCode of your Slic3r Printer Profile.  Text between [] will be automatically converted to actual values by Slic3R PE when exporting the GCode to disk or to the printer.
+
+;AFTER_LAYER_CHANGE
+
+;LAYER [layer_num]
+
 The splice process is now defined in the Statup GCode of the Slic3r Print profile.  based on the materials a user can define heat/compression/cooling additional.  The MATERIAL_DEFAULT setting provides a configurable fallback in case no profile is defined for the material combination.   NOTE:  these entries are not symmetrical, ie you need to define both directions in order to specify a complete process
 
 ;P2PP MATERIAL_DEFAULT_0_0_0
