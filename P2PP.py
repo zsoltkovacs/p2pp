@@ -36,7 +36,7 @@ FilamentType    = [ 1,1,1,1 ]
 
 
 FilamentTypeConversion   = {
-    'PVA'   : 1,
+    'PLA'   : 1,
     'SCAFF' : 1,
     'NGEN'  : 1,
     'PVA'   : 2,
@@ -48,9 +48,7 @@ FilamentTypeConversion   = {
 }
 
 FilamentName    = [ "Unnamed", "Unnamed" ,  "Unnamed", "Unnamed"]
-
 FilamentColor   = [ "FFFF00" , "FF00FF" , "00FFFF", "FF0000"]  #default colors when not set, Yellow, Purple, Cyan, Red
-
 FilamentTransition = [
                        [False, False, False, False],
                        [False, False, False, False],
@@ -142,6 +140,8 @@ extrusionMultiplier = 0.95
 
 # provide extra filament at the end of the run
 extraFilament = 150
+minimalSpliceLength=80
+minimalStartSpliceLenght=100
 
 
 
@@ -207,11 +207,11 @@ def SwitchColor( newTool , Location):
     SpliceCount +=1
 
     if SpliceCount==2:
-        if SpliceLength < 100:
-            O30TableTxt += ";       ERROR: Short first splice (<100mm)\n"
+        if SpliceLength < minimalStartSpliceLenght:
+            O30TableTxt += ";       ERROR: Short first splice (<{}mm) Length:{}\n".format(SpliceLength, minimalStartSpliceLenght)
     elif SpliceCount>2:
-        if SpliceLength < 80:
-            O30TableTxt += ";       ERROR: Short splice (<80mm) Length:{} Layer:{} Tool:{}\n".format(SpliceLength, Layer, currenttool)
+        if SpliceLength < minimalSpliceLength:
+            O30TableTxt += ";       ERROR: Short splice (<{}mm) Length:{} Layer:{} Tool:{}\n".format(minimalSpliceLength, SpliceLength, Layer, currenttool)
 
     currenttool = newTool
 
@@ -273,7 +273,7 @@ def ParseGCodeLine(gcodeFullLine):
     global TotalExtrusion,extrusionMultiplier, Layer, PrinterProfile
     global LastPing, PingExp, PingInterval, PingCount
     global PingText, ToolChange, CurrentTool, ToolChange, FilInfo
-    global SpliceOffset
+    global SpliceOffset, minimalStartSpliceLenght, minimalSpliceLength
 
     if len(gcodeFullLine)<2:
         return gcodeFullLine
@@ -335,7 +335,6 @@ def ParseGCodeLine(gcodeFullLine):
     if gcodeFullLine.startswith(";P2PP FN=") and FilInfo :  #filament color information
         p2ppinfo = gcodeFullLine[9:].strip("\n-+!@#$%^&*(){}[];:\"\',.<>/?").replace(" ", "_")
         FilamentName[currenttool] = p2ppinfo
-        print("{} = {}".format(currenttool, p2ppinfo))
 
     if gcodeFullLine.startswith(";P2PP FC=#") and FilInfo :  #filament color information
         p2ppinfo = gcodeFullLine[10:].rstrip("\n")
@@ -350,7 +349,14 @@ def ParseGCodeLine(gcodeFullLine):
         PrinterProfile = gcodeFullLine[21:].rstrip("\n")
     if gcodeFullLine.startswith(";P2PP SPLICEOFFSET="):
         SpliceOffset = float(gcodeFullLine[19:].rstrip("\n"))
-
+    if gcodeFullLine.startswith(";P2PP MINSTARTSPLICE="):
+        minimalStartSpliceLenght = float(gcodeFullLine[21:].rstrip("\n"))
+        if minimalStartSpliceLenght<100:
+            minimalStartSpliceLenght=100
+    if gcodeFullLine.startswith(";P2PP MINSPLICE="):
+        minimalSpliceLength = float(gcodeFullLine[16:].rstrip("\n"))
+        if (minimalSpliceLength<40):
+            minimalSpliceLength = 40
 
     # Next section(s) clean up the GCode generated for the MMU
     # specially the rather violent unload/reload reauired for the MMU2
