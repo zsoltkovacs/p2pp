@@ -27,60 +27,20 @@ DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/Lego.gcode'
 graphicalUserInterface = True
 
 # Filament Transition Table
-# encode filament type in your GCode for Filament
-# add the following line (without the leading #)
-# ;P2PP FT%1
-# this will tell the post processor that this is filament of type 1 (you can add as many numbers as you want
-
-FilamentType    = [ 1,1,1,1 ]
-
-
-FilamentTypeConversion   = {
-    'PLA'   : 1,
-    'SCAFF' : 1,
-    'NGEN'  : 1,
-    'PVA'   : 2,
-    'PET'  : 3,
-    'FLEX'  : 4,
-    'ABS'   : 4,
-    'HIPS'  : 4,
-    'EDGE'  : 4
-}
-
-FilamentName    = [ "Unnamed", "Unnamed" ,  "Unnamed", "Unnamed"]
-FilamentColor   = [ "FFFF00" , "FF00FF" , "00FFFF", "FF0000"]  #default colors when not set, Yellow, Purple, Cyan, Red
-FilamentTransition = [
-                       [False, False, False, False],
-                       [False, False, False, False],
-                       [False, False, False, False],
-                       [False, False, False, False]
-                    ]
-
-FilamentHeat    = [
-    ["D000" , "D000", "D000" , "D000"] ,  #D1x
-    ["D000" , "D000", "D000" , "D000"] ,  #D2x
-    ["D000" , "D000", "D000" , "D000"] ,  #D3x
-    ["D000" , "D000", "D000" , "D000"]    #D4x
-]
-FilamentCompression = [
-    ["D000" , "D000", "D000" , "D000"] ,  #D1x
-    ["D000" , "D000", "D000" , "D000"] ,  #D2x
-    ["D000" , "D000", "D000" , "D000"] ,  #D3x
-    ["D000" , "D000", "D000" , "D000"]    #D4x
-]
-FilamentCooling = [
-    ["D000" , "D000", "D000" , "D000"] ,  #D1x
-    ["D000" , "D000", "D000" , "D000"] ,  #D2x
-    ["D000" , "D000", "D000" , "D000"] ,  #D3x
-    ["D000" , "D000", "D000" , "D000"]    #D4x
-]
+FilamentUsed            = [ False , False , False , False ]
+FilamentType            = [ "","","","" ]
+FilamentName            = [ "Unnamed", "Unnamed" , "Unnamed", "Unnamed"]
+FilamentColor           = [ "-" , "-" ,  "-" , "-" ]
+DefaultAlgorithm        = "D000 D000 D000"
+AlgorithmDict           =  {}
+ProcessWarnings = ""
 
 # printerprofile is a unique ID linked to a printer configuration profile in the Palette 2 hardware.
 PrinterProfile = ''
 
 # this variable is used for checking which filament strands are used throughout the print.   if a filament is used
 # it is configured with a D{type} otherwise a D0 in the filament descriptor.   D0 will NOT be loaded during the initialization
-FilamentUsed   = [False , False , False , False ]
+
 O32Table = ""
 
 # spliceoffset allows for a correction of the position at which the transition occurs.   When the first transition is scheduled
@@ -143,8 +103,6 @@ extraFilament = 150
 minimalSpliceLength=80
 minimalStartSpliceLenght=100
 
-
-
 #toolchange is a variable that keeps track if the processed G-Code is part of a toolchange or a regular path
 # it is set based on patterns used in the gcode
 ToolChange = False
@@ -163,22 +121,59 @@ def HexifyLong(num):
 def HexifyFloat(f):
     return "D" + (hex(struct.unpack('<I', struct.pack('<f', f))[0]))[2:]
 
+#################################################################
+########################## COMPOSE WARNING BLOCK ################
+#################################################################
 
-#generate algorithm information
+def LogWarning( text ):
+    global ProcessWarnings
+    ProcessWarnings += text +"\n"
+
+#################################################################
+########################## ALIGORITHM PROCESSING ################
+#################################################################
+
+def CreateProfileString(heating, compression, cooling):
+    return "{} {} {}".format(HexifyShort(int(heating)), HexifyShort(int(compression)), HexifyShort(int(cooling)))
+
+
+def ProcessMaterial(SpliceInfo):
+    global DefaultAlgorithm, AlgorithmDict
+
+    fields = SpliceInfo.split("_")
+    numfields = len(fields)
+
+    if fields[0] == "DEFAULT" and numfields == 4:
+        DefaultAlgorithm = CreateProfileString(fields[1], fields[2], fields[3])
+
+    if numfields == 5:
+        key = "{}-{}".format(fields[0], fields[1])
+        AlgorithmDict[key] = CreateProfileString(fields[2], fields[3], fields[4])
+
+
+def RetrieveAlgorithm(key):
+    global ProcessWarnings
+    try:
+        return AlgorithmDict[key]
+    except:
+        LogWarning ("WARNING: No Algorithm defined for transitionin {}.  Using Default.".format(key))
+        return DefaultAlgorithm
+
 def Algorithms():
-    global AlgorithmCount, O32Table
-    for Filament_In  in range(0 , len(FilamentTransition)):
-        for Filament_Out in range(0 ,len(FilamentTransition[Filament_In])):
-            if FilamentTransition[Filament_In][Filament_Out]:
-                  O32Table += "O32 D{}{} {} {} {}\n".format(Filament_In+1, Filament_Out+1,
-                                                            FilamentHeat[Filament_In][Filament_Out],
-                                                            FilamentCompression[Filament_In][Filament_Out] ,
-                                                            FilamentCooling[Filament_In][Filament_Out])
-                  AlgorithmCount+=1
+    global  AlgorithmCount, O32Table
+    for i in range(4):
+        for j in range(4):
+            if (i==j) or not FilamentUsed[i] or not FilamentUsed[j]:
+                continue
+            key = "{}-{}".format(FilamentType[i], FilamentType[j])
+            O32Table += "032 D{}{} {}\n".format(i+1,j+1,RetrieveAlgorithm(key))
+            AlgorithmCount += 1
 
 
+#############################################################################
+## Generate O30 Commands for color switches
+#############################################################################
 
-# keep track of the filament changes and generate the corresponding O30 commands that go in the header of the file
 def SwitchColor( newTool , Location):
     global O30Table, O30TableTxt,  currenttool, LastLocation, SpliceCount, SpliceOffset, FilamentUsed, Layer
 
@@ -201,9 +196,6 @@ def SwitchColor( newTool , Location):
         O30TableTxt += ";       S{:04} - {:-8.2f} -> {:-8.2f} = {:-8.2f}mm\n".format(SpliceCount,LastLocation,Location,SpliceLength)
         LastLocation = Location
 
-        if  (newTool != -1):
-            FilamentTransition[FilamentType[currenttool]-1][FilamentType[newTool]-1] = True
-
     SpliceCount +=1
 
     if SpliceCount==2:
@@ -223,7 +215,14 @@ def FilamentUsage():
     # all filament is type 1 for now, need to work on including type info in Slic3r
     for i in range(4):
         if FilamentUsed[i]:
-            result +="D{}{}{} ".format(FilamentType[i], FilamentColor[i],FilamentName[i])
+            if FilamentType[i]=="":
+                LogWarning("Filament #{} is missing Material Type, make sure to add ;P2PP FT=[filament_type] to filament GCode".format(i))
+            if FilamentName[i]=="Unnamed":
+                LogWarning("Filament #{} is missing Name, make sure to add ;P2PP FN=[filament_preset] to filament GCode".format(i))
+            if FilamentName[i]=="-":
+                LogWarning("Filament #{} is missing Color info, make sure to add ;P2PP FC=[extruder_colour] to filament GCode".format(i))
+                FilamentName[i]='000000'
+            result +="D{}{}{} ".format(i+1, FilamentColor[i],FilamentName[i])
         else:
 
          result += "D0 "
@@ -233,6 +232,12 @@ def FilamentUsage():
 
 def OmegaHeader(Name):
     global SpliceOffset
+
+
+    if PrinterProfile == '':
+        LogWarning("Printerprofile identifier is missing, add ;P2PP PRINTERPROFILE=<your printer profile ID> to the Printer Start GCode block")
+    if SpliceCount == 0:
+        LogWarning("This does not look lie a multi color file......")
 
     Algorithms()
 
@@ -248,9 +253,7 @@ def OmegaHeader(Name):
     header.append('O29 ' + HexifyShort(HotSwapCount)+"\n")
     #generate list of splices
     header.append (O30Table)
-
-
-    header.append(O32Table)
+    header.append (O32Table)
     header.append("O1 D{} {}".format(Name,HexifyFloat(TotalExtrusion+ SpliceOffset +100))+"\n")
     header.append("M0\n")
     header.append("T0\n")
@@ -265,6 +268,13 @@ def OmegaHeader(Name):
     header.append(";------------------:"+"\n")
     header.append(PingText)
     header.append("\n;Processed by P2PP version {}\n\n".format(__version__))
+    header.append("\n\n\n;------------------:"+"\n")
+    header.append(";PROCESS WARNINGS:"+"\n")
+    header.append(";------------------:"+"\n")
+    if ProcessWarnings=="":
+            header.append("None")
+    else:
+            header.append(ProcessWarnings)
     return header
 
 
@@ -325,11 +335,8 @@ def ParseGCodeLine(gcodeFullLine):
     # Build up the O32 table with Algo info
     #######################################
     if gcodeFullLine.startswith(";P2PP FT=") and FilInfo :  #filament type information
-        p2ppinfo = gcodeFullLine[9:].rstrip("\n")
-        try:
-            FilamentType[currenttool] = FilamentTypeConversion[p2ppinfo]
-        except:
-             FilamentType[currenttool] = 1   #default profile = 1
+        FilamentType[currenttool] = gcodeFullLine[9:].rstrip("\n")
+
 
 
     if gcodeFullLine.startswith(";P2PP FN=") and FilInfo :  #filament color information
@@ -357,6 +364,8 @@ def ParseGCodeLine(gcodeFullLine):
         minimalSpliceLength = float(gcodeFullLine[16:].rstrip("\n"))
         if (minimalSpliceLength<40):
             minimalSpliceLength = 40
+    if gcodeFullLine.startswith(";P2PP MATERIAL_"):
+        ProcessMaterial(gcodeFullLine[15:].rstrip("\n"))
 
     # Next section(s) clean up the GCode generated for the MMU
     # specially the rather violent unload/reload reauired for the MMU2
