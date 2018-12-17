@@ -365,10 +365,14 @@ def main(argv):
     _taskName = "NoName"
 
     try:
-        opts, args = getopt.getopt( argv, "ci:o:p:")
+        opts, args = getopt.getopt( argv, "gci:o:p:")
     except getopt.GetoptError:
         sys.exit(2)
     for opt, arg in opts:
+        if opt == "-g":
+            ##################
+            #do gui stuff here
+            ##################
         if opt == "-i":
             fname = arg
             basename = os.path.basename(fname)
