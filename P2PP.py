@@ -22,7 +22,7 @@ import getopt
 #########################################
 
 DEBUG_MODE = False
-DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/Walter_Head-s3d.gcode'
+DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/Lego.gcode'
 
 # Filament Transition Table
 # encode filament type in your GCode for Filament
@@ -61,7 +61,7 @@ FilamentCooling = [
 ]
 
 # printerprofile is a unique ID linked to a printer configuration profile in the Palette 2 hardware.
-PrinterProfile = '0313be853ee2990c'
+PrinterProfile = ''
 
 # this variable is used for checking which filament strands are used throughout the print.   if a filament is used
 # it is configured with a D{type} otherwise a D0 in the filament descriptor.   D0 will NOT be loaded during the initialization
@@ -71,7 +71,7 @@ O32Table = ""
 # spliceoffset allows for a correction of the position at which the transition occurs.   When the first transition is scheduled
 # to occur at 120mm in GCode, you can add a number of mm to push the transition further in the purge tower.  This srves a similar
 # function as the transition offset in chroma
-SpliceOffset = 0
+SpliceOffset = 0.0
 
 # keeps track of the number of splices discovered in the print
 SpliceCount    = 0
@@ -241,6 +241,7 @@ def OmegaHeader(Name):
     header.append(";------------------:"+"\n")
     header.append(";SPLICE INFORMATION:"+"\n")
     header.append(";------------------:"+"\n")
+    header.append(";       Splice Offset = {:-8.2f}mm\n".format(SpliceOffset))
     header.append(O30TableTxt)
     header.append("\n\n\n;------------------:"+"\n")
     header.append(";PING  INFORMATION:"+"\n")
@@ -252,9 +253,10 @@ def OmegaHeader(Name):
 
 # G Code parsing routine
 def ParseGCodeLine(gcodeFullLine):
-    global TotalExtrusion,extrusionMultiplier, Layer
+    global TotalExtrusion,extrusionMultiplier, Layer, PrinterProfile
     global LastPing, PingExp, PingInterval, PingCount
     global PingText, ToolChange, CurrentTool, ToolChange, FilInfo
+    global SpliceOffset
 
     if len(gcodeFullLine)<2:
         return gcodeFullLine
@@ -314,6 +316,14 @@ def ParseGCodeLine(gcodeFullLine):
         FilamentColor[currenttool] = p2ppinfo
         FilInfo = False
 
+
+    # Other configuration information
+    # this information should be defined in your Slic3r printer settings, startup GCode
+    ###################################################################################
+    if gcodeFullLine.startswith(";P2PP PRINTERPROFILE=") and PrinterProfile=='':   # -p takes precedence over printer defined in file
+        PrinterProfile = gcodeFullLine[21:].rstrip("\n")
+    if gcodeFullLine.startswith(";P2PP SPLICEOFFSET="):
+        SpliceOffset = float(gcodeFullLine[19:].rstrip("\n"))
 
 
     # Next section(s) clean up the GCode generated for the MMU
@@ -381,8 +391,6 @@ def main(argv):
     with open(fname) as opf:
         gcode = opf.readlines()
     opf.close
-
-    O30TableTxt = ";       Splice Offset = {:-8.2f}mm\n".format(SpliceOffset)
 
     # Process the file
     ##################
