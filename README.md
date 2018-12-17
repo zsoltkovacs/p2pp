@@ -28,13 +28,24 @@ Add the Printer Profile ID and Splice Offset to the Printer Start GCode:
 
 ;Palette 2 Configuration 
 
-;P2PP PRINTERPROFILE=0313be853ee2990c   (make sur eto replace with your printer profile)
+;P2PP PRINTERPROFILE=0313be853ee2990c   (make sure to replace with your printer profile, this can be retrieved from a canvas or chroma generated file.   At this moment I have no information on how to create this ID, but will find out and add)
 
 ;P2PP SPLICEOFFSET=30
 
 ;P2PP MINSTARTSPLICE=100
 
 ;P2PP MINSPLICE=70
+
+The splice process is now defined in the Statup GCode of the Slic3r Print profile.  based on the materials a user can define heat/compression/cooling additional.  The MATERIAL_DEFAULT setting provides a configurable fallback in case no profile is defined for the material combination.   NOTE:  these entries are not symmetrical, ie you need to define both directions in order to specify a complete process
+
+;P2PP MATERIAL_DEFAULT_0_0_0
+
+;P2PP MATERIAL_PVA_PVA_0_0_0
+
+;P2PP MATERIAL_PVA_PLA_0_0_0
+
+;P2PP MATERIAL_PLA_PLA_0_0_0
+
 
 
 Please note that start slice distance minimum is 100, minimum slice distance can be set as low as 40... this may impact the speed at which filament can be created so print speed may have to be adjusted accordingly
@@ -48,5 +59,5 @@ For each piece of filament you need to include the followinf information
 ;P2PP FC=[extruder_colour]
 
 
-where for each type of filament with a different Splice profile you need to add a number.   Currently 4 are supported, but up to 9 can be defined through change in the script (work in progress)
+
 
