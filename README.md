@@ -27,6 +27,7 @@ In addition to that the following setup is required to work P2PP
 Add the Printer Profile ID and Splice Offset to the Printer Start GCode:
 
 ;Palette 2 Configuration 
+
 ;P2PP PRINTERPROFILE=0313be853ee2990c   (make sur eto replace with your printer profile)
 
 ;P2PP SPLICEOFFSET=30
