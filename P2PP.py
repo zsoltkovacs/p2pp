@@ -1,7 +1,7 @@
 #!/usr/bin/pythonw
 
 __author__ = "Tom Van den Eede"
-__copyright__ = "Copyright 2018, Palette2 Splicer PostProcessing Project"
+__copyright__ = "Copyright 2018, Palette2 Splicer Post Processing Project"
 __credits__ = ["Tom Van den Eede"]
 __license__ = "GPL"
 __version__ = "1.0.0"
