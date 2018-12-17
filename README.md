@@ -28,13 +28,35 @@ Add the Printer Profile ID and Splice Offset to the Printer Start GCode:
 
 ;Palette 2 Configuration 
 
-;P2PP PRINTERPROFILE=0313be853ee2990c   (make sur eto replace with your printer profile)
+
+!!! FOR NOW THERE IS LITTLE ERROR CHECKING ON THE P2PP CODES SO MAKE SURE TO ENTER EVERYTHINGS AS SHOWN INCLUDING CAPITALS ETC
+
+
+;P2PP PRINTERPROFILE=0313be853ee2990c   (make sure to replace with your printer profile, this can be retrieved from a canvas or chroma generated file.   At this moment I have no information on how to create this ID, I have asked Mosaic and support will let me know if we can use any random number.   An unknown number should trigger the printer to make a new profile and do tube length calibration.  Once this has been cleared out I will add some better description here
 
 ;P2PP SPLICEOFFSET=30
 
 ;P2PP MINSTARTSPLICE=100
 
 ;P2PP MINSPLICE=70
+
+
+If you want the splice length warnings to contain layer information you also need to add the following information to the AFTER LAYER CHANGE GCode of your Slic3r Printer Profile.  Text between [] will be automatically converted to actual values by Slic3R PE when exporting the GCode to disk or to the printer.
+
+;AFTER_LAYER_CHANGE
+
+;LAYER [layer_num]
+
+The splice process is now defined in the Statup GCode of the Slic3r Print profile.  based on the materials a user can define heat/compression/cooling additional.  The MATERIAL_DEFAULT setting provides a configurable fallback in case no profile is defined for the material combination.   NOTE:  these entries are not symmetrical, ie you need to define both directions in order to specify a complete process
+
+;P2PP MATERIAL_DEFAULT_0_0_0
+
+;P2PP MATERIAL_PVA_PVA_0_0_0
+
+;P2PP MATERIAL_PVA_PLA_0_0_0
+
+;P2PP MATERIAL_PLA_PLA_0_0_0
+
 
 
 Please note that start slice distance minimum is 100, minimum slice distance can be set as low as 40... this may impact the speed at which filament can be created so print speed may have to be adjusted accordingly
@@ -48,5 +70,5 @@ For each piece of filament you need to include the followinf information
 ;P2PP FC=[extruder_colour]
 
 
-where for each type of filament with a different Splice profile you need to add a number.   Currently 4 are supported, but up to 9 can be defined through change in the script (work in progress)
+
 
