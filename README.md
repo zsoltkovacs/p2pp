@@ -28,7 +28,11 @@ Add the Printer Profile ID and Splice Offset to the Printer Start GCode:
 
 ;Palette 2 Configuration 
 
-;P2PP PRINTERPROFILE=0313be853ee2990c   (make sure to replace with your printer profile, this can be retrieved from a canvas or chroma generated file.   At this moment I have no information on how to create this ID, but will find out and add)
+
+!!! FOR NOW THERE IS LITTLE ERROR CHECKING ON THE P2PP CODES SO MAKE SURE TO ENTER EVERYTHINGS AS SHOWN INCLUDING CAPITALS ETC
+
+
+;P2PP PRINTERPROFILE=0313be853ee2990c   (make sure to replace with your printer profile, this can be retrieved from a canvas or chroma generated file.   At this moment I have no information on how to create this ID, I have asked Mosaic and support will let me know if we can use any random number.   An unknown number should trigger the printer to make a new profile and do tube length calibration.  Once this has been cleared out I will add some better description here
 
 ;P2PP SPLICEOFFSET=30
 
