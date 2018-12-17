@@ -32,8 +32,9 @@ Add the Printer Profile ID and Splice Offset to the Printer Start GCode:
 
 
 For each piece of filament you need to include the followinf information
-;P2PP FT%<type>
-;P2PP FC[extruder_colour]
+;P2PP FN=[filament_preset]
+;P2PP FT=[filament_type]
+;P2PP FC=[extruder_colour]
 
 where for each type of filament with a different Splice profile you need to add a number.   Currently 4 are supported, but up to 9 can be defined through change in the script (work in progress)
 
