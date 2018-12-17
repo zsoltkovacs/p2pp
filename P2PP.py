@@ -225,6 +225,7 @@ def FilamentUsage():
         if FilamentUsed[i]:
             result +="D{}{}{} ".format(FilamentType[i], FilamentColor[i],FilamentName[i])
         else:
+
          result += "D0 "
     return result+"\n"
 
