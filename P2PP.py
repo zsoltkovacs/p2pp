@@ -22,7 +22,7 @@ import getopt
 #########################################
 
 DEBUG_MODE = False
-DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/Lego.gcode'
+DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/Walter_Head-s3d.gcode'
 
 # Filament Transition Table
 # encode filament type in your GCode for Filament
@@ -234,7 +234,7 @@ def OmegaHeader(Name):
 
 
     header.append(O32Table)
-    header.append("O1 D{} {}".format(Name,HexifyLong(int(TotalExtrusion+ SpliceOffset +100)))+"\n")
+    header.append("O1 D{} {}".format(Name,HexifyFloat(TotalExtrusion+ SpliceOffset +100))+"\n")
     header.append("M0\n")
     header.append("T0\n")
 
