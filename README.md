@@ -29,7 +29,10 @@ Add the Printer Profile ID and Splice Offset to the Printer Start GCode:
 ;Palette 2 Configuration 
 ;P2PP PRINTERPROFILE=0313be853ee2990c
 ;P2PP SPLICEOFFSET=30
+;P2PP MINSTARTSPLICE=100
+;P2PP MINSPLICE=70
 
+Please note that start slice distance minimum is 100, minimum slice distance can be set as low as 40... this may impact the speed at which filament can be created so print speed may have to be adjusted accordingly
 
 For each piece of filament you need to include the followinf information
 ;P2PP FN=[filament_preset]
