@@ -27,14 +27,26 @@ In addition to that the following setup is required to work P2PP
 Add the Printer Profile ID and Splice Offset to the Printer Start GCode:
 
 ;Palette 2 Configuration 
-;P2PP PRINTERPROFILE=0313be853ee2990c
+
+;P2PP PRINTERPROFILE=0313be853ee2990c   (make sur eto replace with your printer profile)
+
 ;P2PP SPLICEOFFSET=30
 
+;P2PP MINSTARTSPLICE=100
+
+;P2PP MINSPLICE=70
+
+
+Please note that start slice distance minimum is 100, minimum slice distance can be set as low as 40... this may impact the speed at which filament can be created so print speed may have to be adjusted accordingly
 
 For each piece of filament you need to include the followinf information
+
 ;P2PP FN=[filament_preset]
+
 ;P2PP FT=[filament_type]
+
 ;P2PP FC=[extruder_colour]
+
 
 where for each type of filament with a different Splice profile you need to add a number.   Currently 4 are supported, but up to 9 can be defined through change in the script (work in progress)
 
