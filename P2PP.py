@@ -260,7 +260,10 @@ def OmegaHeader(Name):
     for i in range(len(AlgorithmList)):
         header.append ("O32 {}\n".format(AlgorithmList[i]))
 
-    header.append("O1 D{} {}\n".format(Name,HexifyFloat(TotalExtrusion+SpliceOffset)))
+    if len(SpliceLocation)>0:
+        header.append("O1 D{} {}\n".format(Name, HexifyFloat(SpliceLocation[-1])))
+    else:
+        header.append("O1 D{} {}\n".format(Name,HexifyFloat(TotalExtrusion+SpliceOffset)))
     header.append("M0\n")
     header.append("T0\n")
 
