@@ -414,7 +414,7 @@ def ParseGCodeLine(gcodeFullLine):
     if "TOOLCHANGE END" in gcodeFullLine:
         ToolChange = False
     if "TOOLCHANGE UNLOAD" in gcodeFullLine:
-        OutputArray.append(";P2PP Set Wipe SPeed\nG1 F2000\n")
+        OutputArray.append(";P2PP Set Wipe Speed\nG1 F2000\n")
 
     #--------------------------------------------------------------
     # Do not perform this part of the GCode for MMU filament unload
@@ -423,13 +423,15 @@ def ParseGCodeLine(gcodeFullLine):
     if ToolChange:
         if gcodeCommand2=="G1":
             for filter in DiscardedMoves:
-                if filter in gcodeFullLine:
+                if filter in gcodeFullLine:         # remove specofic MMU2 mextruder moves
                     return ";P2PP removed "+gcodeFullLine
             return gcodeRemoveSpeed(gcodeFullLine)
         if gcodeCommand4=="M907":
-            return ";P2PP removed "+gcodeFullLine
+            return ";P2PP removed "+gcodeFullLine   # remove motor power instructions
+        if gcodeCommand4=="M220":
+            return ";P2PP removed "+gcodeFullLine   # remove feedrate instructions
         if gcodeFullLine.startswith("G4 S0"):
-            return ";P2PP removed "+gcodeFullLine
+            return ";P2PP removed "+gcodeFullLine   # remove dwelling instructions
 
 
     # Layer Information
