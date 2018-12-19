@@ -21,7 +21,7 @@ arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers f
 
 arguments.add_argument('-i',
                        '--input-file',
-                       required=False)
+                       required=True)
 arguments.add_argument('-d',
                        '--output-file',
                        required=False)

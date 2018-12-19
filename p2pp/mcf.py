@@ -9,8 +9,10 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 __status__ = 'Beta'
 
-import struct
 import os
+
+from p2pp.formatnumbers import hexify_short, hexify_long, hexify_float
+
 
 #########################################
 # Variable default values
@@ -58,8 +60,9 @@ totalMaterialExtruded = 0
 # Not sure this is a good idea.   Ping distance increases over the print in an exponential way.   Each ping is 1.03 times
 # further from the previous one.   Pings occur in random places!!! as the are non-intrusive and don't causes pauses in the
 # print they aren ot restricted to the wipe tower and they will occur as soon as the interval length for ping is exceeded.
-lastPingExtruderPosition = -100
+lastPingExtruderPosition = 0
 pingIntervalLength = 350
+maxPingIntervalLength = 3000
 pingLengthMultiplier = 1.03
 
 
@@ -77,19 +80,6 @@ withinToolchangeBlock = False  # keeps track if the processed G-Code is part of 
 allowFilamentInformationUpdate = False  # TBA
 
 
-# hexify_short is used to turn a short integer into the specific notation used by Mosaic
-def hexify_short(num):
-    return "D" + '{0:04x}'.format(num)
-
-
-# hexify_long is used to turn a 32-bit integer into the specific notation used by Mosaic
-def hexify_long(num):
-    return "D" + '{0:08x}'.format(num)
-
-
-# hexify_float is used to turn a 32-but floating point number into the specific notation used by Mosaic
-def hexify_float(f):
-    return "D" + (hex(struct.unpack('<I', struct.pack('<f', f))[0]))[2:]
 
 #################################################################
 ########################## COMPOSE WARNING BLOCK ################
@@ -98,7 +88,7 @@ def hexify_float(f):
 
 def log_warning(text):
     global processWarnings
-    processWarnings.append(text)
+    processWarnings.append(";"+text)
 
 
 # ################################################################
@@ -120,23 +110,30 @@ def algorithm_processmaterialconfiguration(splice_info):
     numfields = len(fields)
 
     if fields[0] == "DEFAULT" and numfields == 4:
-        defaultSpliceAlgorithm = algorithm_createprocessstring(fields[1], fields[2], fields[3])
+        defaultSpliceAlgorithm = algorithm_createprocessstring(fields[1],
+                                                               fields[2],
+                                                               fields[3])
 
     if numfields == 5:
-        key = "{}-{}".format(fields[0], fields[1])
-        spliceAlgorithmDictionary[key] = algorithm_createprocessstring(fields[2], fields[3], fields[4])
+        key = "{}-{}".format(fields[0],
+                             fields[1])
+        spliceAlgorithmDictionary[key] = algorithm_createprocessstring(fields[2],
+                                                                       fields[3],
+                                                                       fields[4])
 
 
 def algorithm_createtable():
     global spliceAlgorithmTable, processWarnings
     for i in range(4):
         for j in range(4):
-            if (i == j) or not paletteInputsUsed[i] or not paletteInputsUsed[j]:
+            if  not paletteInputsUsed[i] or not paletteInputsUsed[j]:
                 continue
             try:
-                algo =  spliceAlgorithmDictionary["{}-{}".format(filamentType[i], filamentType[j])]
+                algo =  spliceAlgorithmDictionary["{}-{}".format(filamentType[i],
+                                                                 filamentType[j])]
             except:
-                log_warning("WARNING: No Algorithm defined for transitioning {} to {}.  Using Default.".format(filamentType[i],filamentType[j]))
+                log_warning("WARNING: No Algorithm defined for transitioning {} to {}.  Using Default.".format(filamentType[i],
+                                                                                                               filamentType[j]))
                 algo =  defaultSpliceAlgorithm
 
             spliceAlgorithmTable.append("D{}{} {}".format(i + 1,
@@ -233,7 +230,7 @@ def header_generateomegaheader(Name, splice_offset):
     summary.append(";------------------:\n")
 
     for i in range(len(pingExtruderPosition)):
-        summary.append("Ping {:04} at {:-8.2f}mm\n".format(i + 1,
+        summary.append(";Ping {:04} at {:-8.2f}mm\n".format(i + 1,
                                                            pingExtruderPosition[i]
                                                            )
                        )
@@ -244,7 +241,7 @@ def header_generateomegaheader(Name, splice_offset):
     warnings.append(";------------------:\n")
 
     if len(processWarnings) == 0:
-        warnings.append("None")
+        warnings.append(";None")
     else:
         for i in range(len(processWarnings)):
             warnings.append("{}\n".format(processWarnings[i]))
@@ -369,11 +366,11 @@ def gcode_parseline(splice_offset, gcodeFullLine):
                 if (totalMaterialExtruded - lastPingExtruderPosition) > pingIntervalLength:
                     pingIntervalLength = pingIntervalLength * pingLengthMultiplier
 
-                    pingIntervalLength = min(1000, pingIntervalLength)
+                    pingIntervalLength = min(maxPingIntervalLength, pingIntervalLength)
 
                     lastPingExtruderPosition = totalMaterialExtruded
                     pingExtruderPosition.append(lastPingExtruderPosition)
-                    processedGCode.append(";Palette 2 - PING\nG4 S0\nO31 " + hexify_float(lastPingExtruderPosition))
+                    processedGCode.append(";Palette 2 - PING\nG4 S0\nO31 {}\n".format(hexify_float(lastPingExtruderPosition)))
                     processedGCode.append("M117 PING {:03} {:-8.2f}mm\n\n".format(len(pingExtruderPosition), lastPingExtruderPosition))
 
     # Process Toolchanges. Build up the O30 table with Splice info
@@ -445,16 +442,16 @@ def gcode_parseline(splice_offset, gcodeFullLine):
 
 
 def generate(input_file, output_file, printer_profile, splice_offset, silent):
+
     global printerProfileString
     printerProfileString = printer_profile
-    # read the input file
-    ###################
+
     basename = os.path.basename(input_file)
     _taskName = os.path.splitext(basename)[0]
 
     with open(input_file) as opf:
         gcode_file = opf.readlines()
-    # opf.close   # Not required.
+
 
     # Process the file
     ##################
