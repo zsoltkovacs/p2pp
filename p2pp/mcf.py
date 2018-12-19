@@ -138,7 +138,7 @@ def algorithm_createtable():
             try:
                 algo =  spliceAlgorithmDictionary["{}-{}".format(filamentType[i], filamentType[j])]
             except:
-                log_warning("WARNING: No Algorithm defined for transitioning {}.  Using Default.".format(key))
+                log_warning("WARNING: No Algorithm defined for transitioning {} to {}.  Using Default.".format(format(filamentType[i],format(filamentType[j]))
                 algo =  defaultSpliceAlgorithm
 
             spliceAlgorithmTable.append("D{}{} {}".format(i + 1,
