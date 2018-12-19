@@ -1,11 +1,13 @@
-__author__ = "Tom Van den Eede"
-__copyright__ = "Copyright 2018, Palette2 Splicer Post Processing Project"
-__credits__ = ["Tom Van den Eede", "Tim Brookman"]
-__license__ = "GPL"
-__version__ = "1.0.0"
-__maintainer__ = "Tom Van den Eede"
-__email__ = "P2PP@pandora.be"
-__status__ = "Beta"
+__author__ = 'Tom Van den Eede'
+__copyright__ = 'Copyright 2018, Palette2 Splicer Post Processing Project'
+__credits__ = ['Tom Van den Eede',
+               'Tim Brookman'
+               ]
+__license__ = 'GPL'
+__version__ = '1.0.0'
+__maintainer__ = 'Tom Van den Eede'
+__email__ = 'P2PP@pandora.be'
+__status__ = 'Beta'
 
 import struct
 import os
@@ -30,13 +32,8 @@ AlgorithmCount = 0
 
 ProcessWarnings = ""
 PrinterProfile = ''  # A unique ID linked to a printer configuration profile in the Palette 2 hardware.
-
-
-# list of possible algorithms
-AlgorithmList = []
-
-# final output array with Gcode
-OutputArray = []
+AlgorithmList = []  # list of possible algorithms
+OutputArray = []  # final output array with Gcode
 
 # spliceoffset allows for a correction of the position at which the transition occurs.   When the first transition is scheduled
 # to occur at 120mm in GCode, you can add a number of mm to push the transition further in the purge tower.  This serves a similar
@@ -68,7 +65,6 @@ TotalExtrusion = 0
 # Not sure this is a good idea.   Ping distance increases over the print in an exponential way.   Each ping is 1.03 times
 # further from the previous one.   Pings occur in random places!!! as the are non-intrusive and don't causes pauses in the
 # print they aren ot restricted to the wipe tower and they will occur as soon as the interval length for ping is exceeded.
-
 LastPing = -100
 PingInterval = 350
 PingExp = 1.03
@@ -165,16 +161,16 @@ def Algorithms():
 # # Generate O30 Commands for color switches
 # ############################################################################
 
-def SwitchColor(newTool, Location):
+def SwitchColor(newTool, Location, splice_offset):
     global currenttool, LastLocation
-    global SpliceOffset, FilamentUsed, Layer
+    global FilamentUsed, Layer
     global SpliceLocation, SpliceTool, SpliceLength
 
     # some commands are generated at the end to unload filament, they appear as a reload of current filament - messing up things
     if newTool == currenttool:
         return
 
-    Location += SpliceOffset
+    Location += splice_offset
 
 
     if newTool == -1:
@@ -226,8 +222,7 @@ def FilamentUsage():
 
 
 # Generate the Omega - Header that drives the Palette to generate filament
-def OmegaHeader(Name):
-    global SpliceOffset
+def OmegaHeader(Name, splice_offset):
 
     if PrinterProfile == '':
         LogWarning("Printerprofile identifier is missing, add ;P2PP PRINTERPROFILE=<your printer profile ID> to the Printer Start GCode block")
@@ -261,14 +256,14 @@ def OmegaHeader(Name):
     if len(SpliceLocation) > 0:
         header.append("O1 D{} {}\n".format(Name, HexifyFloat(SpliceLocation[-1])))
     else:
-        header.append("O1 D{} {}\n".format(Name, HexifyFloat(TotalExtrusion+SpliceOffset)))
+        header.append("O1 D{} {}\n".format(Name, HexifyFloat(TotalExtrusion + splice_offset)))
 
     header.append("M0\n")
     header.append("T0\n")
     header.append(";------------------:\n")
     header.append(";SPLICE INFORMATION:\n")
     header.append(";------------------:\n")
-    header.append("\n;       Splice Offset = {:-8.2f}mm\n\n".format(SpliceOffset))
+    header.append("\n;       Splice Offset = {:-8.2f}mm\n\n".format(splice_offset))
 
     for i in range(len(SpliceLocation)):
         header.append(";{:04}   Tool: {}  Location: {:-8.2f}mm   length {:-8.2f}mm \n".format(i+1,
@@ -320,11 +315,11 @@ def gcodeRemoveSpeed(gcode):
 
 
 # G Code parsing routine
-def ParseGCodeLine(gcodeFullLine):
+def ParseGCodeLine(gcodeFullLine, splice_offset):
     global TotalExtrusion,extrusionMultiplier, Layer, PrinterProfile
     global LastPing, PingExp, PingInterval
     global ToolChange, CurrentTool, ToolChange, FilInfo
-    global SpliceOffset, minimalStartSpliceLength, minimalSpliceLength, OutputArray
+    global minimalStartSpliceLength, minimalSpliceLength, OutputArray
 
     if len(gcodeFullLine)<2:
         return gcodeFullLine
@@ -367,7 +362,7 @@ def ParseGCodeLine(gcodeFullLine):
     ##############################################################
     if gcodeFullLine[0] == 'T':
         newTool = int(gcodeFullLine[1])
-        SwitchColor(newTool, TotalExtrusion)
+        SwitchColor(newTool, TotalExtrusion, splice_offset)
         FilInfo = True
         return ";P2PP removed "+gcodeFullLine
 
@@ -390,7 +385,7 @@ def ParseGCodeLine(gcodeFullLine):
     if gcodeFullLine.startswith(";P2PP PRINTERPROFILE=") and PrinterProfile == '':   # -p takes precedence over printer defined in file
         PrinterProfile = gcodeFullLine[21:].rstrip("\n")
     if gcodeFullLine.startswith(";P2PP SPLICEOFFSET="):
-        SpliceOffset = float(gcodeFullLine[19:].rstrip("\n"))
+        splice_offset = float(gcodeFullLine[19:].rstrip("\n"))
     if gcodeFullLine.startswith(";P2PP MINSTARTSPLICE="):
         minimalStartSpliceLength = float(gcodeFullLine[21:].rstrip("\n"))
         if minimalStartSpliceLength<100:
@@ -439,13 +434,13 @@ def ParseGCodeLine(gcodeFullLine):
         Layer = gcodeFullLine[7:].strip("\n")
     # return the original line if no change required
     ################################################
-    return gcodeFullLine
+    return gcodeFullLine, splice_offset
 
 
 def generate(input_file, output_file, printer_profile, splice_offset):
-    global PrinterProfile, SpliceOffset
+    global PrinterProfile
     PrinterProfile = printer_profile
-    SpliceOffset = splice_offset
+    splice_offset = splice_offset
     # read the input file
     ###################
     basename = os.path.basename(input_file)
@@ -458,9 +453,12 @@ def generate(input_file, output_file, printer_profile, splice_offset):
     # Process the file
     ##################
     for line in gcode:
-        OutputArray.append(ParseGCodeLine(line))
-    SwitchColor(-1, TotalExtrusion)
-    header = OmegaHeader(_taskName)
+        # ParseGCodeLine now returns splice_offset from print file if it exists, keeping everything consistent.
+        # splice_offset from gcode takes precedence over splice_offset from CLI.
+        result, splice_offset = ParseGCodeLine(line, splice_offset)
+        OutputArray.append(result)
+    SwitchColor(-1, TotalExtrusion, splice_offset)
+    header = OmegaHeader(_taskName, splice_offset)
 
     # write the output file
     ######################
