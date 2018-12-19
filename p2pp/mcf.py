@@ -16,9 +16,6 @@ import os
 # Variable default values
 #########################################
 
-DEBUG_MODE = True
-DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/MosaicKeychain.gcode'
-
 # Filament Transition Table
 paletteInputsUsed = [False, False, False, False]
 filamentType = ["", "", "", ""]
@@ -185,7 +182,8 @@ def header_generateomegaheader(Name, splice_offset):
                     "Filament #{} is missing Color info, make sure to add ;P2PP FC=[extruder_colour] to filament GCode".format(
                         i))
                 filemantDescription[i] = '000000'
-                header.append( "D{}{}{} ".format(i + 1,
+
+            header.append( "D{}{}{} ".format(i + 1,
                                         filamentColorCode[i],
                                         filemantDescription[i]
                                         ))
