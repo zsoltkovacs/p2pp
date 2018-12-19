@@ -480,8 +480,8 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
 
     if not silent:
-        print ''.join(omega_result['summary'])
-        print ''.join(omega_result['warnings'])
+        print (''.join(omega_result['summary']))
+        print (''.join(omega_result['warnings']))
 
     # write the output file
     ######################
