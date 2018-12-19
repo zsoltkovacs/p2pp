@@ -25,7 +25,7 @@ filamentType = ["", "", "", ""]
 filemantDescription = ["Unnamed", "Unnamed", "Unnamed", "Unnamed"]
 filamentColorCode = ["-", "-", "-", "-"]
 defaultSpliceAlgorithm = "D000 D000 D000"
-processWarnings = ""
+processWarnings = []
 spliceAlgorithmTable = []  # list of possible algorithms
 
 
@@ -62,7 +62,7 @@ totalMaterialExtruded = 0
 # print they aren ot restricted to the wipe tower and they will occur as soon as the interval length for ping is exceeded.
 lastPingExtruderPosition = -100
 pingIntervalLength = 350
-pingILengthMultiplier = 1.03
+pingLengthMultiplier = 1.03
 
 
 # currenttool/lastLocation are variables required to generate O30 splice info.   splice info is generated at the end of the tool path
@@ -100,7 +100,7 @@ def hexify_float(f):
 
 def log_warning(text):
     global processWarnings
-    processWarnings += text + "\n"
+    processWarnings.append(text)
 
 
 # ################################################################
@@ -138,7 +138,7 @@ def algorithm_createtable():
             try:
                 algo =  spliceAlgorithmDictionary["{}-{}".format(filamentType[i], filamentType[j])]
             except:
-                log_warning("WARNING: No Algorithm defined for transitioning {} to {}.  Using Default.".format(format(filamentType[i],format(filamentType[j]))
+                log_warning("WARNING: No Algorithm defined for transitioning {} to {}.  Using Default.".format(filamentType[i],filamentType[j]))
                 algo =  defaultSpliceAlgorithm
 
             spliceAlgorithmTable.append("D{}{} {}".format(i + 1,
@@ -146,8 +146,6 @@ def algorithm_createtable():
                                                           algo
                                                           )
                                         )
-
-
 
 
 
@@ -246,11 +244,11 @@ def header_generateomegaheader(Name, splice_offset):
     warnings.append(";PROCESS WARNINGS:\n")
     warnings.append(";------------------:\n")
 
-    if processWarnings == "":
+    if len(processWarnings) == 0:
         warnings.append("None")
     else:
-        warnings.append(processWarnings)
-        warnings.append("\n;Processed by P2PP version {}\n".format(__version__))
+        for i in range(len(processWarnings)):
+            warnings.append("{}\n".format(processWarnings[i]))
 
     return {'header': header, 'summary': summary, 'warnings': warnings}
 
@@ -338,7 +336,7 @@ def gcode_filtertoolchangeblock(line, gcode_command_2, gcode_command_4):
 # G Code parsing routine
 def gcode_parseline(splice_offset, gcodeFullLine):
     global totalMaterialExtruded,extrusionMultiplier, currentLayer, printerProfileString
-    global lastPingExtruderPosition, pingILengthMultiplier, pingIntervalLength
+    global lastPingExtruderPosition, pingLengthMultiplier, pingIntervalLength
     global withinToolchangeBlock, CurrentTool, withinToolchangeBlock, allowFilamentInformationUpdate
     global minimalStartSpliceLength, minimalSpliceLength, processedGCode
 
@@ -370,10 +368,10 @@ def gcode_parseline(splice_offset, gcodeFullLine):
                 totalMaterialExtruded += float(offsetE) * extrusionMultiplier
 
                 if (totalMaterialExtruded - lastPingExtruderPosition) > pingIntervalLength:
-                    pingIntervalLength = pingIntervalLength * pingILengthMultiplier
+                    pingIntervalLength = pingIntervalLength * pingLengthMultiplier
 
-                    if pingIntervalLength > 1000:
-                        pingIntervalLength = 1000
+                    pingIntervalLength = min(1000, pingIntervalLength)
+
                     lastPingExtruderPosition = totalMaterialExtruded
                     pingExtruderPosition.append(lastPingExtruderPosition)
                     processedGCode.append(";Palette 2 - PING\nG4 S0\nO31 " + hexify_float(lastPingExtruderPosition))
