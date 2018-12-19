@@ -315,23 +315,23 @@ def gcodeRemoveSpeed(gcode):
 
 
 # G Code parsing routine
-def ParseGCodeLine(gcodeFullLine, splice_offset):
+def ParseGCodeLine(splice_offset, gcodeFullLine):
     global TotalExtrusion,extrusionMultiplier, Layer, PrinterProfile
     global LastPing, PingExp, PingInterval
     global ToolChange, CurrentTool, ToolChange, FilInfo
     global minimalStartSpliceLength, minimalSpliceLength, OutputArray
 
-    if len(gcodeFullLine)<2:
-        return gcodeFullLine
+    if len(gcodeFullLine) < 2:
+        return {'gcode': gcodeFullLine, 'splice_offset': splice_offset}
 
     gcodeCommand2 = gcodeFullLine[0:2]
     gcodeCommand4 = gcodeFullLine[0:4]
 
     # Processing of extrusion multiplier commands
     #############################################
-    if gcodeCommand4=="M221":
+    if gcodeCommand4 == "M221":
         for part in gcodeFullLine.split(" "):
-            if(part==""):
+            if part == "":
                 continue
             if part[0] == 'S':
                 extrusionMultiplier = float(part[1:])/100
@@ -341,7 +341,7 @@ def ParseGCodeLine(gcodeFullLine, splice_offset):
     #############################################
     if gcodeCommand2 == "G1":
         for part in gcodeFullLine.split(" "):
-            if (part == ""):
+            if part == "":
                 continue
             if part[0] == 'E':
                 offsetE = part[1:]
@@ -351,7 +351,7 @@ def ParseGCodeLine(gcodeFullLine, splice_offset):
                 if (TotalExtrusion - LastPing) > PingInterval:
                     PingInterval = PingInterval * PingExp
 
-                    if PingInterval >1000:
+                    if PingInterval > 1000:
                         PingInterval = 1000
                     LastPing = TotalExtrusion
                     PingLocation.append(LastPing)
@@ -364,18 +364,18 @@ def ParseGCodeLine(gcodeFullLine, splice_offset):
         newTool = int(gcodeFullLine[1])
         SwitchColor(newTool, TotalExtrusion, splice_offset)
         FilInfo = True
-        return ";P2PP removed "+gcodeFullLine
+        return {'gcode': ';P2PP removed ' + gcodeFullLine, 'splice_offset': splice_offset}
 
     # Build up the O32 table with Algo info
     #######################################
-    if gcodeFullLine.startswith(";P2PP FT=") and FilInfo:  #filament type information
+    if gcodeFullLine.startswith(";P2PP FT=") and FilInfo:  # filament type information
         FilamentType[currenttool] = gcodeFullLine[9:].rstrip("\n")
 
-    if gcodeFullLine.startswith(";P2PP FN=") and FilInfo:  #filament color information
+    if gcodeFullLine.startswith(";P2PP FN=") and FilInfo:  # filament color information
         p2ppinfo = gcodeFullLine[9:].strip("\n-+!@#$%^&*(){}[];:\"\',.<>/?").replace(" ", "_")
         FilamentName[currenttool] = p2ppinfo
 
-    if gcodeFullLine.startswith(";P2PP FC=#") and FilInfo:  #filament color information
+    if gcodeFullLine.startswith(";P2PP FC=#") and FilInfo:  # filament color information
         p2ppinfo = gcodeFullLine[10:].rstrip("\n")
         FilamentColor[currenttool] = p2ppinfo
 
@@ -384,16 +384,20 @@ def ParseGCodeLine(gcodeFullLine, splice_offset):
     ###################################################################################
     if gcodeFullLine.startswith(";P2PP PRINTERPROFILE=") and PrinterProfile == '':   # -p takes precedence over printer defined in file
         PrinterProfile = gcodeFullLine[21:].rstrip("\n")
+
     if gcodeFullLine.startswith(";P2PP SPLICEOFFSET="):
         splice_offset = float(gcodeFullLine[19:].rstrip("\n"))
+
     if gcodeFullLine.startswith(";P2PP MINSTARTSPLICE="):
         minimalStartSpliceLength = float(gcodeFullLine[21:].rstrip("\n"))
-        if minimalStartSpliceLength<100:
-            minimalStartSpliceLength=100
+        if minimalStartSpliceLength < 100:
+            minimalStartSpliceLength = 100
+
     if gcodeFullLine.startswith(";P2PP MINSPLICE="):
         minimalSpliceLength = float(gcodeFullLine[16:].rstrip("\n"))
-        if (minimalSpliceLength<40):
+        if minimalSpliceLength < 40:
             minimalSpliceLength = 40
+
     if gcodeFullLine.startswith(";P2PP MATERIAL_"):
         ProcessMaterial(gcodeFullLine[15:].rstrip("\n"))
 
@@ -408,55 +412,65 @@ def ParseGCodeLine(gcodeFullLine, splice_offset):
     if "TOOLCHANGE UNLOAD" in gcodeFullLine:
         OutputArray.append(";P2PP Set Wipe Speed\nG1 F2000\n")
 
-    # --------------------------------------------------------------
-    # Do not perform this part of the GCode for MMU filament unload
-    # --------------------------------------------------------------
-    DiscardedMoves = ["E-15.0000",
-                      "G1 E10.5000",
-                      "G1 E3.0000",
-                      "G1 E1.5000"
-                      ]
-    if ToolChange:
-        if gcodeCommand2 == "G1":
-            for gcode_filter in DiscardedMoves:
-                if gcode_filter in gcodeFullLine:         # remove specific MMU2 extruder moves
-                    return ";P2PP removed "+gcodeFullLine
-            return gcodeRemoveSpeed(gcodeFullLine)
-        if gcodeCommand4 == "M907":
-            return ";P2PP removed "+gcodeFullLine   # remove motor power instructions
-        if gcodeCommand4 == "M220":
-            return ";P2PP removed "+gcodeFullLine   # remove feedrate instructions
-        if gcodeFullLine.startswith("G4 S0"):
-            return ";P2PP removed "+gcodeFullLine   # remove dwelling instructions
-
     # Layer Information
     if gcodeFullLine.startswith(";LAYER "):
         Layer = gcodeFullLine[7:].strip("\n")
-    # return the original line if no change required
-    ################################################
-    return gcodeFullLine, splice_offset
+        return {'gcode': gcodeFullLine, 'splice_offset': splice_offset}
+
+    if ToolChange:
+        return {'gcode': tool_change(gcodeFullLine, gcodeCommand2, gcodeCommand4), 'splice_offset': splice_offset}
+
+    # Catch All
+    return {'gcode': gcodeFullLine, 'splice_offset': splice_offset}
+
+def tool_change(line, gcode_command_2, gcode_command_4):
+    # --------------------------------------------------------------
+    # Do not perform this part of the GCode for MMU filament unload
+    # --------------------------------------------------------------
+    discarded_moves = ["E-15.0000",
+                       "G1 E10.5000",
+                       "G1 E3.0000",
+                       "G1 E1.5000"
+                       ]
+
+    if gcode_command_2 == "G1":
+        for gcode_filter in discarded_moves:
+            if gcode_filter in line:         # remove specific MMU2 extruder moves
+                return ";P2PP removed "+line
+        return gcodeRemoveSpeed(line)
+
+    if gcode_command_4 == "M907":
+        return ";P2PP removed " + line   # remove motor power instructions
+
+    if gcode_command_4 == "M220":
+        return ";P2PP removed " + line   # remove feedrate instructions
+
+    if line.startswith("G4 S0"):
+        return ";P2PP removed " + line   # remove dwelling instructions
+
+    return line
 
 
 def generate(input_file, output_file, printer_profile, splice_offset):
     global PrinterProfile
     PrinterProfile = printer_profile
-    splice_offset = splice_offset
     # read the input file
     ###################
     basename = os.path.basename(input_file)
     _taskName = os.path.splitext(basename)[0]
 
     with open(input_file) as opf:
-        gcode = opf.readlines()
+        gcode_file = opf.readlines()
     # opf.close   # Not required.
 
     # Process the file
     ##################
-    for line in gcode:
+    for line in gcode_file:
         # ParseGCodeLine now returns splice_offset from print file if it exists, keeping everything consistent.
         # splice_offset from gcode takes precedence over splice_offset from CLI.
-        result, splice_offset = ParseGCodeLine(line, splice_offset)
-        OutputArray.append(result)
+        result = ParseGCodeLine(splice_offset, line)
+        splice_offset = float(result['splice_offset'])
+        OutputArray.append(result['gcode'])
     SwitchColor(-1, TotalExtrusion, splice_offset)
     header = OmegaHeader(_taskName, splice_offset)
 

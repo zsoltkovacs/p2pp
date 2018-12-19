@@ -41,6 +41,7 @@ arguments.add_argument('-g',
 arguments.add_argument('-p',
                        '--printer-profile',
                        required=False,
+                       default='',
                        help='A unique ID linked to a printer configuration'
                             ' profile in the Palette 2 hardware.'
                        )
