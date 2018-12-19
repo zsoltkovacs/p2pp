@@ -232,6 +232,8 @@ def OmegaHeader(Name, splice_offset):
     Algorithms()
 
     header = []
+    summary = []
+    warnings = []
     header.append('O21 ' + HexifyShort(20) + "\n")  # MSF2.0
     header.append('O22 D' + PrinterProfile + "\n")  # printerprofile used in Palette2
     header.append('O23 D0001' + "\n")              # unused
@@ -260,41 +262,43 @@ def OmegaHeader(Name, splice_offset):
 
     header.append("M0\n")
     header.append("T0\n")
-    header.append(";------------------:\n")
-    header.append(";SPLICE INFORMATION:\n")
-    header.append(";------------------:\n")
-    header.append("\n;       Splice Offset = {:-8.2f}mm\n\n".format(splice_offset))
+
+    summary.append(";------------------:\n")
+    summary.append(";SPLICE INFORMATION:\n")
+    summary.append(";------------------:\n")
+    summary.append(";       Splice Offset = {:-8.2f}mm\n\n".format(splice_offset))
 
     for i in range(len(SpliceLocation)):
-        header.append(";{:04}   Tool: {}  Location: {:-8.2f}mm   length {:-8.2f}mm \n".format(i+1,
-                                                                                              SpliceTool[i],
-                                                                                              SpliceLocation[i],
-                                                                                              SpliceLength[i]
-                                                                                              )
+        summary.append(";{:04}   Tool: {}  Location: {:-8.2f}mm   length {:-8.2f}mm \n".format(i+1,
+                                                                                               SpliceTool[i],
+                                                                                               SpliceLocation[i],
+                                                                                               SpliceLength[i]
+                                                                                               )
                       )
 
-    header.append("\n\n\n")
-    header.append(";------------------:\n")
-    header.append(";PING  INFORMATION:\n")
-    header.append(";------------------:\n")
+    summary.append("\n")
+    summary.append(";------------------:\n")
+    summary.append(";PING  INFORMATION:\n")
+    summary.append(";------------------:\n")
 
     for i in range(len(PingLocation)):
-        header.append("Ping {:04} at {:-8.2f}mm\n".format(i+1,
-                                                          PingLocation[i]
-                                                          )
-                      )
+        summary.append("Ping {:04} at {:-8.2f}mm\n".format(i+1,
+                                                           PingLocation[i]
+                                                           )
+                       )
 
-    header.append("\n\n\n")
-    header.append(";------------------:\n")
-    header.append(";PROCESS WARNINGS:\n")
-    header.append(";------------------:\n")
+    warnings.append("\n")
+    warnings.append(";------------------:\n")
+    warnings.append(";PROCESS WARNINGS:\n")
+    warnings.append(";------------------:\n")
 
     if ProcessWarnings == "":
-            header.append("None")
+        warnings.append("None")
     else:
-            header.append(ProcessWarnings)
-    header.append("\n\n\n;Processed by P2PP version {}\n\n\n".format(__version__))
-    return header
+        warnings.append(ProcessWarnings)
+        warnings.append("\n;Processed by P2PP version {}\n".format(__version__))
+
+    return {'header': header, 'summary': summary, 'warnings': warnings}
 
 
 # Gcode remove speed information from a G1 statement
@@ -451,7 +455,7 @@ def tool_change(line, gcode_command_2, gcode_command_4):
     return line
 
 
-def generate(input_file, output_file, printer_profile, splice_offset):
+def generate(input_file, output_file, printer_profile, splice_offset, silent):
     global PrinterProfile
     PrinterProfile = printer_profile
     # read the input file
@@ -472,7 +476,12 @@ def generate(input_file, output_file, printer_profile, splice_offset):
         splice_offset = float(result['splice_offset'])
         OutputArray.append(result['gcode'])
     SwitchColor(-1, TotalExtrusion, splice_offset)
-    header = OmegaHeader(_taskName, splice_offset)
+    omega_result = OmegaHeader(_taskName, splice_offset)
+    header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
+
+    if not silent:
+        print ''.join(omega_result['summary'])
+        print ''.join(omega_result['warnings'])
 
     # write the output file
     ######################

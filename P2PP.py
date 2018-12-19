@@ -45,6 +45,11 @@ arguments.add_argument('-p',
                        help='A unique ID linked to a printer configuration'
                             ' profile in the Palette 2 hardware.'
                        )
+arguments.add_argument('-s',
+                       '--silent',
+                       default=False,
+                       help='Omits Summary page after processing from being printed to STDOUT'
+                       )
 
 
 def main(args):
@@ -58,7 +63,8 @@ def main(args):
         mcf.generate(input_file,
                      args['output_file'],
                      args['printer_profile'],
-                     args['splice_offset']
+                     args['splice_offset'],
+                     args['silent']
                      )
         # for debugging purposes only - this allows running the tool outside of slicer
 
