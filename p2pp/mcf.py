@@ -16,8 +16,8 @@ import os
 # Variable default values
 #########################################
 
-DEBUG_MODE = False
-DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/Lego.gcode'
+DEBUG_MODE = True
+DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/MosaicKeychain.gcode'
 
 # Filament Transition Table
 paletteInputsUsed = [False, False, False, False]
@@ -26,7 +26,8 @@ filemantDescription = ["Unnamed", "Unnamed", "Unnamed", "Unnamed"]
 filamentColorCode = ["-", "-", "-", "-"]
 defaultSpliceAlgorithm = "D000 D000 D000"
 processWarnings = []
-spliceAlgorithmTable = []  # list of possible algorithms
+spliceAlgorithmTable = []
+spliceAlgorithmDictionary = {}
 
 
 printerProfileString = ''  # A unique ID linked to a printer configuration profile in the Palette 2 hardware.
