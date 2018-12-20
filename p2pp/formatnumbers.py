@@ -27,3 +27,13 @@ def hexify_long(num):
 # hexify_float is used to turn a 32-but floating point number into the specific notation used by Mosaic
 def hexify_float(f):
     return "D" + (hex(struct.unpack('<I', struct.pack('<f', f))[0]))[2:]
+
+def hours( sec ):
+    return int(sec/3600)
+
+
+def minutes( sec ):
+    return int((sec%3600)/60)
+
+def seconds(sec):
+    return int(sec%60)

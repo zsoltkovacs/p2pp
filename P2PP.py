@@ -13,15 +13,15 @@ __status__ = 'Beta'
 import p2pp.mcf as mcf
 import argparse
 
-DEBUG_MODE = False
-DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/MosaicKeychain.gcode'
+DEBUG_MODE = True
+DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/Test.gcode'
 
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
                                                 ' GCODE derived from Slic3r.')
 
 arguments.add_argument('-i',
                        '--input-file',
-                       required=True)
+                       required=not DEBUG_MODE)
 arguments.add_argument('-d',
                        '--output-file',
                        required=False)
