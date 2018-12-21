@@ -402,7 +402,7 @@ def gcode_parseline(splice_offset, gcodeFullLine):
                     processedGCode.append(";Palette 2 - PING\n")
                     processedGCode.append("G4 S0\n")
                     processedGCode.append("O31 {}\n".format(hexify_float(lastPingExtruderPosition)))
-                    processedGCode.append("M117 PING {:03} {:-8.2f}mm]\n".format(len(pingExtruderPosition), lastPingExtruderPosition))
+                    # processedGCode.append("M117 PING {:03} {:-8.2f}mm]\n".format(len(pingExtruderPosition), lastPingExtruderPosition))
 
     # Process Toolchanges. Build up the O30 table with Splice info
     ##############################################################
@@ -506,6 +506,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     ######################
     if not output_file:
         output_file = input_file
-    opf = open(output_file+"out", "w")
+    opf = open(output_file, "w")
     opf.writelines(header)
     opf.writelines(processedGCode)
