@@ -13,7 +13,7 @@ __status__ = 'Beta'
 import p2pp.mcf as mcf
 import argparse
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/Test.gcode'
 
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
