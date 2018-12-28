@@ -10,7 +10,7 @@ __email__ = 'P2PP@pandora.be'
 __status__ = 'Beta'
 
 import os
-
+import p2pp.gui as gui
 from p2pp.formatnumbers import hexify_short, hexify_long, hexify_float
 
 
@@ -136,7 +136,7 @@ def algorithm_createtable():
                 algo =  spliceAlgorithmDictionary["{}-{}".format(filamentType[i],
                                                                  filamentType[j])]
             except:
-                log_warning("WARNING: No Algorithm defined for transitioning {} to {}.  Using Default.\n".format(filamentType[i],
+                log_warning("WARNING: No Algorithm defined for transitioning {} to {}. Using Default".format(filamentType[i],
                                                                                                                filamentType[j]))
                 algo =  defaultSpliceAlgorithm
 
@@ -249,6 +249,8 @@ def header_generateomegaheader(Name, splice_offset):
     else:
         for i in range(len(processWarnings)):
             warnings.append("{}\n".format(processWarnings[i]))
+        gui.showwarnings(warnings)
+
 
     return {'header': header, 'summary': summary, 'warnings': warnings}
 
@@ -282,10 +284,10 @@ def gcode_processtoolchange(newTool, Location, splice_offset):
 
         if len(spliceExtruderPosition)==1:
             if spliceLength[0] < minimalStartSpliceLength:
-                log_warning(";Warning : Short first splice (<{}mm) Length:{}\n".format(Length, minimalStartSpliceLength))
+                log_warning("Warning : Short first splice (<{}mm) Length:{:-3.2f}".format(Length, minimalStartSpliceLength))
         else:
             if spliceLength[-1] < minimalSpliceLength:
-                log_warning(";Warning: Short splice (<{}mm) Length:{} Layer:{} Tool:{}\n".format(minimalSpliceLength, Length, currentLayer, currentTool))
+                log_warning("Warning: Short splice (<{}mm) Length:{:-3.2f} Layer:{} Input:{}".format(minimalSpliceLength, Length, currentLayer, currentTool))
 
     previousToolChangeLocation = Location
     currentTool = newTool
@@ -482,8 +484,16 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     basename = os.path.basename(input_file)
     _taskName = os.path.splitext(basename)[0]
 
-    with open(input_file) as opf:
-        gcode_file = opf.readlines()
+    try:
+        with open(input_file) as opf:
+            gcode_file = opf.readlines()
+    except FileNotFoundError:
+        gui.usererror("Could not from file\n'{}'".format(input_file))
+        exit(1)
+    except:
+        gui.usererror("Could not read from file\n'{}'".format(input_file))
+        exit(2)
+
 
 
     # Process the file

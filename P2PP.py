@@ -12,16 +12,15 @@ __status__ = 'Beta'
 
 import p2pp.mcf as mcf
 import argparse
+import p2pp.gui as gui
 
-DEBUG_MODE = False
-DEBUG_MODE_INPUT_FILE = '/Users/tomvandeneede/Desktop/Test.gcode'
 
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
                                                 ' GCODE derived from Slic3r.')
 
 arguments.add_argument('-i',
                        '--input-file',
-                       required=not DEBUG_MODE)
+                       required=True)
 arguments.add_argument('-d',
                        '--output-file',
                        required=False)
@@ -53,12 +52,13 @@ arguments.add_argument('-s',
 
 
 def main(args):
+
+
+
     if not args['gui']:
         # CLI Mode
-        if DEBUG_MODE:
-            input_file = DEBUG_MODE_INPUT_FILE
-        else:
-            input_file = args['input_file']
+
+        input_file = args['input_file']
 
         mcf.generate(input_file,
                      args['output_file'],
@@ -72,7 +72,6 @@ def main(args):
         # GUI Mode
         pass
 
-
-
 if __name__ == "__main__":
+
     main(vars(arguments.parse_args()))
