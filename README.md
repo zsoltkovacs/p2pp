@@ -64,6 +64,11 @@ e.g */Users/tomvandeneede/IdeaProjects/P2PP/P2PP.sh*
 
 Please note that start slice distance minimum is 100, minimum slice distance can be set as low as 40... this may impact the speed at which filament can be created so print speed may have to be adjusted accordingly
 
+
+When you want to make use of the Canvas HUB functionality, you will also need to make sure to insert .mcf **before** the .gcode in each filename.  You can automate this bu putting the following template in the P`rinter Settings / Output Optionsa / Output filename format:
+
+{input_filename_base}.mcf.gcode
+
 **Add the following lines exactly as shown to *EACH* filament profile you want to use with the palette 2.**
 These changes will not interfere with the normal working under other profiles.
 
