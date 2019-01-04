@@ -12,7 +12,6 @@ __status__ = 'Beta'
 
 import p2pp.mcf as mcf
 import argparse
-import p2pp.gui as gui
 
 
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
@@ -53,8 +52,6 @@ arguments.add_argument('-s',
 
 def main(args):
 
-
-
     if not args['gui']:
         # CLI Mode
 
@@ -72,6 +69,6 @@ def main(args):
         # GUI Mode
         pass
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     main(vars(arguments.parse_args()))

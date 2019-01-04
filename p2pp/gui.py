@@ -18,10 +18,10 @@ except ImportError:
     from tkinter import *
     from tkinter import messagebox as  tkMessageBox
 
-
+import os
 
 root = Tk()
-root.iconbitmap('favicon.ico')
+root.iconbitmap(os.path.dirname(sys.argv[0])+'\\favicon.ico')
 root.iconify()
 
 def center(win, width, height):
@@ -33,15 +33,15 @@ def center(win, width, height):
 def clicked():
     root.destroy()
 
-def usererror(  bodyText ):
-    tkMessageBox.showerror("P2PP - Error Occurred", bodyText)
+
+def usererror(bodyText):
+    tkMessageBox.askcancel("P2PP - Error Occurred", bodyText)
 
 
-def showwarnings(  warningList ):
+def showwarnings(warningList):
     root.title("P2PP - Process Warnings")
     center(root, 800, 600)
     root.deiconify()
-
 
     lbl = Label(root, text="P2PP - Process Warnings", padx=5, pady=5, font=("Arial Bold", 24), fg="red")
     lbl.pack(side=TOP, fill=Y)
@@ -51,12 +51,11 @@ def showwarnings(  warningList ):
     sb = Scrollbar(canvas)
     list = Text(canvas)
 
-    sb.pack(side = RIGHT, fill=Y)
+    sb.pack(side=RIGHT, fill=Y)
     for warning in range(len(warningList)-4):
         list.insert(END, warningList[warning+4][1:])
     list.pack(side=LEFT, fill=BOTH, expand=1)
-    sb.config(command = list.yview)
-
+    sb.config(command=list.yview)
 
     btn = Button(root,text='Close', command=clicked)
     btn.pack(side=BOTTOM, fill=Y, pady=10)
@@ -64,5 +63,7 @@ def showwarnings(  warningList ):
     root.attributes('-topmost', True)
     root.after_idle(root.attributes, '-topmost', False)
     root.mainloop()
+
+
 
 

@@ -306,7 +306,6 @@ def gcode_parseline(splice_offset, gcodeFullLine):
 
     if gcodeCommand2 == "G1":
 
-
             extruderMovement = get_gcode_parameter(gcodeFullLine, "E")
 
             if extruderMovement != "":
