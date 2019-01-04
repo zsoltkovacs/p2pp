@@ -1,6 +1,24 @@
-from Tkinter import *
-import Tkinter
-import tkMessageBox
+__author__ = 'Tom Van den Eede'
+__copyright__ = 'Copyright 2018, Palette2 Splicer Post Processing Project'
+__credits__ = ['Tom Van den Eede',
+               'Tim Brookman'
+               ]
+__license__ = 'GPL'
+__version__ = '1.0.0'
+__maintainer__ = 'Tom Van den Eede'
+__email__ = 'P2PP@pandora.be'
+__status__ = 'Beta'
+
+
+
+try:
+    from Tkinter import *
+    import tkMessageBox
+except ImportError:
+    from tkinter import *
+    from tkinter import messagebox as  tkMessageBox
+
+
 
 root = Tk()
 root.iconbitmap('favicon.ico')
@@ -16,7 +34,7 @@ def clicked():
     root.destroy()
 
 def usererror(  bodyText ):
-    tkMessageBox.askcancel("P2PP - Error Occurred", bodyText)
+    tkMessageBox.showerror("P2PP - Error Occurred", bodyText)
 
 
 def showwarnings(  warningList ):
@@ -46,7 +64,5 @@ def showwarnings(  warningList ):
     root.attributes('-topmost', True)
     root.after_idle(root.attributes, '-topmost', False)
     root.mainloop()
-
-
 
 
