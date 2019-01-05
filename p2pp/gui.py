@@ -13,15 +13,19 @@ __status__ = 'Beta'
 
 try:
     from Tkinter import *
+    import Tkinter as tk
     import tkMessageBox
 except ImportError:
     from tkinter import *
+    import tkinter as tk
     from tkinter import messagebox as  tkMessageBox
 
 
+import os
+
 
 root = Tk()
-root.iconbitmap('favicon.ico')
+root.iconbitmap(os.path.dirname(sys.argv[0])+'\\favicon.ico')
 root.iconify()
 
 def center(win, width, height):
@@ -34,7 +38,7 @@ def clicked():
     root.destroy()
 
 def usererror(  bodyText ):
-    tkMessageBox.showerror("P2PP - Error Occurred", bodyText)
+    tkMessageBox.showinfo("P2PP - Error Occurred", bodyText)
 
 
 def showwarnings(  warningList ):
