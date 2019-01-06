@@ -73,12 +73,12 @@ when you imported the config profile, you will only have to update the first lin
 
 One of the first lines of the mcf.gcode file will contain the O22 command. 
 
-e.g. O22 D**e827315ff39aaaaa
+e.g. O22 De827315ff39aaaaa
 
-Take everythong after O22 D and use that as your printer Profileas follows.  Note your ID will differ and making a mistake will trigger the printer in recalibration!!
+Take everythong after **O22 D** and use that as your printer Profileas follows.  Note your ID will differ and making a mistake will trigger the printer in recalibration!!
 
 ```
-*;P2PP PRINTERPROFILE=**e827315ff39aaaaa
+*;P2PP PRINTERPROFILE=e827315ff39aaaaa
 *;P2PP SPLICEOFFSET=30
 *;P2PP MINSTARTSPLICE=100
 *;P2PP MINSPLICE=70
