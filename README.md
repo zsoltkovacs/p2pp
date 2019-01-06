@@ -28,11 +28,18 @@ Prior to using the script it is important to *setup the printer according to the
 
 ## Installation
 
-Clone this Github repository to a zip file and extract this zipfile to a location of your choice.  In addition you will need either python 2.7 or python 3 to be installed on your machine.  
+Clone this Github repository to a zip file and extract this zipfile to a location of your choice.  In addition you will need either python 2.7 or python 3 to be installed on your machine. 
+
+
+### WINDOWS 
+
+edit the .bat file with the correct path to the .py script.  
+
+
+### Unix / Mac OSX
 
 Further when running on a unix-flavoured system (Mac OSX or Linux), you will need to make the script p2pp.sh executable:
-
-WINDOWS ONLY: edit the .bat file with the correct path to the .py script.   
+ 
 
 ```
    cd place_where_you_extracted_the_zip_file
