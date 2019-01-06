@@ -33,12 +33,17 @@ Clone this Github repository to a zip file and extract this zipfile to a locatio
 
 Further when running on a unix-flavoured system (Mac OSX or Linux), you will need to make the script p2pp.sh executable:
 
-*   cd place_where_you_extracted_the_zip_file
-*   chmod 755 p2pp.sh
+`
+   cd place_where_you_extracted_the_zip_file
+   chmod 755 p2pp.sh
+`
 
 you van test now by typing
 
-*   ./p2pp.sh
+`
+   ./p2pp.sh
+
+`
 
 this should result in the following error:
 
