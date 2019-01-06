@@ -134,10 +134,7 @@ During the conversion the script may come up with a window stating possible warn
 On your first prints make sure to review the output file to make sure it contains the Omega header. (bunch of comands starting this capital letter O (oh)
 
 The purge settings in Slic3r PE are defined under the purge volumes settings.  This button is only visible on the plates screen when a multimaterial serup is selected using one extruder only.   The information entered in this screen is volumetric. This means that you have to roughly multiply the number in these fields by a factor 2.4 in order to get the filament length.
-
-![purgevolumes][purgevolumes]
-
-[purgevolumes]: https://github.com/tomvandeneede/p2pp/raw/master/screenshots/purgevolumes.jpg "purgevolumes"
+I successfully tested with an 180mm3 value (75mm filament)
 
 Happy printing.
 
