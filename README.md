@@ -1,5 +1,4 @@
-# p2pp
-**Palette2 Post Processing tool for Slic3r PE**
+# p2pp - **Palette2 Post Processing tool for Slic3r PE**
 
 
 **Tested with version 1.41.2**
