@@ -137,7 +137,7 @@ The purge settings in Slic3r PE are defined under the purge volumes settings.  T
 
 ![purgevolumes][purgevolumes]
 
-[purgevolumes]: https://github.com/tomvandeneede/p2pp/raw/master/screenshort/purgevolumes.jpg "purgevolumes"
+[purgevolumes]: https://github.com/tomvandeneede/p2pp/raw/master/screenshots/purgevolumes.jpg "purgevolumes"
 
 Happy printing.
 
