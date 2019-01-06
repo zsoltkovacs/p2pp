@@ -18,7 +18,7 @@ try:
 except ImportError:
     from tkinter import *
     import tkinter as tk
-    from tkinter import messagebox as  tkMessageBox
+    from tkinter import messagebox as tkMessageBox
 
 import os
 
@@ -26,21 +26,23 @@ root = Tk()
 root.iconbitmap(os.path.dirname(sys.argv[0])+'\\favicon.ico')
 root.iconify()
 
+
 def center(win, width, height):
     win.update_idletasks()
     x = (win.winfo_screenwidth() // 2) - (width // 2)
     y = (win.winfo_screenheight() // 2) - (height // 2)
     win.geometry('{}x{}+{}+{}'.format(width, height, x, y))
 
+
 def clicked():
     root.destroy()
 
 
-def usererror(bodyText):
-    tkMessageBox.askcancel("P2PP - Error Occurred", bodyText)
+def usererror(body_text):
+    tkMessageBox.askcancel("P2PP - Error Occurred", body_text)
 
 
-def showwarnings(warningList):
+def show_warnings(warning_list):
     root.title("P2PP - Process Warnings")
     center(root, 800, 600)
     root.deiconify()
@@ -54,18 +56,14 @@ def showwarnings(warningList):
     list = Text(canvas)
 
     sb.pack(side=RIGHT, fill=Y)
-    for warning in range(len(warningList)-4):
-        list.insert(END, warningList[warning+4][1:])
+    for warning in range(len(warning_list)-4):
+        list.insert(END, warning_list[warning+4][1:])
     list.pack(side=LEFT, fill=BOTH, expand=1)
     sb.config(command=list.yview)
 
-    btn = Button(root,text='Close', command=clicked)
+    btn = Button(root, text='Close', command=clicked)
     btn.pack(side=BOTTOM, fill=Y, pady=10)
     root.lift()
     root.attributes('-topmost', True)
     root.after_idle(root.attributes, '-topmost', False)
     root.mainloop()
-
-
-
-
