@@ -106,8 +106,8 @@ def header_generateomegaheader(job_name, splice_offset):
                 v.filemantDescription[i] = '000000'
 
             header.append("D{}{}{} ".format(i + 1,
-                                            v.filamentColorCode[i],
-                                            v.filemantDescription[i]
+                                            v.filamentColorCode[i].strip("\n"),
+                                            v.filemantDescription[i].strip("\n")
                                             ))
         else:
             header.append("D0 ")
