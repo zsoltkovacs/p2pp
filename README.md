@@ -47,10 +47,11 @@ you van test now by typing
 ```
 
 this should result in the following error:
-
+```
 usage: P2PP.py [-h] -i INPUT_FILE [-d OUTPUT_FILE] [-o SPLICE_OFFSET] [-g GUI]
                [-p PRINTER_PROFILE] [-s SILENT]
 P2PP.py: error: argument -i/--input-file: expected one argument
+```
 
 This indicates all files are properly setup and execute correctly
 
@@ -76,40 +77,38 @@ e.g. O22 D**e827315ff39aaaaa
 
 Take everythong after O22 D and use that as your printer Profileas follows.  Note your ID will differ and making a mistake will trigger the printer in recalibration!!
 
+```
 *;P2PP PRINTERPROFILE=**e827315ff39aaaaa
-
 *;P2PP SPLICEOFFSET=30
-
 *;P2PP MINSTARTSPLICE=100
-
 *;P2PP MINSPLICE=70
-
+```
 
 If you want the splice length warnings to contain layer information you also need to add the following information to the **AFTER LAYER CHANGE GCode of your Slic3r Printer Profile**.  Text between [] will be automatically converted to actual values by Slic3R PE when exporting the GCode to disk or to the printer.  This step is not reauired if you are using the imported sample profile
 
+```
 *;AFTER_LAYER_CHANGE
-
 *;LAYER [layer_num]
+```
 
 The splice process is now defined in the Statup GCode of the Slic3r  PE *Print profile*.  Based on the materials a user can define heat/compression/cooling additional.  The MATERIAL_DEFAULT setting provides a configurable fallback in case no profile is defined for the material combination.   **NOTE:**  these entries are not symmetrical, ie you need to define both directions in order to specify a complete process; This step is already included in the sample profile.
 
-
+```
 *;P2PP MATERIAL_DEFAULT_0_0_0
-
 *;P2PP MATERIAL_PVA_PVA_0_0_0
-
 *;P2PP MATERIAL_PVA_PLA_0_0_0
-
 *;P2PP MATERIAL_PLA_PLA_0_0_0
+```
 
 ### Print Settings
 
 Under **Print Settings - Output options** you will find the possibility to add a **post-processing script**.  Put the full name of the .sh (unix/Mac OSX) or .bat  (Windows) in this window.  Include the full path (don't use ~ for OSX).  Add no parameters.
 
+```
 e.g */yourpath/p2pp.sh*
 or on a windows machine
 e.g. *c:\yourpath\p2pp.bat*
-
+```
 
 **IMPORTANT: the minimal first slice length is 100mm, required to make the filament reach the outgoing drive, minimum slice distance for following slices  can be set as low as 40 this will impact the speed at which filament can be created so print speed may have to be adjusted accordingly**
 
@@ -119,12 +118,11 @@ e.g. *c:\yourpath\p2pp.bat*
 Add the following lines exactly as shown to *EACH* filament profile you want to use with the palette 2.
 These changes will not interfere with the normal working under other profiles as only comments are added to the gcode file.
 
+```
 ;P2PP FN=[filament_preset]
-
 ;P2PP FT=[filament_type]
-
 ;P2PP FC=[extruder_colour]
-
+```
 
 
 ## Usage
