@@ -57,7 +57,7 @@ def algorithm_createtable():
                 continue
             try:
                 algo = v.spliceAlgorithmDictionary["{}-{}".format(v.filamentType[i], v.filamentType[j])]
-            except ValueError:
+            except KeyError:
                 log_warning("WARNING: No Algorithm defined for transitioning {} to {}. Using Default".format(v.filamentType[i],
                                                                                                              v.filamentType[j]))
                 algo = v.defaultSpliceAlgorithm
@@ -322,7 +322,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
     # Build up the O32 table with Algo info
     #######################################
     if gcode_fullline.startswith(";P2PP FT=") and v.allowFilamentInformationUpdate:  # filament type information
-        v.filamentType[v.currentTool] = gcode_fullline[9:]
+        v.filamentType[v.currentTool] = gcode_fullline[9:].strip("\n")
 
     if gcode_fullline.startswith(";P2PP FN=") and v.allowFilamentInformationUpdate:  # filament color information
         p2ppinfo = gcode_fullline[9:].strip("\n-+!@#$%^&*(){}[];:\"\',.<>/?").replace(" ", "_")
