@@ -2,6 +2,7 @@
 
 
 **Tested with version 1.41.2 and 1.42.0 Alpha 1**
+earlier versions may generate different code patterns and may not work correctly
 
 
 ## Purpose
