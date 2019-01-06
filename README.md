@@ -13,7 +13,7 @@ Allow Palette 2 users to exploit all freatures and functionality of the palette 
 - use of variable layers without blowing up the wipe tower
 - wipe to waste object
 - wipe to infill
-- ....
+- configurable option to create more filament at the end of the print 
 
 P2pp currently only works for devices in a connected setup.  It does not generate the required sequences to meet the Pause-based pings in accessory mode.
 
@@ -76,13 +76,13 @@ One of the first lines of the mcf.gcode file will contain the O22 command.
 e.g. O22 De827315ff39aaaaa
 
 Take everythong after **O22 D** and use that as your printer Profileas follows.  Note your ID will differ and making a mistake will trigger the printer in recalibration!!
-
 ```
 *;P2PP PRINTERPROFILE=e827315ff39aaaaa
 *;P2PP SPLICEOFFSET=30
 *;P2PP MINSTARTSPLICE=100
 *;P2PP MINSPLICE=70
 ```
+SPLICEOFFSET defined the amount of mm added to the first splice.  It works in a simalr way as setting the transition position % from Chroma and Canvas.  Here the value is a fiexed length.  I found 30mm to be a good position resulting in perfect prints on my setup.   You may want to tweak this function if you find the transition happens too early or too late.
 
 If you want the splice length warnings to contain layer information you also need to add the following information to the **AFTER LAYER CHANGE GCode of your Slic3r Printer Profile**.  Text between [] will be automatically converted to actual values by Slic3R PE when exporting the GCode to disk or to the printer.  This step is not reauired if you are using the imported sample profile
 
@@ -91,7 +91,7 @@ If you want the splice length warnings to contain layer information you also nee
 *;LAYER [layer_num]
 ```
 
-The splice process is now defined in the Statup GCode of the Slic3r  PE *Print profile*.  Based on the materials a user can define heat/compression/cooling additional.  The MATERIAL_DEFAULT setting provides a configurable fallback in case no profile is defined for the material combination.   **NOTE:**  these entries are not symmetrical, ie you need to define both directions in order to specify a complete process; This step is already included in the sample profile.
+The splice process is now defined in the Statup GCode of the Slic3r  PE *Printer profile*.  Based on the materials a user can define heat/compression/cooling additional.  The MATERIAL_DEFAULT setting provides a configurable fallback in case no profile is defined for the material combination.   **NOTE:**  these entries are not symmetrical, ie you need to define both directions in order to specify a complete process; This step is already included in the sample profile.  The definition is as per standard Chroma and Canvas profiles.  Order of parameters is heat/compression/cooling so.  Default is all 0 as per standard in Chroma and Canvas
 
 ```
 *;P2PP MATERIAL_DEFAULT_0_0_0
