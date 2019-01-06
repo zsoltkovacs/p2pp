@@ -289,7 +289,7 @@ def gcode_parseline(splice_offset, gcodeFullLine):
     if gcodeCommand4 == "M220":
         newFeedrate = get_gcode_parameter(gcodeFullLine, "S")
         if (newFeedrate != ""):
-            currentprintFeedrate = newFeedrate/100
+            vars.currentprintFeedrate = newFeedrate/100
 
 
     # Processing of extrusion multiplier commands
@@ -297,7 +297,7 @@ def gcode_parseline(splice_offset, gcodeFullLine):
     if gcodeCommand4 == "M221":
         newMultiplier = get_gcode_parameter(gcodeFullLine , "S")
         if (newMultiplier != ""):
-            extrusionMultiplier = newMultiplier/100
+            vars.extrusionMultiplier = newMultiplier/100
 
     # Processing of Extruder Movement commands
     # and generating ping at threshold intervals
