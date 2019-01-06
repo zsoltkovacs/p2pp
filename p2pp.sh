@@ -1,2 +1,3 @@
-#/bin/sh
-/Users/tomvandeneede/IdeaProjects/P2PP/P2PP.py -i $1
+#!/bin/sh
+DIRECTORY=`dirname $0`
+$DIRECTORY/P2PP.py -i $1
