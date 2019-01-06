@@ -43,7 +43,7 @@ you van test now by typing
 this should result in the following error:
 
 *usage: P2PP.py [-h] -i INPUT_FILE [-d OUTPUT_FILE] [-o SPLICE_OFFSET] [-g GUI]
-*               [-p PRINTER_PROFILE] [-s SILENT]
+               [-p PRINTER_PROFILE] [-s SILENT]
 *P2PP.py: error: argument -i/--input-file: expected one argument
 
 This indicates all files are properly setup and execute correctly
