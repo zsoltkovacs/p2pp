@@ -8,7 +8,7 @@
 
 ## Purpose
 
-Allow Palette 2 users to exploit all freatures and functionality of the palette 2 (Pro) with their Prusa MK3 devices, including
+Allow Palette 2 users to exploit all freatures and functionality of the palette 2 (Pro) with the Slic3r PE functionality for multi material printing including:
 
 - use of variable layers without blowing up the wipe tower
 - wipe to waste object
@@ -132,6 +132,12 @@ When setup correctly the script will be triggered automatically from Slic3r PE a
 During the conversion the script may come up with a window stating possible warninngs.  If slices are too short, increase the purge volumes until the required length is met (or lower the P2PP_MINSPLICE setting).   If the start slice is too short, you can add a brim or skirt to use more filament in the first color.
 
 On your first prints make sure to review the output file to make sure it contains the Omega header. (bunch of comands starting this capital letter O (oh)
+
+The purge settings in Slic3r PE are defined under the purge volumes settings.  This button is only visible on the plates screen when a multimaterial serup is selected using one extruder only.   The information entered in this screen is volumetric. This means that you have to roughly multiply the number in these fields by a factor 2.4 in order to get the filament length.
+
+![alt text][purgevolumes]
+
+[purgevolumes]: https://github.com/adam-p/tomvandeneede/p2pp/raw/master/screenshort/purgevolumes.jpg "purgevolumes"
 
 Happy printing.
 
