@@ -119,6 +119,8 @@ or on a windows machine
 e.g. c:\yourpath\p2pp.bat
 ```
 
+Under Multipe Extruders, make sure the *Wipe Tower* is enabled and the function *Prime all printing extruders* is **disabled**
+
 **IMPORTANT: the minimal first slice length is 100mm, required to make the filament reach the outgoing drive, minimum slice distance for following slices  can be set as low as 40 this will impact the speed at which filament can be created so print speed may have to be adjusted accordingly**
 
 
