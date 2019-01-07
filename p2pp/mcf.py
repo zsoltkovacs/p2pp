@@ -83,7 +83,7 @@ def header_generateomegaheader(job_name, splice_offset):
     summary = []
     warnings = []
     header.append('O21 ' + hexify_short(20) + "\n")  # MSF2.0
-    header.append('O22 D' + v.printerProfileString + "\n")  # printerprofile used in Palette2
+    header.append('O22 D' + v.printerProfileString.strip("\n") + "\n")  # printerprofile used in Palette2
     header.append('O23 D0001' + "\n")              # unused
     header.append('O24 D0000' + "\n")              # unused
 
