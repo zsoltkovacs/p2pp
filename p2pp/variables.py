@@ -38,6 +38,8 @@ spliceOffset = 0.0
 spliceExtruderPosition = []
 spliceUsedTool = []
 spliceLength = []
+
+#SIDE WIPES
 side_wipe_loc = ""
 side_wipe= False
 side_wipe_length = 0
