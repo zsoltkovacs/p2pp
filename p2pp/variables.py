@@ -55,7 +55,7 @@ pingExtruderPosition = []
 hotSwapCount = 0
 
 # TotalExtrusion keeps track of the total extrusion in mm for the print taking into account the Extruder Multiplier set
-# in the GCode settings.
+# in the GCode settings...
 totalMaterialExtruded = 0
 
 # The next 3 variables are used to generate pings.   A ping is scheduled every ping interval.  The LastPing option
