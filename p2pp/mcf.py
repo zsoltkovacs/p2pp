@@ -273,6 +273,18 @@ def gcode_parseline(splice_offset, gcode_fullline):
     gcode_command2 = gcode_fullline[0:2]
     gcode_command4 = gcode_fullline[0:4]
 
+
+    if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM START") or \
+       gcode_fullline.startswith("; CP EMPTY GRID START"):
+       v.side_wipe_skip = v.side_wipe
+
+    if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM END") or \
+       gcode_fullline.startswith("; CP EMPTY GRID END"):
+       v.side_wipe_skip = False
+
+    if v.side_wipe_skip == True:
+        return {'gcode': ";P2PP removed "+gcode_fullline , 'splice_offset': splice_offset}
+
     # Processing of extrusion speed commands
     # ############################################
     if gcode_command4 == "M220":
@@ -341,6 +353,10 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if gcode_fullline.startswith(";P2PP SPLICEOFFSET="):
         splice_offset = float(gcode_fullline[19:])
 
+    if gcode_fullline.startswith(";P2PP SIDEWIPELOC="):
+        v.side_wipe_loc = gcode_fullline[19:]
+        v.side_wipe = True
+
     if gcode_fullline.startswith(";P2PP MINSTARTSPLICE="):
         v.minimalStartSpliceLength = float(gcode_fullline[21:])
         if v.minimalStartSpliceLength < 100:
@@ -357,10 +373,19 @@ def gcode_parseline(splice_offset, gcode_fullline):
     # Next section(s) clean up the GCode generated for the MMU
     # specially the rather violent unload/reload required for the MMU2
     ###################################################################
+
     if "TOOLCHANGE START" in gcode_fullline:
         v.allowFilamentInformationUpdate = False
         v.withinToolchangeBlock = True
+        if v.side_wipe:
+            v.processedGCode.append(";P2PP Side Wipe\n")
+            v.processedGCode.append("G1 {}\n".format(v.side_wipe_loc))
+            v.side_wipe_length = 0
+
+
+
     if "TOOLCHANGE END" in gcode_fullline:
+        v.processedGCode.append("G1 E{}\n".format(v.side_wipe_length))
         v.withinToolchangeBlock = False
     if "TOOLCHANGE UNLOAD" in gcode_fullline:
         v.processedGCode.append(";P2PP Set Wipe Speed\n")
@@ -373,7 +398,14 @@ def gcode_parseline(splice_offset, gcode_fullline):
         return {'gcode': gcode_fullline, 'splice_offset': splice_offset}
 
     if v.withinToolchangeBlock:
-        return {'gcode': gcode_filtertoolchangeblock(gcode_fullline, gcode_command2, gcode_command4), 'splice_offset': splice_offset}
+        if v.side_wipe:
+            eparam = get_gcode_parameter(gcode_fullline,"E")
+            if eparam != "":
+                v.side_wipe_length += float(eparam)
+            return {'gcode' : ";P2PP removed "+gcode_fullline , 'splice_offset': splice_offset}
+
+        else:
+            return {'gcode': gcode_filtertoolchangeblock(gcode_fullline, gcode_command2, gcode_command4), 'splice_offset': splice_offset}
 
     # Catch All
     return {'gcode': gcode_fullline, 'splice_offset': splice_offset}
