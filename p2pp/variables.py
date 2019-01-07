@@ -59,7 +59,7 @@ hotSwapCount = 0
 totalMaterialExtruded = 0
 
 # The next 3 variables are used to generate pings.   A ping is scheduled every ping interval.  The LastPing option
-# keeps the last extruder position where a ping was generated.  It is set to -100 to pring the first PING forward...
+# keeps the last extruder position where a  ping was generated.  It is set to -100 to pring the first PING forward...
 # Not sure this is a good idea.   Ping distance increases over the print in an exponential way.   Each ping is 1.03 times
 # further from the previous one.   Pings occur in random places!!! as the are non-intrusive and don't causes pauses in the
 # print they aren ot restricted to the wipe tower and they will occur as soon as the interval length for ping is exceeded.
