@@ -267,7 +267,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
         gcode_fullline = gcode_fullline.split(';')[0]
         gcode_fullline = gcode_fullline.rstrip('\n')
 
-    if len(gcode_fullline) < 2:
+    if len(gcode_fullline) < 2 or gcode_fullline.startswith("M73") or gcode_fullline.startswith("M900"):
         return {'gcode': gcode_fullline, 'splice_offset': splice_offset}
 
     gcode_command2 = gcode_fullline[0:2]
@@ -276,7 +276,8 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
     if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM START") or \
        gcode_fullline.startswith("; CP EMPTY GRID START"):
-       v.side_wipe_skip = v.side_wipe
+        if not v.withinToolchangeBlock:
+            v.side_wipe_skip = v.side_wipe
 
     if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM END") or \
        gcode_fullline.startswith("; CP EMPTY GRID END"):
@@ -381,20 +382,20 @@ def gcode_parseline(splice_offset, gcode_fullline):
         if v.side_wipe:
             v.side_wipe_length = 0
 
-
-
-    if "TOOLCHANGE END" in gcode_fullline:
-        if v.side_wipe:
-            v.processedGCode.append(";P2PP Side Wipe\n")
-            v.processedGCode.append("G1 {} Y25\n".format(v.side_wipe_loc))
-            v.processedGCode.append("M400\n")
-            wipespeed = int(60/((v.side_wipe_length+1)/20) * 150)
-            wipespeed = min( wipespeed, 2400)
-            v.processedGCode.append("G1 {} Y175 E{} F{}\n".format(v.side_wipe_loc, v.side_wipe_length, wipespeed ))
-            v.processedGCode.append("M400\n")
+    if ("TOOLCHANGE END" in gcode_fullline) and not v.side_wipe:
         v.withinToolchangeBlock = False
 
-    if "TOOLCHANGE UNLOAD" in gcode_fullline:
+    if ("PURGING FINISHED" in gcode_fullline) and  v.withinToolchangeBlock and v.side_wipe:
+        v.processedGCode.append(";P2PP Side Wipe\n")
+        v.processedGCode.append("G1 {} Y25\n".format(v.side_wipe_loc))
+        v.processedGCode.append("M400\n")
+        wipespeed = int(60/((v.side_wipe_length+1)/20) * 150)
+        wipespeed = min( wipespeed, 2400)
+        v.processedGCode.append("G1 {} Y175 E{} F{}\n".format(v.side_wipe_loc, v.side_wipe_length, wipespeed ))
+        v.processedGCode.append("M400\n")
+        v.withinToolchangeBlock = False
+
+    if "TOOLCHANGE UNLOAD" in gcode_fullline and not  v.side_wipe:
         v.processedGCode.append(";P2PP Set Wipe Speed\n")
         v.processedGCode.append("G1 F2000\n")
         v.currentprintFeed = 2000.0 / 60.0
