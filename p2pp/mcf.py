@@ -392,7 +392,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
             wipespeed = int(25000/(v.side_wipe_length))
             wipespeed = min( wipespeed, 2000)
             v.processedGCode.append("G1 {} Y175 E{} F{}\n".format(v.side_wipe_loc, v.side_wipe_length, wipespeed ))
-            v.processedGCode.appemd("G1 X240 F200")
+            v.processedGCode.appemd("G1 X245 F200")
         v.withinToolchangeBlock = False
 
     if "TOOLCHANGE UNLOAD" in gcode_fullline and not  v.side_wipe:
