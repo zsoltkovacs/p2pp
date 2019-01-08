@@ -53,6 +53,8 @@ def algorithm_processmaterialconfiguration(splice_info):
 def algorithm_createtable():
     for i in range(4):
         for j in range(4):
+            if i==j:
+                continue
             if not v.paletteInputsUsed[i] or not v.paletteInputsUsed[j]:
                 continue
             try:
@@ -219,7 +221,7 @@ def gcode_removespeedinfo(gcode):
             result += subcommand+" "
 
     if len(result) < 4:
-        return ";P2PP Removed "+gcode
+        return ";--- P2PP Removed "+gcode
 
     return result
 
@@ -237,17 +239,17 @@ def gcode_filtertoolchangeblock(line, gcode_command_2, gcode_command_4):
     if gcode_command_2 == "G1":
         for gcode_filter in discarded_moves:
             if gcode_filter in line:         # remove specific MMU2 extruder moves
-                return ";P2PP removed "+line
+                return ";--- P2PP removed "+line
         return gcode_removespeedinfo(line)
 
     if gcode_command_4 == "M907":
         return ";P2PP removed " + line   # remove motor power instructions
 
     if gcode_command_4 == "M220":
-        return ";P2PP removed " + line   # remove feedrate instructions
+        return ";--- P2PP removed " + line   # remove feedrate instructions
 
     if line.startswith("G4 S0"):
-        return ";P2PP removed " + line   # remove dwelling instructions
+        return ";--- P2PP removed " + line   # remove dwelling instructions
 
     return line
 
@@ -285,7 +287,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
        v.side_wipe_skip = False
 
     if v.side_wipe_skip == True:
-        return {'gcode': ";P2PP removed "+gcode_fullline , 'splice_offset': splice_offset}
+        return {'gcode': ";--- P2PP removed "+gcode_fullline , 'splice_offset': splice_offset}
 
     # Processing of extrusion speed commands
     # ############################################
@@ -335,7 +337,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
         new_tool = int(gcode_fullline[1])
         gcode_processtoolchange(new_tool, v.totalMaterialExtruded, splice_offset)
         v.allowFilamentInformationUpdate = True
-        return {'gcode': ';P2PP removed ' + gcode_fullline, 'splice_offset': splice_offset}
+        return {'gcode': ';--- P2PP removed ' + gcode_fullline, 'splice_offset': splice_offset}
 
     # Build up the O32 table with Algo info
     #######################################
