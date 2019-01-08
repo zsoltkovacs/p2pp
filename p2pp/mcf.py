@@ -260,6 +260,7 @@ def get_gcode_parameter(gcode, parameter):
     return ""
 
 
+
 # G Code parsing routine
 def gcode_parseline(splice_offset, gcode_fullline):
 
@@ -308,6 +309,10 @@ def gcode_parseline(splice_offset, gcode_fullline):
             extruder_movement = get_gcode_parameter(gcode_fullline, "E")
 
             if extruder_movement != "":
+
+                if v.withinToolchangeBlock:
+                    if v.side_wipe:
+                        v.side_wipe_length += extruder_movement * v.extrusionMultiplier
 
                 actual_extrusion_length = extruder_movement * v.extrusionMultiplier
                 v.totalMaterialExtruded += actual_extrusion_length
@@ -406,15 +411,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
         return {'gcode': gcode_fullline, 'splice_offset': splice_offset}
 
     if v.withinToolchangeBlock:
-        if v.side_wipe:
-            if gcode_command2=="G1":
-                eparam = get_gcode_parameter(gcode_fullline,"E")
-                if eparam != "":
-                    v.side_wipe_length += float(eparam)
-            return {'gcode' : ";P2PP removed "+gcode_fullline , 'splice_offset': splice_offset}
-
-        else:
-            return {'gcode': gcode_filtertoolchangeblock(gcode_fullline, gcode_command2, gcode_command4), 'splice_offset': splice_offset}
+        return {'gcode': gcode_filtertoolchangeblock(gcode_fullline, gcode_command2, gcode_command4), 'splice_offset': splice_offset}
 
     # Catch All
     return {'gcode': gcode_fullline, 'splice_offset': splice_offset}
