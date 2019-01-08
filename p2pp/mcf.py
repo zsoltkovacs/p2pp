@@ -386,7 +386,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
         v.withinToolchangeBlock = False
 
     if ("PURGING FINISHED" in gcode_fullline) and  v.withinToolchangeBlock and v.side_wipe:
-        if v.side_wipe_length>0
+        if v.side_wipe_length>0:
             v.processedGCode.append(";P2PP Side Wipe\n")
             v.processedGCode.append("G1 {} Y25\n".format(v.side_wipe_loc))
             wipespeed = int(25000/(v.side_wipe_length))
