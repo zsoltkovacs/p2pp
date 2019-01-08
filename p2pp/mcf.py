@@ -372,7 +372,6 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
     # Next section(s) clean up the GCode generated for the MMU
     # specially the rather violent unload/reload required for the MMU2
-
     # special processing for side wipes is required in this section
     #################################################################
 
