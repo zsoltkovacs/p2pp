@@ -145,6 +145,12 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 ```
 3. Remember to click the floppy-disk icon to save!
 
+**NOTE:**
+> [filament_preset], [filament_type] and [extruder_colour] are all built-in Slic3r variables. No changes are required here.
+> FN will be populated with the name of the Filament Preset (e.g. PETG - eSUN RED, Prusa PETG, Some Filament profile name...)
+> FT will be populated with the type of the filament (from the drop down box in the filament settings) (e.g. PET, PLA,PVA,ABS...)
+> FC will be populated with the web hex colour code of the extruder colour (e.g. #FFFFF, #FF00FF etc..)
+
 ## Usage
 
 When setup correctly the script will be triggered automatically from Slic3r PE and exported files will contain the mcf header required for palette operation. This functionality will only be enabled when selecting the right print/filament and printer profiles so when selecting any other profiles, single filament file generation will happen as before.
