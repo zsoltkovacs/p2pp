@@ -386,13 +386,13 @@ def gcode_parseline(splice_offset, gcode_fullline):
         v.withinToolchangeBlock = False
 
     if ("PURGING FINISHED" in gcode_fullline) and  v.withinToolchangeBlock and v.side_wipe:
-        v.processedGCode.append(";P2PP Side Wipe\n")
-        v.processedGCode.append("G1 {} Y25\n".format(v.side_wipe_loc))
-        v.processedGCode.append("M400\n")
-        wipespeed = int(25000/(v.side_wipe_length+0.1))
-        wipespeed = min( wipespeed, 2000)
-        v.processedGCode.append("G1 {} Y175 E{} F{}\n".format(v.side_wipe_loc, v.side_wipe_length, wipespeed ))
-        v.processedGCode.append("M400\n")
+        if v.side_wipe_length>0
+            v.processedGCode.append(";P2PP Side Wipe\n")
+            v.processedGCode.append("G1 {} Y25\n".format(v.side_wipe_loc))
+            wipespeed = int(25000/(v.side_wipe_length))
+            wipespeed = min( wipespeed, 2000)
+            v.processedGCode.append("G1 {} Y175 E{} F{}\n".format(v.side_wipe_loc, v.side_wipe_length, wipespeed ))
+            v.processedGCode.appemd("G1 X240 F200")
         v.withinToolchangeBlock = False
 
     if "TOOLCHANGE UNLOAD" in gcode_fullline and not  v.side_wipe:
