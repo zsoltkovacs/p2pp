@@ -389,8 +389,8 @@ def gcode_parseline(splice_offset, gcode_fullline):
         v.processedGCode.append(";P2PP Side Wipe\n")
         v.processedGCode.append("G1 {} Y25\n".format(v.side_wipe_loc))
         v.processedGCode.append("M400\n")
-        wipespeed = int(60/((v.side_wipe_length+1)/45) * 150)
-        wipespeed = min( wipespeed, 1000)
+        wipespeed = int(25000/(v.side_wipe_length+0.1))
+        wipespeed = min( wipespeed, 250)
         v.processedGCode.append("G1 {} Y175 E{} F{}\n".format(v.side_wipe_loc, v.side_wipe_length, wipespeed ))
         v.processedGCode.append("M400\n")
         v.withinToolchangeBlock = False
