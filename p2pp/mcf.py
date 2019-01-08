@@ -354,7 +354,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
         splice_offset = float(gcode_fullline[19:])
 
     if gcode_fullline.startswith(";P2PP SIDEWIPELOC="):
-        v.side_wipe_loc = gcode_fullline[18:]
+        v.side_wipe_loc = gcode_fullline[18:].strip("\n")
         v.side_wipe = True
 
     if gcode_fullline.startswith(";P2PP MINSTARTSPLICE="):
@@ -386,9 +386,11 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if "TOOLCHANGE END" in gcode_fullline:
         if v.side_wipe:
             v.processedGCode.append(";P2PP Side Wipe\n")
-            v.processedGCode.append("G1 {}\n".format(v.side_wipe_loc))
+            v.processedGCode.append("G1 {} Y25\n".format(v.side_wipe_loc))
             v.processedGCode.append("M400\n")
-            v.processedGCode.append("G1 E{}\n".format(v.side_wipe_length))
+            wipespeed = int(60/((v.side_wipe_length+1)/20) * 150)
+            wipespeed = min( wipespeed, 2400)
+            v.processedGCode.append("G1 {} Y175 E{} F{}\n".format(v.side_wipe_loc, v.side_wipe_length, wipespeed ))
             v.processedGCode.append("M400\n")
         v.withinToolchangeBlock = False
 
@@ -404,9 +406,10 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
     if v.withinToolchangeBlock:
         if v.side_wipe:
-            eparam = get_gcode_parameter(gcode_fullline,"E")
-            if eparam != "":
-                v.side_wipe_length += float(eparam)
+            if gcode_command2=="G1":
+                eparam = get_gcode_parameter(gcode_fullline,"E")
+                if eparam != "":
+                    v.side_wipe_length += float(eparam)
             return {'gcode' : ";P2PP removed "+gcode_fullline , 'splice_offset': splice_offset}
 
         else:
