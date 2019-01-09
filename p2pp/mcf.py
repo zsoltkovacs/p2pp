@@ -402,7 +402,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
             wipespeed = int(25000/(v.side_wipe_length))
             wipespeed = min( wipespeed, 2000)
             v.processedGCode.append("G1 {} Y175 E{} F{}\n".format(v.side_wipe_loc, v.side_wipe_length, wipespeed ))
-            v.processedGCode.append("G1 X245 F200")
+            v.processedGCode.append("G1 X245 F200\n")
             v.processedGCode.append(";Side Wipe Check {} - {} = {} (purged {})".format(v.totalMaterialExtruded,v.wipe_start_extrusion, v.totalMaterialExtruded-v.wipe_start_extrusion, v.side_wipe_length))
             v.side_wipe_length = 0
         v.withinToolchangeBlock = False
