@@ -17,12 +17,9 @@ def hexify_short(num):
     return "D" + '{0:04x}'.format(num)
 
 
-
 # hexify_long is used to turn a 32-bit integer into the specific notation used by Mosaic
 def hexify_long(num):
     return "D" + '{0:08x}'.format(num)
-
-
 
 # hexify_float is used to turn a 32-but floating point number into the specific notation used by Mosaic
 def hexify_float(f):
@@ -30,7 +27,6 @@ def hexify_float(f):
 
 def hours( sec ):
     return int(sec/3600)
-
 
 def minutes( sec ):
     return int((sec%3600)/60)

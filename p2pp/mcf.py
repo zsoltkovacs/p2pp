@@ -12,6 +12,7 @@ __status__ = 'Beta'
 import os
 import p2pp.gui as gui
 from p2pp.formatnumbers import hexify_short, hexify_long, hexify_float
+from p2pp.colornames import findNearestColor
 import p2pp.variables as v
 
 
@@ -107,8 +108,9 @@ def header_generateomegaheader(job_name, splice_offset):
                         i))
                 v.filemantDescription[i] = '000000'
 
-            header.append("D{}{}{} ".format(i + 1,
+            header.append("D{}{}{}_{} ".format(i + 1,
                                             v.filamentColorCode[i].strip("\n"),
+                                            findNearestColor(v.filamentColorCode[i].strip("\n")),
                                             v.filemantDescription[i].strip("\n")
                                             ))
         else:
@@ -388,6 +390,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
         v.withinToolchangeBlock = True
         if v.side_wipe:
             v.side_wipe_length = 0
+            v.wipe_start_extrusion= v.totalMaterialExtruded
 
     if ("TOOLCHANGE END" in gcode_fullline) and not v.side_wipe:
         v.withinToolchangeBlock = False
@@ -400,6 +403,8 @@ def gcode_parseline(splice_offset, gcode_fullline):
             wipespeed = min( wipespeed, 2000)
             v.processedGCode.append("G1 {} Y175 E{} F{}\n".format(v.side_wipe_loc, v.side_wipe_length, wipespeed ))
             v.processedGCode.append("G1 X245 F200")
+            v.processedGCode.append(";Side Wipe Check {} - {} = {} (purged {})".format(v.totalMaterialExtruded,v.wipe_start_extrusion, v.totalMaterialExtruded-v.wipe_start_extrusion, v.side_wipe_length))
+            v.side_wipe_length = 0
         v.withinToolchangeBlock = False
 
     if "TOOLCHANGE UNLOAD" in gcode_fullline and not  v.side_wipe:

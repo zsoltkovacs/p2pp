@@ -83,3 +83,4 @@ minimalSpliceLength = 80  # Minimum overall splice length.
 minimalStartSpliceLength = 100  # Minimum first splice length.
 withinToolchangeBlock = False  # keeps track if the processed G-Code is part of a toolchange or a regular path.
 allowFilamentInformationUpdate = False  # TBA
+
