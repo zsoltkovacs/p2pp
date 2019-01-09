@@ -45,7 +45,6 @@ def findNearestColor(userColor):
         if colDist < threshold:
             threshold = colDist
             colorName = color_names_sorted[colorNum]
-            print ("{} {}".format(colorName, threshold))
 
     return colorName
 

@@ -366,6 +366,10 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if gcode_fullline.startswith(";P2PP SIDEWIPELOC="):
         v.side_wipe_loc = gcode_fullline[18:].strip("\n")
         v.side_wipe = True
+        #log_warning("Using the experimental Side Transition featue")
+
+    if gcode_fullline.startswith(";P2PP EXTRAENDFILAMENT="):
+        v.extraRunoutFilament = float(gcode_fullline[23:])
 
     if gcode_fullline.startswith(";P2PP MINSTARTSPLICE="):
         v.minimalStartSpliceLength = float(gcode_fullline[21:])
