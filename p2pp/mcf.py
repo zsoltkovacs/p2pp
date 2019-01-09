@@ -431,38 +431,47 @@ def gcode_parseline(splice_offset, gcode_fullline):
 # Generate the file and glue it all together!
 # #####################################################################
 def generate(input_file, output_file, printer_profile, splice_offset, silent):
+
+
     v.printerProfileString = printer_profile
     basename = os.path.basename(input_file)
     _taskName = os.path.splitext(basename)[0]
 
     try:
-        with open(input_file) as opf:
-            gcode_file = opf.readlines()
+        opf = open(input_file, encoding='utf-8')
+    except:
+        try:
+            opf = open(input_file)
+        except:
+            gui.usererror("Could read input file\n'{}'".format(input_file))
+            exit(1)
 
-            # Process the file
-            # #################
-            for line in gcode_file:
-                # gcode_parseline now returns splice_offset from print file if it exists, keeping everything consistent.
-                # splice_offset from gcode takes precedence over splice_offset from CLI.
-                result = gcode_parseline(splice_offset, line)
-                splice_offset = float(result['splice_offset'])
-                v.processedGCode.append(result['gcode'] + "\n")
-            gcode_processtoolchange(-1, v.totalMaterialExtruded, splice_offset)
-            omega_result = header_generateomegaheader(_taskName, splice_offset)
-            header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
 
-            if not silent:
-                print (''.join(omega_result['summary']))
-                print (''.join(omega_result['warnings']))
+    gcode_file = opf.readlines()
 
-            # write the output file
-            ######################
-            if not output_file:
-                output_file = input_file
-            opf = open(output_file, "w")
-            opf.writelines(header)
-            opf.writelines(v.processedGCode)
+    opf.close()
 
-    except SystemError:
-        gui.usererror("Could read input file\n'{}'".format(input_file))
-        exit(1)
+    # Process the file
+    # #################
+    for line in gcode_file:
+        result = gcode_parseline(splice_offset, line)
+        splice_offset = float(result['splice_offset'])
+        v.processedGCode.append(result['gcode'] + "\n")
+
+
+    gcode_processtoolchange(-1, v.totalMaterialExtruded, splice_offset)
+    omega_result = header_generateomegaheader(_taskName, splice_offset)
+    header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
+
+    if not silent:
+        print (''.join(omega_result['summary']))
+        print (''.join(omega_result['warnings']))
+
+    # write the output file
+    ######################
+    if not output_file:
+        output_file = input_file
+    opf = open(output_file, "w")
+    opf.writelines(header)
+    opf.writelines(v.processedGCode)
+
