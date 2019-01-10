@@ -207,6 +207,7 @@ def gcode_processtoolchange(new_tool, location, splice_offset):
             if v.spliceLength[-1] < v.minimalSpliceLength:
                 log_warning("Warning: Short splice (<{}mm) Length:{:-3.2f} Layer:{} Input:{}".format(v.minimalSpliceLength, length, v.currentLayer, v.currentTool))
 
+
     v.previousToolChangeLocation = location
     v.currentTool = new_tool
 
@@ -380,11 +381,13 @@ def gcode_parseline(splice_offset, gcode_fullline):
         v.minimalStartSpliceLength = float(gcode_fullline[21:])
         if v.minimalStartSpliceLength < 100:
             v.minimalStartSpliceLength = 100
+            log_warning("Minimal first slice length adjusted to 100mm")
 
     if gcode_fullline.startswith(";P2PP MINSPLICE="):
         v.minimalSpliceLength = float(gcode_fullline[16:])
-        if v.minimalSpliceLength < 40:
-            v. minimalSpliceLength = 40
+        if v.minimalSpliceLength < 70:
+            v. minimalSpliceLength = 70
+            log_warning("Minimal slice length adjusted to 70mm")
 
     if gcode_fullline.startswith(";P2PP MATERIAL_"):
         algorithm_processmaterialconfiguration(gcode_fullline[15:])
