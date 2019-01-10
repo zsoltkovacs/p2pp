@@ -403,6 +403,14 @@ def gcode_parseline(splice_offset, gcode_fullline):
         if v.side_wipe:
             v.side_wipe_length = 0
             v.wipe_start_extrusion= v.totalMaterialExtruded
+            idx=len(v.processedGCode)-1
+
+            while idx>-1 and v.processedGCode[idx] != "M900 K0":
+                if v.processedGCode[idx][0:1] == "G1":
+                    extruder_movement = get_gcode_parameter(v.processedGCode[idx], "E")
+                    if extruder_movement != "":
+                        v.side_wipe_length += extrudermovement
+                v.processedGCode[idx] = ";--- P2PP removed "+ v.processedGCode[idx]
 
     if ("TOOLCHANGE END" in gcode_fullline) and not v.side_wipe:
         v.withinToolchangeBlock = False
