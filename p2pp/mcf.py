@@ -363,6 +363,9 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if gcode_fullline.startswith(";P2PP SPLICEOFFSET="):
         splice_offset = float(gcode_fullline[19:])
 
+    if gcode_fullline.startswith(";P2PP LINEAIRPING"):
+        v.pingLengthMultiplier = 1.0
+
     if gcode_fullline.startswith(";P2PP SIDEWIPELOC="):
         v.side_wipe_loc = gcode_fullline[18:].strip("\n")
         v.side_wipe = True
