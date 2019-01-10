@@ -265,6 +265,7 @@ def get_gcode_parameter(gcode, parameter):
     return ""
 
 
+# restrospective cleanup of generated code AFTER detectinf a purge volume in print
 
 def retro_cleanup():
 
@@ -277,6 +278,7 @@ def retro_cleanup():
         if not v.processedGCode[idx].startswith("M73"):
             v.processedGCode[idx] = ";--- P2PP removed " + v.processedGCode[idx]
         idx -= 1
+
 
 # G Code parsing routine
 def gcode_parseline(splice_offset, gcode_fullline):
@@ -334,8 +336,9 @@ def gcode_parseline(splice_offset, gcode_fullline):
                 actual_extrusion_length = extruder_movement * v.extrusionMultiplier
                 v.totalMaterialExtruded += actual_extrusion_length
 
-                if (v.totalMaterialExtruded - v.lastPingExtruderPosition) > v.pingIntervalLength:
+                if (v.totalMaterialExtruded - v.lastPingExtruderPosition) > v.pingIntervalLength  and v.side_wipe_length==0:
                     v.pingIntervalLength = v.pingIntervalLength * v.pingLengthMultiplier
+
 
                     v.pingIntervalLength = min(v.maxPingIntervalLength, v.pingIntervalLength)
 
