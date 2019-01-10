@@ -68,7 +68,7 @@ This indicates all files are properly setup and has executed correctly.
 The remainder of the configuration is done in Slic3r PE
 
 ## Configuration of Slic3r PE:
-**NOTE:**
+**IMPORTANT:**
 > For now, there is no error checking on some of the P2PP codes. You need to ensure that they are followed **exactly**. **They are CaSe SeNSiTiVE!**
 
 If you want a head-start, you can import the configuration file in the splic3r_templates subfolder.  This file contains PLA Filament, print and printer definitions.   
@@ -133,7 +133,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ```
 9. Click the floppy-disk icon, and append "Palette P2PP" to the end of the Print Settings profile name.
 
-**NOTE:**
+**IMPORTANT:**
 > The minimal first slice length is 100mm. This is required to make the filament reach the outgoing drive. Minimum slice distance for following slices can be set as low as 40, however this will impact the speed at which filament can be created and so print speed may have to be adjusted accordingly
 
 
@@ -164,7 +164,7 @@ When setup correctly the script will be triggered automatically from Slic3r PE a
 During the conversion the script may come up with a window stating possible warninngs.
 
 The purge settings in Slic3r PE are defined under the purge volumes settings.  This button is only visible on the "Plater Tab" and only when a Multi-Material Printer Profile is selected when "Multi Material, Single Extruder" is enabled.  The information entered in this screen is volumetric. This means that you have to roughly multiply the number in these fields by a factor 2.4 in order to get the filament length. We've found that 180mm3 (75mm of Filament) works well. 
-> You do not need to set any volume for "Unloaded" - Leave this as 0. 
+> You do not need to set any volume for "Unloaded" - Leave this as 0. This is because we're never unloading filament, only ever loading as the Palette is providing continuous filament to the extruder.
 
 On your first prints make sure you review the output file to make sure it contains the Omega header. (bunch of commands starting with capital letter O (oh))
 
