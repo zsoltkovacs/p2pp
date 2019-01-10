@@ -411,6 +411,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
                     if extruder_movement != "":
                         v.side_wipe_length += extrudermovement
                 v.processedGCode[idx] = ";--- P2PP removed "+ v.processedGCode[idx]
+                idx -=1
 
     if ("TOOLCHANGE END" in gcode_fullline) and not v.side_wipe:
         v.withinToolchangeBlock = False
