@@ -314,8 +314,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
             if extruder_movement != "":
 
-                if v.withinToolchangeBlock:
-                    if v.side_wipe:
+                if v.withinToolchangeBlock and v.side_wipe:
                         v.side_wipe_length += extruder_movement * v.extrusionMultiplier
 
                 actual_extrusion_length = extruder_movement * v.extrusionMultiplier
@@ -331,7 +330,10 @@ def gcode_parseline(splice_offset, gcode_fullline):
                     v.processedGCode.append(";Palette 2 - PING\n")
                     v.processedGCode.append("G4 S0\n")
                     v.processedGCode.append("O31 {}\n".format(hexify_float(v.lastPingExtruderPosition)))
-                    # processedGCode.append("M117 PING {:03} {:-8.2f}mm]\n".format(len(pingExtruderPosition), lastPingExtruderPosition))
+
+            if v.withinToolchangeBlock and v.side_wipe:
+                return {'gcode': ';--- P2PP removed ' + gcode_fullline, 'splice_offset': splice_offset}
+
 
     # Process Toolchanges. Build up the O30 table with Splice info
     ##############################################################
@@ -363,7 +365,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if gcode_fullline.startswith(";P2PP SPLICEOFFSET="):
         splice_offset = float(gcode_fullline[19:])
 
-    if gcode_fullline.startswith(";P2PP LINEAIRPING"):
+    if gcode_fullline.startswith(";P2PP LINEARPING"):
         v.pingLengthMultiplier = 1.0
 
     if gcode_fullline.startswith(";P2PP SIDEWIPELOC="):
@@ -402,7 +404,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if ("TOOLCHANGE END" in gcode_fullline) and not v.side_wipe:
         v.withinToolchangeBlock = False
 
-    if ("PURGING FINISHED" in gcode_fullline) and  v.withinToolchangeBlock and v.side_wipe:
+    if ("P2PP ENDPURGETOWER" in gcode_fullline) and  v.withinToolchangeBlock and v.side_wipe:
         if v.side_wipe_length>0:
             v.processedGCode.append(";P2PP Side Wipe\n")
             v.processedGCode.append("G1 {} Y25\n".format(v.side_wipe_loc))
