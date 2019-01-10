@@ -265,6 +265,17 @@ def get_gcode_parameter(gcode, parameter):
 
 
 
+def retro_cleanup():
+
+    idx = len(v.processedGCode) - 1
+    while idx > -1 and not v.processedGCode[idx].startswith("M900"):
+        if v.processedGCode[idx][0:1] == "G1":
+            extruder_movement = get_gcode_parameter(v.processedGCode[idx], "E")
+            if extruder_movement != "":
+                v.side_wipe_length += extrudermovement
+        v.processedGCode[idx] = ";--- P2PP removed " + v.processedGCode[idx]
+        idx -= 1
+
 # G Code parsing routine
 def gcode_parseline(splice_offset, gcode_fullline):
 
@@ -282,6 +293,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM START") or \
        gcode_fullline.startswith("; CP EMPTY GRID START"):
         if not v.withinToolchangeBlock:
+            retro_cleanup()
             v.side_wipe_skip = v.side_wipe
 
     if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM END") or \
@@ -402,6 +414,8 @@ def gcode_parseline(splice_offset, gcode_fullline):
         if v.side_wipe:
             v.side_wipe_length = 0
             v.wipe_start_extrusion= v.totalMaterialExtruded
+            retro_cleanup()
+
 
     if ("TOOLCHANGE END" in gcode_fullline) and not v.side_wipe:
         v.withinToolchangeBlock = False
