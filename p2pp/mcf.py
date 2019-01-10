@@ -109,10 +109,10 @@ def header_generateomegaheader(job_name, splice_offset):
                 v.filemantDescription[i] = '000000'
 
             header.append("D{}{}{}_{} ".format(i + 1,
-                                            v.filamentColorCode[i].strip("\n"),
-                                            findNearestColor(v.filamentColorCode[i].strip("\n")),
-                                            v.filemantDescription[i].strip("\n")
-                                            ))
+                                               v.filamentColorCode[i].strip("\n"),
+                                               findNearestColor(v.filamentColorCode[i].strip("\n")),
+                                               v.filemantDescription[i].strip("\n")
+                                               ))
         else:
             header.append("D0 ")
 
@@ -206,7 +206,6 @@ def gcode_processtoolchange(new_tool, location, splice_offset):
         else:
             if v.spliceLength[-1] < v.minimalSpliceLength:
                 log_warning("Warning: Short splice (<{}mm) Length:{:-3.2f} Layer:{} Input:{}".format(v.minimalSpliceLength, length, v.currentLayer, v.currentTool))
-
 
     v.previousToolChangeLocation = location
     v.currentTool = new_tool
@@ -407,15 +406,15 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if ("TOOLCHANGE END" in gcode_fullline) and not v.side_wipe:
         v.withinToolchangeBlock = False
 
-    if ("P2PP ENDPURGETOWER" in gcode_fullline) and  v.withinToolchangeBlock and v.side_wipe:
+    if ("P2PP ENDPURGETOWER" in gcode_fullline) and v.withinToolchangeBlock and v.side_wipe:
         if v.side_wipe_length>0:
             v.processedGCode.append(";P2PP Side Wipe\n")
             v.processedGCode.append("G1 {} Y25\n".format(v.side_wipe_loc))
             wipespeed = int(25000/(v.side_wipe_length))
             wipespeed = min( wipespeed, 2000)
-            v.processedGCode.append("G1 {} Y175 E{} F{}\n".format(v.side_wipe_loc, v.side_wipe_length, wipespeed ))
+            v.processedGCode.append("G1 {} Y175 E{} F{}\n".format(v.side_wipe_loc, v.side_wipe_length, wipespeed))
             v.processedGCode.append("G1 X245 F200\n")
-            v.processedGCode.append(";Side Wipe Check {} - {} = {} (purged {})\n".format(v.totalMaterialExtruded,v.wipe_start_extrusion, v.totalMaterialExtruded-v.wipe_start_extrusion, v.side_wipe_length))
+            v.processedGCode.append(";Side Wipe Check {} - {} = {} (purged {})\n".format(v.totalMaterialExtruded, v.wipe_start_extrusion, v.totalMaterialExtruded-v.wipe_start_extrusion, v.side_wipe_length))
             v.side_wipe_length = 0
         v.withinToolchangeBlock = False
 
@@ -439,8 +438,6 @@ def gcode_parseline(splice_offset, gcode_fullline):
 # Generate the file and glue it all together!
 # #####################################################################
 def generate(input_file, output_file, printer_profile, splice_offset, silent):
-
-
     v.printerProfileString = printer_profile
     basename = os.path.basename(input_file)
     _taskName = os.path.splitext(basename)[0]
@@ -451,7 +448,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         try:
             opf = open(input_file)
         except:
-            gui.usererror("Could read input file\n'{}'".format(input_file))
+            gui.usererror("Could'nt read input file\n'{}'".format(input_file))
             exit(1)
 
 
