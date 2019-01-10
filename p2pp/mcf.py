@@ -120,7 +120,8 @@ def header_generateomegaheader(job_name, splice_offset):
 
     header.append('O26 ' + hexify_short(len(v.spliceExtruderPosition)) + "\n")
     header.append('O27 ' + hexify_short(len(v.pingExtruderPosition)) + "\n")
-    header.append('O28 ' + hexify_short(len(v.spliceAlgorithmTable)) + "\n")
+    header.append("O28 D{:0>4d}\n".format(len(v.spliceAlgorithmTable)))
+    #header.append('O28 ' + hexify_short(len(v.spliceAlgorithmTable)) + "\n")
     header.append('O29 ' + hexify_short(v.hotSwapCount) + "\n")
 
     for i in range(len(v.spliceExtruderPosition)):
@@ -420,7 +421,6 @@ def gcode_parseline(splice_offset, gcode_fullline):
             v.side_wipe_length = 0
             v.wipe_start_extrusion= v.totalMaterialExtruded
             retro_cleanup()
-
 
     if ("TOOLCHANGE END" in gcode_fullline) and not v.side_wipe:
         v.withinToolchangeBlock = False
