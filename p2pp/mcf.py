@@ -213,22 +213,21 @@ def gcode_processtoolchange(new_tool, location, splice_offset):
     v.currentTool = new_tool
 
 
-# Gcode remove speed information from a G1 statement
-def gcode_removespeedinfo(gcode):
+def gcode_removeparams(gcode, params):
     result = ""
     parts = gcode.split(" ")
 
     for subcommand in parts:
         if subcommand == "":
             continue
-        if subcommand[0] != "F":
+        if not subcommand[0] in params:
             result += subcommand+" "
 
+    result.strip(" ")
     if len(result) < 4:
         return ";--- P2PP Removed "+gcode
 
     return result
-
 
 def gcode_filtertoolchangeblock(line, gcode_command_2, gcode_command_4):
     # --------------------------------------------------------------
@@ -244,7 +243,7 @@ def gcode_filtertoolchangeblock(line, gcode_command_2, gcode_command_4):
         for gcode_filter in discarded_moves:
             if gcode_filter in line:         # remove specific MMU2 extruder moves
                 return ";--- P2PP removed "+line
-        return gcode_removespeedinfo(line)
+        return gcode_gcode_removeparams(line,"F")
 
     if gcode_command_4 == "M907":
         return ";P2PP removed " + line   # remove motor power instructions
@@ -283,8 +282,12 @@ def retro_cleanup():
             v.processedGCode[idx] = ";--- P2PP removed " + v.processedGCode[idx]
         idx -= 1
 
-
 # G Code parsing routine
+def MovedInTower():
+    if v.currentPositionX >= v.wipe_tower_info['minx'] and v.currentPositionX <= v.wipe_tower_info['maxx'] and v.currentPositionY >= v.wipe_tower_info['miny'] and v.currentPositionY <=v.wipe_tower_info['maxy']:
+        return True
+    return False
+
 def gcode_parseline(splice_offset, gcode_fullline):
 
     if not gcode_fullline[0] == ";":
@@ -294,12 +297,22 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if len(gcode_fullline) < 2 or gcode_fullline.startswith("M73") or gcode_fullline.startswith("M900"):
         return {'gcode': gcode_fullline, 'splice_offset': splice_offset}
 
+    gcode_command  = gcode_fullline[0]
     gcode_command2 = gcode_fullline[0:2]
     gcode_command4 = gcode_fullline[0:4]
 
+    if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM START"):
+        v.defineTower = True
+
+    if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM END"):
+        v.defineTower = False
+        v.processedGCode.append("; TOWER COORDINATES ({:-8.2f},{:-8.2f}) to ({:-8.2f},{:-8.2f})".format(
+            v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy']
+        ))
 
     if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM START") or \
        gcode_fullline.startswith("; CP EMPTY GRID START"):
+
         if not v.withinToolchangeBlock:
             retro_cleanup()
             v.side_wipe_skip = v.side_wipe
@@ -308,8 +321,31 @@ def gcode_parseline(splice_offset, gcode_fullline):
        gcode_fullline.startswith("; CP EMPTY GRID END"):
        v.side_wipe_skip = False
 
+    ### Find wipe tower coordinates
+    ###############################
+    if gcode_command == "G" and v.defineTower:
+        parmX = get_gcode_parameter(gcode_fullline, "X")
+        parmY = get_gcode_parameter(gcode_fullline, "Y")
+        v.processedGCode.append("Add point ({},{})".format(parmX, parmY))
+        if parmX != "":
+            v.wipe_tower_info['maxx'] = max (v.wipe_tower_info['maxx'],parmX)
+            v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], parmX)
+            if not v.side_wipe_skip:
+                v.currentPositionX = parmX
+
+        if parmY != "":
+            v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], parmY)
+            v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], parmY)
+            if not v.side_wipe_skip:
+                v.currentPositionY = parmY
+
     if v.side_wipe_skip == True:
         return {'gcode': ";--- P2PP removed "+gcode_fullline , 'splice_offset': splice_offset}
+
+    if MovedInTower() and v.side_wipe:
+        v.processedGCode.append("; COORDINATES REMOVED FROM  TOWERMOVE "+gcode_fullline)
+        gcode_gcode_removeparams(line, "XY")
+
 
     # Processing of extrusion speed commands
     # ############################################
@@ -325,9 +361,6 @@ def gcode_parseline(splice_offset, gcode_fullline):
         if new_multiplier != "":
             v.extrusionMultiplier = new_multiplier / 100
 
-    # Processing of Extruder Movement commands
-    # and generating ping at threshold intervals
-    # ############################################
     if gcode_command2 == "G1":
 
             extruder_movement = get_gcode_parameter(gcode_fullline, "E")
