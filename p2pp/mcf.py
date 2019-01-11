@@ -243,7 +243,7 @@ def gcode_filtertoolchangeblock(line, gcode_command_2, gcode_command_4):
         for gcode_filter in discarded_moves:
             if gcode_filter in line:         # remove specific MMU2 extruder moves
                 return ";--- P2PP removed "+line
-        return gcode_gcode_removeparams(line,"F")
+        return gcode_removeparams(line,"F")
 
     if gcode_command_4 == "M907":
         return ";P2PP removed " + line   # remove motor power instructions
@@ -344,7 +344,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
     if MovedInTower() and v.side_wipe:
         v.processedGCode.append("; COORDINATES REMOVED FROM  TOWERMOVE "+gcode_fullline)
-        gcode_gcode_removeparams(line, "XY")
+        gcode_removeparams(line, "XY")
 
 
     # Processing of extrusion speed commands
