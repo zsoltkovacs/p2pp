@@ -269,7 +269,7 @@ def gcode_filtertoolchangeblock(line, gcode_command_2, gcode_command_4):
         for gcode_filter in discarded_moves:
             if gcode_filter in line:         # remove specific MMU2 extruder moves
                 return ";--- P2PP removed "+line
-        return gcode_removeparams(line,"F")
+        return gcode_removeparams(line,["F"])
 
     if gcode_command_4 == "M907":
         return ";P2PP removed " + line   # remove motor power instructions
@@ -333,7 +333,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
     if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM END"):
         v.defineTower = False
-        v.processedGCode.append("; TOWER COORDINATES ({:-8.2f},{:-8.2f}) to ({:-8.2f},{:-8.2f})".format(
+        v.processedGCode.append("; TOWER COORDINATES ({:-8.2f},{:-8.2f}) to ({:-8.2f},{:-8.2f})\n".format(
             v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy']
         ))
 
@@ -350,27 +350,34 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
     ### Find wipe tower coordinates
     ###############################
-    if gcode_command == "G" and v.defineTower:
+    if gcode_command == "G":
+
         parmX = get_gcode_parameter(gcode_fullline, "X")
         parmY = get_gcode_parameter(gcode_fullline, "Y")
+
+
         if parmX != "":
-            v.wipe_tower_info['maxx'] = max (v.wipe_tower_info['maxx'],parmX)
-            v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], parmX)
+            if v.defineTower:
+                v.wipe_tower_info['maxx'] = max (v.wipe_tower_info['maxx'],parmX)
+                v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], parmX)
             if not v.side_wipe_skip:
-                v.currentPositionX = parmX
+                   v.currentPositionX = parmX
 
         if parmY != "":
-            v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], parmY)
-            v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], parmY)
+            if v.defineTower:
+                v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], parmY)
+                v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], parmY)
             if not v.side_wipe_skip:
                 v.currentPositionY = parmY
 
-    if v.side_wipe_skip == True:
+        if MovedInTower() and v.side_wipe and not v.side_wipe_skip:
+            v.processedGCode.append(";--- P2PP removed - action in purgetower "+gcode_fullline+"\n")
+            gcode_fullline = gcode_removeparams(gcode_fullline, ["X","Y"])
+
+    if v.side_wipe_skip:
         return {'gcode': ";--- P2PP removed "+gcode_fullline , 'splice_offset': splice_offset}
 
-    if MovedInTower() and v.side_wipe:
-        v.processedGCode.append("; COORDINATES REMOVED FROM  TOWERMOVE "+gcode_fullline)
-        gcode_removeparams(gcode_fullline, "XY")
+
 
 
     # Processing of extrusion speed commands
