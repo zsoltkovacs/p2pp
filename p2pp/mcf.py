@@ -277,7 +277,7 @@ def retro_cleanup():
         if v.processedGCode[idx][0:1] == "G1":
             extruder_movement = get_gcode_parameter(v.processedGCode[idx], "E")
             if extruder_movement != "":
-                v.side_wipe_length += extrudermovement
+                v.side_wipe_length += extruder_movement
         if not v.processedGCode[idx].startswith("M73"):
             v.processedGCode[idx] = ";--- P2PP removed " + v.processedGCode[idx]
         idx -= 1
