@@ -344,7 +344,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
     if MovedInTower() and v.side_wipe:
         v.processedGCode.append("; COORDINATES REMOVED FROM  TOWERMOVE "+gcode_fullline)
-        gcode_removeparams(line, "XY")
+        gcode_removeparams(gcode_fullline, "XY")
 
 
     # Processing of extrusion speed commands
