@@ -33,3 +33,7 @@ def minutes( sec ):
 
 def seconds(sec):
     return int(sec%60)
+
+
+def comment_out(line):
+    return "; -- P2PP removed" + line
