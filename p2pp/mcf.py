@@ -438,7 +438,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
                 sweep =  min(v.side_wipe_length, 20)
                 v.side_wipe_length -=20
 
-                wipespeed = int(25000/(v.sweep))
+                wipespeed = int(25000/(sweep))
                 wipespeed = min( wipespeed, 5000)
                 v.processedGCode.append("G1 {} Y{} E{} F{}\n".format(v.side_wipe_loc, moveto, sweep, wipespeed ))
 
