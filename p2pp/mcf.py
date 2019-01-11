@@ -425,7 +425,6 @@ def gcode_parseline(splice_offset, gcode_fullline):
             v.wipe_start_extrusion= v.totalMaterialExtruded
             retro_cleanup()
 
-
     if ("TOOLCHANGE END" in gcode_fullline) and not v.side_wipe:
         v.withinToolchangeBlock = False
 
@@ -484,7 +483,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         try:
             opf = open(input_file)
         except:
-            gui.usererror("Could read input file\n'{}'".format(input_file))
+            gui.usererror("Could'nt read input file\n'{}'".format(input_file))
             exit(1)
 
 
