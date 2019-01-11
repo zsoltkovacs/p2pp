@@ -434,7 +434,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
             v.processedGCode.append("G1 {} Y25\n".format(v.side_wipe_loc))
 
             moveto = 175
-            while side_wipe_length > 0:
+            while v.side_wipe_length > 0:
                 sweep =  min(v.side_wipe_length, 20)
                 v.side_wipe_length -=20
 
