@@ -51,13 +51,39 @@ def algorithm_processmaterialconfiguration(splice_info):
                                                                          fields[4])
 
 
+def algorithm_transitionused(fromInput, toInput):
+    if len(v.spliceUsedTool)>0 :
+
+       for idx in range(len(v.spliceUsedTool)-1):
+           if  v.spliceUsedTool[idx] == fromInput and v.spliceUsedTool[idx+1] == toInput:
+               return True
+
+    return False
+
+
+
+
 def algorithm_createtable():
+
+    spliceAlgoList = []
     for i in range(4):
         for j in range(4):
+
             if i==j:
                 continue
-            if not v.paletteInputsUsed[i] or not v.paletteInputsUsed[j]:
+
+            try:
+                algoKey = "{}{}".format(v.usedFilamentTypes.index(v.filamentType[i])+1,v.usedFilamentTypes.index(v.filamentType[j])+1)
+                if algoKey in spliceAlgoList:
+                    continue
+            except:
                 continue
+
+            if not algorithm_transitionused(i,j):
+                continue
+
+            spliceAlgoList.append(algoKey)
+
             try:
                 algo = v.spliceAlgorithmDictionary["{}-{}".format(v.filamentType[i], v.filamentType[j])]
             except KeyError:
@@ -65,11 +91,8 @@ def algorithm_createtable():
                                                                                                              v.filamentType[j]))
                 algo = v.defaultSpliceAlgorithm
 
-            v.spliceAlgorithmTable.append("D{}{} {}".format(i + 1,
-                                                            j + 1,
-                                                            algo
-                                                            )
-                                          )
+
+            v.spliceAlgorithmTable.append("D{} {}".format(algoKey,algo))
 
 
 # Generate the Omega - Header that drives the Palette to generate filament
@@ -108,7 +131,7 @@ def header_generateomegaheader(job_name, splice_offset):
                         i))
                 v.filemantDescription[i] = '000000'
 
-            header.append("D{}{}{}_{} ".format(i + 1,
+            header.append("D{}{}{}_{} ".format(v.usedFilamentTypes.index(v.filamentType[i])+1,
                                             v.filamentColorCode[i].strip("\n"),
                                             findNearestColor(v.filamentColorCode[i].strip("\n")),
                                             v.filemantDescription[i].strip("\n")
@@ -120,8 +143,11 @@ def header_generateomegaheader(job_name, splice_offset):
 
     header.append('O26 ' + hexify_short(len(v.spliceExtruderPosition)) + "\n")
     header.append('O27 ' + hexify_short(len(v.pingExtruderPosition)) + "\n")
-    header.append("O28 D{:0>4d}\n".format(len(v.spliceAlgorithmTable)))
-    #header.append('O28 ' + hexify_short(len(v.spliceAlgorithmTable)) + "\n")
+    if len(v.spliceAlgorithmTable) > 9:
+        log_warning("ATTENTION: THIS FILE WILL NOT POTENTIALLY NOT WORK CORRECTY DUE TO A BUG IN PALETTE2 PLUGIN")
+        header.append("O28 D{:0>4d}\n".format(len(v.spliceAlgorithmTable)))
+    else:
+        header.append('O28 ' + hexify_short(len(v.spliceAlgorithmTable)) + "\n")
     header.append('O29 ' + hexify_short(v.hotSwapCount) + "\n")
 
     for i in range(len(v.spliceExtruderPosition)):
@@ -292,7 +318,8 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
     if not gcode_fullline[0] == ";":
         gcode_fullline = gcode_fullline.split(';')[0]
-        gcode_fullline = gcode_fullline.rstrip('\n')
+
+    gcode_fullline = gcode_fullline.rstrip('\n')
 
     if len(gcode_fullline) < 2 or gcode_fullline.startswith("M73") or gcode_fullline.startswith("M900"):
         return {'gcode': gcode_fullline, 'splice_offset': splice_offset}
@@ -326,7 +353,6 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if gcode_command == "G" and v.defineTower:
         parmX = get_gcode_parameter(gcode_fullline, "X")
         parmY = get_gcode_parameter(gcode_fullline, "Y")
-        v.processedGCode.append("Add point ({},{})".format(parmX, parmY))
         if parmX != "":
             v.wipe_tower_info['maxx'] = max (v.wipe_tower_info['maxx'],parmX)
             v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], parmX)
@@ -401,6 +427,8 @@ def gcode_parseline(splice_offset, gcode_fullline):
     #######################################
     if gcode_fullline.startswith(";P2PP FT=") and v.allowFilamentInformationUpdate:  # filament type information
         v.filamentType[v.currentTool] = gcode_fullline[9:].strip("\n")
+        if not v.filamentType[v.currentTool] in v.usedFilamentTypes:
+            v.usedFilamentTypes.append(v.filamentType[v.currentTool])
 
     if gcode_fullline.startswith(";P2PP FN=") and v.allowFilamentInformationUpdate:  # filament color information
         p2ppinfo = gcode_fullline[9:].strip("\n-+!@#$%^&*(){}[];:\"\',.<>/?").replace(" ", "_")

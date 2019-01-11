@@ -20,10 +20,12 @@ paletteInputsUsed = [False,
                      False,
                      False,
                      False]
+
 filamentType = ["",
                 "",
                 "",
                 ""]
+
 filemantDescription = ["Unnamed",
                        "Unnamed",
                        "Unnamed",
@@ -32,6 +34,8 @@ filamentColorCode = ["-",
                      "-",
                      "-",
                      "-"]
+
+usedFilamentTypes = []
 
 defaultSpliceAlgorithm = "D000 D000 D000"
 processWarnings = []
