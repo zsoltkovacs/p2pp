@@ -270,6 +270,9 @@ def get_gcode_parameter(gcode, parameter):
 
 def retro_cleanup():
 
+
+    if not v.side_wipe:
+        return
     idx = len(v.processedGCode) - 1
     while idx > -1 and not v.processedGCode[idx].startswith("M900"):
         if v.processedGCode[idx][0:1] == "G1":
