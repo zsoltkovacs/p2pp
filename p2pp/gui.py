@@ -39,7 +39,7 @@ def clicked():
 
 
 def usererror(body_text):
-    tkMessageBox.askcancel("P2PP - Error Occurred", body_text)
+    tkMessageBox.showerror("P2PP - Error Occurred", body_text)
 
 
 def show_warnings(warning_list):

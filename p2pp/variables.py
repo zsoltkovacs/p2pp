@@ -44,6 +44,7 @@ spliceAlgorithmDictionary = {}
 
 printerProfileString = ''  # A unique ID linked to a printer configuration profile in the Palette 2 hardware.
 
+gcode_file = []
 processedGCode = []  # final output array with Gcode
 
 # these  variables are used to build the splice information table (Omega-30 commands in GCode) that will drive the Palette2
@@ -93,6 +94,7 @@ lastPingExtruderPosition = 0
 pingIntervalLength = 350
 maxPingIntervalLength = 3000
 pingLengthMultiplier = 1.03
+sidewipecorrection=1.0
 
 
 # currenttool/lastLocation are variables required to generate O30 splice info.   splice info is generated at the end of the tool path

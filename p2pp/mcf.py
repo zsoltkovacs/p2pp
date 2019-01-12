@@ -60,9 +60,6 @@ def algorithm_transitionused(fromInput, toInput):
 
     return False
 
-
-
-
 def algorithm_createtable():
 
     spliceAlgoList = []
@@ -457,6 +454,13 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if gcode_fullline.startswith(";P2PP LINEARPING"):
         v.pingLengthMultiplier = 1.0
 
+    if gcode_fullline.startswith(";P2PP SIDEWIPECORRECTION="):
+        v.sidewipecorrection = float(gcode_fullline[26:])
+        if v.sidewipecorrection <0.9 or v.sidewipecorrection>1.10:
+            log_warning("Side Wipe Correction {} out of range [0.9 - 1.1] using 1.0".format(v.sidewipecorrection))
+            v,sidewipecorrection = 1.0
+
+
     if gcode_fullline.startswith(";P2PP SIDEWIPELOC="):
         v.side_wipe_loc = gcode_fullline[18:].strip("\n")
         v.side_wipe = True
@@ -508,7 +512,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
                 wipespeed = int(25000/(sweep))
                 wipespeed = min( wipespeed, 5000)
-                v.processedGCode.append("G1 {} Y{} E{} F{}\n".format(v.side_wipe_loc, moveto, sweep, wipespeed ))
+                v.processedGCode.append("G1 {} Y{} E{} F{}\n".format(v.side_wipe_loc, moveto, sweep * v.sidewipecorrection, wipespeed ))
 
                 if moveto == 175:
                     moveto = 45
