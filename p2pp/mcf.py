@@ -457,8 +457,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if gcode_fullline.startswith(";P2PP SIDEWIPECORRECTION="):
         v.sidewipecorrection = float(gcode_fullline[26:])
         if v.sidewipecorrection <0.9 or v.sidewipecorrection>1.10:
-            log_warning("Side Wipe Correction {} out of range [0.9 - 1.1] using 1.0".format(v.sidewipecorrection))
-            v,sidewipecorrection = 1.0
+            v.sidewipecorrection = 1.0
 
 
     if gcode_fullline.startswith(";P2PP SIDEWIPELOC="):
