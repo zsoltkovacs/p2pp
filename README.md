@@ -92,6 +92,14 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP MATERIAL_PVA_PLA_0_0_0
     ;P2PP MATERIAL_PLA_PLA_0_0_0
     ;P2PP MATERIAL_PET_PET_0_0_0
+    
+    ; Following settings are optional (see description below)
+    ;P2PP LINEARPING
+    ;P2PP EXTRAENDFILAMENT=150
+    
+    ;P2PP SIDEWIPELOC=X253.9
+    ;P2PP SIDEWIPECORRECTION=1.00
+    
     ```
 
 5. In the "After layer change G-code" INSERT (not overwrite) the following line.
