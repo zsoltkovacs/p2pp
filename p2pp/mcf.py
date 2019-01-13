@@ -118,20 +118,20 @@ def header_generateomegaheader(job_name, splice_offset):
                 log_warning(
                     "Filament #{} is missing Material Type, make sure to add ;P2PP FT=[filament_type] to filament GCode".format(
                         i))
-            if v.filemantDescription[i] == "Unnamed":
+            if v.filamentDescription[i] == "Unnamed":
                 log_warning(
                     "Filament #{} is missing job_name, make sure to add ;P2PP FN=[filament_preset] to filament GCode".format(
                         i))
-            if v.filemantDescription[i] == "-":
+            if v.filamentDescription[i] == "-":
                 log_warning(
                     "Filament #{} is missing Color info, make sure to add ;P2PP FC=[extruder_colour] to filament GCode".format(
                         i))
-                v.filemantDescription[i] = '000000'
+                v.filamentDescription[i] = '000000'
 
             header.append("D{}{}{}_{} ".format(v.usedFilamentTypes.index(v.filamentType[i])+1,
                                             v.filamentColorCode[i].strip("\n"),
                                             findNearestColor(v.filamentColorCode[i].strip("\n")),
-                                            v.filemantDescription[i].strip("\n")
+                                            v.filamentDescription[i].strip("\n")
                                             ))
         else:
             header.append("D0 ")
@@ -311,6 +311,60 @@ def MovedInTower():
         return True
     return False
 
+def parseSlic3rConfig():
+
+    gotFilamentColor = False
+    gotFilamentType = False
+    gotFilamentDesc = False
+
+    for idx in reversed(range(len(v.inputGcode))):
+        gcodeline = v.inputGcode[idx].rstrip("\n")
+
+        if gcodeline.startswith("; avoid_crossing_perimeters"):
+            break
+
+        if gcodeline.startswith("; extruder_colour"):
+
+            parmstart = gcodeline.find("#")
+            if parmstart != -1:
+                gcodeline = gcodeline[parmstart+1:].replace(";","")
+                filamentColor = gcodeline.split("#")
+
+            gotFilamentColor = (len(filamentColor)==4)
+
+            if gotFilamentColor:
+                v.filamentColorCode = filamentColor
+                for item in v.filamentColorCode:
+                    if not item in v.usedFilamentTypes:
+                        v.usedFilamentTypes.append(item)
+            continue
+
+        if gcodeline.startswith("; filament_settings_id"):
+
+            parmstart = gcodeline.find("=")
+            if parmstart != -1:
+                gcodeline = gcodeline[parmstart+1:].strip(" ").replace(" ","_").replace('"',"")
+                filamentDesc = gcodeline.split(";")
+
+            gotFilamentDesc = (len(filamentDesc)==4)
+
+            if gotFilamentDesc:
+                v.filamentDescription = filamentDesc
+            continue
+
+        if gcodeline.startswith("; filament_type"):
+            parmstart = gcodeline.find("=")
+            if parmstart != -1:
+                gcodeline = gcodeline[parmstart+1:].strip(" ").replace(" ","_").replace('"',"")
+                filamentType = gcodeline.split(";")
+
+            gotFilamentType= (len(filamentType)==4)
+
+            if gotFilamentType:
+                v.filamentType = filamentType
+            continue
+
+
 def gcode_parseline(splice_offset, gcode_fullline):
 
     if not gcode_fullline[0] == ";":
@@ -436,7 +490,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
     if gcode_fullline.startswith(";P2PP FN=") and v.allowFilamentInformationUpdate:  # filament color information
         p2ppinfo = gcode_fullline[9:].strip("\n-+!@#$%^&*(){}[];:\"\',.<>/?").replace(" ", "_")
-        v.filemantDescription[v.currentTool] = p2ppinfo
+        v.filamentDescription[v.currentTool] = p2ppinfo
 
     if gcode_fullline.startswith(";P2PP FC=#") and v.allowFilamentInformationUpdate:  # filament color information
         p2ppinfo = gcode_fullline[10:]
@@ -558,13 +612,15 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
             exit(1)
 
 
-    gcode_file = opf.readlines()
+    v.inputGcode= opf.readlines()
 
     opf.close()
 
+    #parseSlic3rConfig()
+
     # Process the file
     # #################
-    for line in gcode_file:
+    for line in v.inputGcode:
         result = gcode_parseline(splice_offset, line)
         splice_offset = float(result['splice_offset'])
         v.processedGCode.append(result['gcode'] + "\n")

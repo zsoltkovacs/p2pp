@@ -26,7 +26,7 @@ filamentType = ["",
                 "",
                 ""]
 
-filemantDescription = ["Unnamed",
+filamentDescription = ["Unnamed",
                        "Unnamed",
                        "Unnamed",
                        "Unnamed"]
@@ -44,7 +44,7 @@ spliceAlgorithmDictionary = {}
 
 printerProfileString = ''  # A unique ID linked to a printer configuration profile in the Palette 2 hardware.
 
-gcode_file = []
+inputGcode = []
 processedGCode = []  # final output array with Gcode
 
 # these  variables are used to build the splice information table (Omega-30 commands in GCode) that will drive the Palette2
