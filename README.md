@@ -141,7 +141,10 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 1. In Slic3r, Click the "Filament Settings Tab"
 2. Navigate to the "Custom G-Code" menu item.
 2. Add the following lines exactly as shown to *EACH* filament profile you want to use with the palette 2. These changes will not interfere with the normal working under other profiles as only comments are added to the gcode file.
+The P2PP ENDPRUGETOWER has to be the very first line in the filament description.
 ```
+;P2PP ENDPURGETOWER
+
 ;P2PP FN=[filament_preset]
 ;P2PP FT=[filament_type]
 ;P2PP FC=[extruder_colour]
