@@ -4,7 +4,7 @@ __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
 __license__ = 'GPL'
-__version__ = '1.0.0'
+__version__ = '2.1 RC1'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 __status__ = 'Beta'
@@ -112,12 +112,14 @@ def header_generateomegaheader(job_name, splice_offset):
 
     header.append("O25 ")
 
+
     for i in range(4):
         if v.paletteInputsUsed[i]:
             if v.filamentType[i] == "":
                 log_warning(
                     "Filament #{} is missing Material Type, make sure to add ;P2PP FT=[filament_type] to filament GCode".format(
                         i))
+
             if v.filamentDescription[i] == "Unnamed":
                 log_warning(
                     "Filament #{} is missing job_name, make sure to add ;P2PP FN=[filament_preset] to filament GCode".format(
@@ -384,6 +386,10 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
     if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM END"):
         v.defineTower = False
+        v.wipe_tower_info['minx']-=2
+        v.wipe_tower_info['miny']-=2
+        v.wipe_tower_info['maxx']+=2
+        v.wipe_tower_info['maxy']+=2
         v.processedGCode.append("; TOWER COORDINATES ({:-8.2f},{:-8.2f}) to ({:-8.2f},{:-8.2f})\n".format(
             v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy']
         ))
@@ -508,6 +514,12 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if gcode_fullline.startswith(";P2PP LINEARPING"):
         v.pingLengthMultiplier = 1.0
 
+    if gcode_fullline.startswith(";P2PP SIDEWIPEMINY="):
+        v.sideWipeMinY=float(gcode_fullline[19:])
+
+    if gcode_fullline.startswith(";P2PP SIDEWIPEMAXY="):
+        v.sideWipeMaxY=float(gcode_fullline[19:])
+
     if gcode_fullline.startswith(";P2PP SIDEWIPECORRECTION="):
         v.sidewipecorrection = float(gcode_fullline[26:])
         if v.sidewipecorrection <0.9 or v.sidewipecorrection>1.10:
@@ -555,22 +567,29 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
     if ("P2PP ENDPURGETOWER" in gcode_fullline) and  v.withinToolchangeBlock and v.side_wipe:
         if v.side_wipe_length>0:
-            v.processedGCode.append(";P2PP Side Wipe\n")
-            v.processedGCode.append("G1 {} Y25\n".format(v.side_wipe_loc))
-
-            moveto = 175
+            v.processedGCode.append(";P2PP Side Wipe\n")G1 F8640
+            v.processedGCode.append("G1 F8640\n")
+            v.processedGCode.append("G0 {} Y{} F2500\n".format(v.side_wipe_loc, v.sideWipeMinY))
+            sweepBaseSpeed = 25000 * abs(v.sideWipeMaxY - v.sideWipeMinY)/150
+            sweeplen = 20 *abs(v.sideWipeMaxY - v.sideWipeMinY)/150
+            feedRate =  -1
+            moveto = v.sideWipeMaxY
             while v.side_wipe_length > 0:
-                sweep =  min(v.side_wipe_length, 20)
-                v.side_wipe_length -=20
+                sweep =  min(v.side_wipe_length, sweeplen)
+                v.side_wipe_length -=sweeplen
 
-                wipespeed = int(25000/(sweep))
+                wipespeed = int(sweepBaseSpeed/sweep)
                 wipespeed = min( wipespeed, 5000)
-                v.processedGCode.append("G1 {} Y{} E{} F{}\n".format(v.side_wipe_loc, moveto, sweep * v.sidewipecorrection, wipespeed ))
+                if feedRate != wipespeed:
+                    v.processedGCode.append("G1 F{}\n".format( wipespeed))
+                    feedRate = wipespeed
 
-                if moveto == 175:
-                    moveto = 45
+                v.processedGCode.append("G1 {} Y{} E{}\n".format(v.side_wipe_loc, moveto, sweep * v.sidewipecorrection))
+
+                if moveto == v.sideWipeMaxY:
+                    moveto = v.sideWipeMinY
                 else:
-                    moveto = 175
+                    moveto = v.sideWipeMaxY
 
             v.processedGCode.append("G1 X245 F200\n")
             v.side_wipe_length = 0

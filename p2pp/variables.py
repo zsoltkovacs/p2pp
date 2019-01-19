@@ -62,6 +62,8 @@ side_wipe = False
 side_wipe_length = 0
 side_wipe_skip = False
 defineTower = False
+sideWipeMinY = 25
+sideWipeMaxY = 175
 
 wipe_tower_info = {'minx': 9999,
                    'miny': 9999,
