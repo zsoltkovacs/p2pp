@@ -204,7 +204,10 @@ The purge settings in Slic3r PE are defined under the purge volumes settings.  T
 > You do not need to set any volume for "Unloaded" - Leave this as 0. 
 
    ```
-  SLIC3R PE uses volume instead of length in the purge settings.  For 1.75mm filament, 1mm of filament repesents a volume of approx 2.4mm3.  So in order to relate to values used in Chroma or Canvas you have to divide the Slic3r PE values by a factor 2.4!
+  SLIC3R PE uses volume instead of length in the purge settings.  
+  For 1.75mm filament, 1mm of filament repesents a volume of approx 2.4mm3.  
+  In order to relate to values used in Chroma or Canvas,you have to divide 
+  the Slic3r PE values by a factor 2.4!
   ```   
 
 
