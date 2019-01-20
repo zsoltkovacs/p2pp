@@ -94,11 +94,15 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP MATERIAL_PET_PET_0_0_0
     
     ; Following settings are optional (see description below)
+    
     ;P2PP LINEARPING
     ;P2PP EXTRAENDFILAMENT=150
     
+    ; Following optional settings control the SIDE TRANSITIONING (see description below)
     ;P2PP SIDEWIPELOC=X253.9
-    ;P2PP SIDEWIPECORRECTION=1.00
+    ;P2PP SIDEWIPEMINY=45
+    ;P2PP SIDEWIPEMAXY=195
+    ;P2PP SIDEWIPECORRECTION=1.0
     
     ```
 
@@ -131,12 +135,22 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
  > **;P2PP SIDEWIPELOC=X#** *[EXPERIMENTAL]*
   This is used to define the location on the X-Axis the printer needs to go to to do a side transition instead of doing a tower purge.  In Slic3r all still needs to be setup with a purge tower.  p2pp will convert the tower purges into side wipes and fileter out all purges that are not necessary (i.e. empty towe shells). 
   If you want to perform a side wipe on the MK3 use the following line.  
-  ...
+  ```
   ;P2PP SIDEWIPELOC=X254
-  ,,,
+  ```
 
-> **;P2PP SIDEWIPECORRECTION=#** *[EXPERIMENTAL]*
-If you find that during side wipes the extruder generates consistently more or less filament (due to no back pressure on the nozzle), you can use this parameter to correct the extrusion length with a factor.  The default factor is 1.0.  The parameter will accept values between 0.9 and 1.1
+> **SIDEWIPEMINY=nnnn** and **SIDEWIPEMAXY=nnnn**
+  These values allow control over the Y movement during the wipe.  Default values are 45 for the minimal value, 195 for the maximal value.  The user can extend/restrict these values if needed.  Setting these parameters does not affect the speed at which the extrusion takes place. 
+  ```
+  ;P2PP SIDEWIPMINY=45
+  ;P2PP SIDEWIPEMAXY=195
+  ```
+  
+> **SIDEWIPECORRECTION=**
+  This parameter is introduced to correct for inconsistent extrusion that may occur when doing side transitions.  If you notice that during the side transition, the printer over or underextrudes for some reason, you can enter a value here between 0.9 and 1.1 that acts as a local extrusion multiplier DURING the extrusion.  Default value is 1.0
+  ```
+  ;P2PP SIDEWIPECORRECTION=1.0
+  ```
 
 ### Print Settings
 1. In Slic3r, Click the "Print Settings Tab"
