@@ -13,7 +13,10 @@ def colorDist(r1,g1,b1,r2,g2,b2):
     return r*r+g*g+b*b
 
 def hex2int( hexnum):
-    return  int(hexnum, 16)
+    try:
+        return  int(hexnum, 16)
+    except:
+        return  0
 
 def color2rgb(c):
     if c[0] == "#":
