@@ -121,10 +121,15 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 
 > **SPLICEOFFSET** 
     Is the amount of mm added to the first splice.  It works in a similar way to the transition position % from Chroma and Canvas.  Here the value is a fixed length.  In our testing, 30mm seemed to be a good position resulting in perfect prints. You may want to tweak this value if you find the transition happens too early or too late.
-
+   ```
+  ;P2PP SPLICEOFFSET=30
+  ``` 
+  
 > **MATERIAL_XXX_XXX\_#\_#\_#**
     This is used to to define heat/compression/cooling settings for the splice between materials. The MATERIAL_DEFAULT setting provides a configurable fallback in case no profile is defined for the material combination. Please be aware that entries are not symmetrical and you need to define the settings for both directions in order to specify a complete process. The definition is as per standard Chroma and Canvas profiles. Order of parameters is CURRENT-MATERIAL/NEW-MATERIAL/HEAT/COMPRESSION/COOLING. Default is all 0 as per standard in Chroma and Canvas.
-
+   ```
+  ;P2PP MATERIAL_PLA_PLA_0_0_0
+  ``` 
 
 > **LINEARPING**  *[OPTIONAL]*
     This is used to keep the filament disctance between pings constant to 350mm.  When this parameter is not set, the ping distance is exponentially growing during the print resulting in filament distances up to 3m between pings in very long prints.
