@@ -366,6 +366,19 @@ def parseSlic3rConfig():
                 v.filamentType = filamentType
             continue
 
+        if gcodeline.startswith("; wiping_volumes_matrix"):
+            parmstart = gcodeline.find("=")
+            if parmstart != -1:
+                wipinginfo = gcodeline[parmstart+1:].strip(" ").split(",")
+                if len(wipinginfo) != 16:
+                    continue
+                for idx in range(len(wipinginfo)):
+                    wipinginfo[idx] = int(wipinginfo[idx])
+
+            if gotFilamentType:
+                v.maxWipe = max(wipinginfo)
+
+            continue
 
 def gcode_parseline(splice_offset, gcode_fullline):
 
@@ -566,8 +579,14 @@ def gcode_parseline(splice_offset, gcode_fullline):
         v.withinToolchangeBlock = False
 
     if ("P2PP ENDPURGETOWER" in gcode_fullline) and  v.withinToolchangeBlock and v.side_wipe:
+
+        # Top off the extrusion purge to the max value in the matrix, this is to prevent brim etc that are extra NOT to be included in the purge
+        if (v.maxWipe>0) and (v.side_wipe_length > v.maxWipe):
+            v.totalMaterialExtruded = v.totalMaterialExtruded -v.side_wipe_length + v.maxWipe
+            v.side_wipe_length = v.maxWipe
+
         if v.side_wipe_length>0:
-            v.processedGCode.append(";P2PP Side Wipe\n")G1 F8640
+            v.processedGCode.append(";P2PP Side Wipe\n")
             v.processedGCode.append("G1 F8640\n")
             v.processedGCode.append("G0 {} Y{} F2500\n".format(v.side_wipe_loc, v.sideWipeMinY))
             sweepBaseSpeed = 25000 * abs(v.sideWipeMaxY - v.sideWipeMinY)/150
@@ -635,7 +654,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     opf.close()
 
-    #parseSlic3rConfig()
+    parseSlic3rConfig()
 
     # Process the file
     # #################
