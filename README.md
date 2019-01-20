@@ -126,13 +126,20 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     This is used to to define heat/compression/cooling settings for the splice between materials. The MATERIAL_DEFAULT setting provides a configurable fallback in case no profile is defined for the material combination. Please be aware that entries are not symmetrical and you need to define the settings for both directions in order to specify a complete process. The definition is as per standard Chroma and Canvas profiles. Order of parameters is CURRENT-MATERIAL/NEW-MATERIAL/HEAT/COMPRESSION/COOLING. Default is all 0 as per standard in Chroma and Canvas.
 
 
-> **;P2PP LINEARPING**  *[OPTIONAL]*
+> **LINEARPING**  *[OPTIONAL]*
     This is used to keep the filament disctance between pings constant to 350mm.  When this parameter is not set, the ping distance is exponentially growing during the print resulting in filament distances up to 3m between pings in very long prints.
+   ```
+  ;P2PP LINEARPING=150
+  ```    
     
-> **;P2PP EXTRAENDFILAMENT=\#** *[OPTIONAL]*
-  This parameter is used to configure the extra length (in mm) of filament P2 will generate at the end of the print.  The default parameter value is defined as 150mm.  The value should at least be the length between the extruder motor to the nozzle.  
+> **EXTRAENDFILAMENT=\#** *[OPTIONAL]*
+  This parameter is used to configure the extra length (in mm) of filament P2 will generate at the end of the print.  The default parameter value is defined as 150mm.  The value should at least be the length between the extruder motor to the nozzle.
   
- > **;P2PP SIDEWIPELOC=X#** *[EXPERIMENTAL]*
+   ```
+  ;P2PP EXTRAENDFILAMENT=150
+  ```
+  
+ > **SIDEWIPELOC=X#** *[EXPERIMENTAL]*
   This is used to define the location on the X-Axis the printer needs to go to to do a side transition instead of doing a tower purge.  In Slic3r all still needs to be setup with a purge tower.  p2pp will convert the tower purges into side wipes and fileter out all purges that are not necessary (i.e. empty towe shells). 
   If you want to perform a side wipe on the MK3 use the following line.  
   ```
