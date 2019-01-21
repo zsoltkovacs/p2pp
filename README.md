@@ -94,11 +94,15 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP MATERIAL_PET_PET_0_0_0
     
     ; Following settings are optional (see description below)
+    
     ;P2PP LINEARPING
     ;P2PP EXTRAENDFILAMENT=150
     
+    ; Following optional settings control the SIDE TRANSITIONING (see description below)
     ;P2PP SIDEWIPELOC=X253.9
-    ;P2PP SIDEWIPECORRECTION=1.00
+    ;P2PP SIDEWIPEMINY=45
+    ;P2PP SIDEWIPEMAXY=195
+    ;P2PP SIDEWIPECORRECTION=1.0
     
     ```
 
@@ -117,26 +121,48 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 
 > **SPLICEOFFSET** 
     Is the amount of mm added to the first splice.  It works in a similar way to the transition position % from Chroma and Canvas.  Here the value is a fixed length.  In our testing, 30mm seemed to be a good position resulting in perfect prints. You may want to tweak this value if you find the transition happens too early or too late.
-
+   ```
+  ;P2PP SPLICEOFFSET=30
+  ``` 
+  
 > **MATERIAL_XXX_XXX\_#\_#\_#**
     This is used to to define heat/compression/cooling settings for the splice between materials. The MATERIAL_DEFAULT setting provides a configurable fallback in case no profile is defined for the material combination. Please be aware that entries are not symmetrical and you need to define the settings for both directions in order to specify a complete process. The definition is as per standard Chroma and Canvas profiles. Order of parameters is CURRENT-MATERIAL/NEW-MATERIAL/HEAT/COMPRESSION/COOLING. Default is all 0 as per standard in Chroma and Canvas.
+   ```
+  ;P2PP MATERIAL_PLA_PLA_0_0_0
+  ``` 
 
-
-> **;P2PP LINEARPING**  *[OPTIONAL]*
+> **LINEARPING**  *[OPTIONAL]*
     This is used to keep the filament disctance between pings constant to 350mm.  When this parameter is not set, the ping distance is exponentially growing during the print resulting in filament distances up to 3m between pings in very long prints.
+   ```
+  ;P2PP LINEARPING=150
+  ```    
     
-> **;P2PP EXTRAENDFILAMENT=\#** *[OPTIONAL]*
-  This parameter is used to configure the extra length (in mm) of filament P2 will generate at the end of the print.  The default parameter value is defined as 150mm.  The value should at least be the length between the extruder motor to the nozzle.  
+> **EXTRAENDFILAMENT=\#** *[OPTIONAL]*
+  This parameter is used to configure the extra length (in mm) of filament P2 will generate at the end of the print.  The default parameter value is defined as 150mm.  The value should at least be the length between the extruder motor to the nozzle.
   
- > **;P2PP SIDEWIPELOC=X#** *[EXPERIMENTAL]*
+   ```
+  ;P2PP EXTRAENDFILAMENT=150
+  ```
+  
+ > **SIDEWIPELOC=X#** *[EXPERIMENTAL]*
   This is used to define the location on the X-Axis the printer needs to go to to do a side transition instead of doing a tower purge.  In Slic3r all still needs to be setup with a purge tower.  p2pp will convert the tower purges into side wipes and fileter out all purges that are not necessary (i.e. empty towe shells). 
   If you want to perform a side wipe on the MK3 use the following line.  
-  ...
+  ```
   ;P2PP SIDEWIPELOC=X254
-  ,,,
+  ```
 
-> **;P2PP SIDEWIPECORRECTION=#** *[EXPERIMENTAL]*
-If you find that during side wipes the extruder generates consistently more or less filament (due to no back pressure on the nozzle), you can use this parameter to correct the extrusion length with a factor.  The default factor is 1.0.  The parameter will accept values between 0.9 and 1.1
+> **SIDEWIPEMINY=nnnn** and **SIDEWIPEMAXY=nnnn**
+  These values allow control over the Y movement during the wipe.  Default values are 45 for the minimal value, 195 for the maximal value.  The user can extend/restrict these values if needed.  Setting these parameters does not affect the speed at which the extrusion takes place. 
+  ```
+  ;P2PP SIDEWIPMINY=45
+  ;P2PP SIDEWIPEMAXY=195
+  ```
+  
+> **SIDEWIPECORRECTION=**
+  This parameter is introduced to correct for inconsistent extrusion that may occur when doing side transitions.  If you notice that during the side transition, the printer over or underextrudes for some reason, you can enter a value here between 0.9 and 1.1 that acts as a local extrusion multiplier DURING the extrusion.  Default value is 1.0
+  ```
+  ;P2PP SIDEWIPECORRECTION=1.0
+  ```
 
 ### Print Settings
 1. In Slic3r, Click the "Print Settings Tab"
@@ -173,8 +199,14 @@ When setup correctly the script will be triggered automatically from Slic3r PE a
 
 During the conversion the script may come up with a window stating possible warninngs.
 
-The purge settings in Slic3r PE are defined under the purge volumes settings.  This button is only visible on the "Plater Tab" and only when a Multi-Material Printer Profile is selected when "Multi Material, Single Extruder" is enabled.  The information entered in this screen is volumetric. This means that you have to roughly multiply the number in these fields by a factor 2.4 in order to get the filament length. We've found that 180mm3 (75mm of Filament) works well. 
+The purge settings in Slic3r PE are defined under the purge volumes settings.  This button is only visible on the "Plater Tab" and only when a Multi-Material Printer Profile is selected when "Multi Material, Single Extruder" is enabled.  The information entered in this screen is volumetric. This means that you have to roughly multiply the number in these fields by a factor 2.4 in order to get the filament length. We've found that 180mm3 (75mm of Filament) works well.
+![purging volumes](https://github.com/tomvandeneede/p2pp/blob/master/docs/Unloading_settings.JPG)
 > You do not need to set any volume for "Unloaded" - Leave this as 0. 
+
+
+> SLIC3R PE uses volume instead of length in the purge settings.  For 1.75mm filament, 1mm of filament repesents a volume of approx 2.4mm3.  In order to relate to values used in Chroma or Canvas,you have to divide the Slic3r PE values by a factor 2.4!
+   
+
 
 On your first prints make sure you review the output file to make sure it contains the Omega header. (bunch of commands starting with capital letter O (oh))
 
