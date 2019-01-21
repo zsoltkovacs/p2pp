@@ -133,7 +133,7 @@ def header_generateomegaheader(job_name, splice_offset):
             header.append("D{}{}{}_{} ".format(v.usedFilamentTypes.index(v.filamentType[i])+1,
                                             v.filamentColorCode[i].strip("\n"),
                                             findNearestColor(v.filamentColorCode[i].strip("\n")),
-                                            v.filamentDescription[i].strip("\n")
+                                            v.filamentType[i].strip("\n")
                                             ))
         else:
             header.append("D0 ")
@@ -325,46 +325,46 @@ def parseSlic3rConfig():
         if gcodeline.startswith("; avoid_crossing_perimeters"):
             break
 
-        if gcodeline.startswith("; extruder_colour"):
-
-            parmstart = gcodeline.find("#")
-            if parmstart != -1:
-                gcodeline = gcodeline[parmstart+1:].replace(";","")
-                filamentColor = gcodeline.split("#")
-
-            gotFilamentColor = (len(filamentColor)==4)
-
-            if gotFilamentColor:
-                v.filamentColorCode = filamentColor
-                for item in v.filamentColorCode:
-                    if not item in v.usedFilamentTypes:
-                        v.usedFilamentTypes.append(item)
-            continue
-
-        if gcodeline.startswith("; filament_settings_id"):
-
-            parmstart = gcodeline.find("=")
-            if parmstart != -1:
-                gcodeline = gcodeline[parmstart+1:].strip(" ").replace(" ","_").replace('"',"")
-                filamentDesc = gcodeline.split(";")
-
-            gotFilamentDesc = (len(filamentDesc)==4)
-
-            if gotFilamentDesc:
-                v.filamentDescription = filamentDesc
-            continue
-
-        if gcodeline.startswith("; filament_type"):
-            parmstart = gcodeline.find("=")
-            if parmstart != -1:
-                gcodeline = gcodeline[parmstart+1:].strip(" ").replace(" ","_").replace('"',"")
-                filamentType = gcodeline.split(";")
-
-            gotFilamentType= (len(filamentType)==4)
-
-            if gotFilamentType:
-                v.filamentType = filamentType
-            continue
+        # if gcodeline.startswith("; extruder_colour"):
+        #
+        #     parmstart = gcodeline.find("#")
+        #     if parmstart != -1:
+        #         gcodeline = gcodeline[parmstart+1:].replace(";","")
+        #         filamentColor = gcodeline.split("#")
+        #
+        #     gotFilamentColor = (len(filamentColor)==4)
+        #
+        #     if gotFilamentColor:
+        #         v.filamentColorCode = filamentColor
+        #         for item in v.filamentColorCode:
+        #             if not item in v.usedFilamentTypes:
+        #                 v.usedFilamentTypes.append(item)
+        #     continue
+        #
+        # if gcodeline.startswith("; filament_settings_id"):
+        #
+        #     parmstart = gcodeline.find("=")
+        #     if parmstart != -1:
+        #         gcodeline = gcodeline[parmstart+1:].strip(" ").replace(" ","_").replace('"',"")
+        #         filamentDesc = gcodeline.split(";")
+        #
+        #     gotFilamentDesc = (len(filamentDesc)==4)
+        #
+        #     if gotFilamentDesc:
+        #         v.filamentDescription = filamentDesc
+        #     continue
+        #
+        # if gcodeline.startswith("; filament_type"):
+        #     parmstart = gcodeline.find("=")
+        #     if parmstart != -1:
+        #         gcodeline = gcodeline[parmstart+1:].strip(" ").replace(" ","_").replace('"',"")
+        #         filamentType = gcodeline.split(";")
+        #
+        #     gotFilamentType= (len(filamentType)==4)
+        #
+        #     if gotFilamentType:
+        #         v.filamentType = filamentType
+        #     continue
 
         if gcodeline.startswith("; wiping_volumes_matrix"):
             parmstart = gcodeline.find("=")
@@ -502,6 +502,7 @@ def gcode_parseline(splice_offset, gcode_fullline):
 
     # Build up the O32 table with Algo info
     #######################################
+
     if gcode_fullline.startswith(";P2PP FT=") and v.allowFilamentInformationUpdate:  # filament type information
         v.filamentType[v.currentTool] = gcode_fullline[9:].strip("\n")
         if not v.filamentType[v.currentTool] in v.usedFilamentTypes:
