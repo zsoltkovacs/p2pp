@@ -528,6 +528,10 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if gcode_fullline.startswith(";P2PP LINEARPING"):
         v.pingLengthMultiplier = 1.0
 
+    if gcode_fullline.startswith(";P2PP LINEARPINGLENGTH="):
+        if v.pingLengthMultiplier == 1.0
+            v.pingIntervalLength = float(gcode_fullline[23:])
+
     if gcode_fullline.startswith(";P2PP SIDEWIPEMINY="):
         v.sideWipeMinY=float(gcode_fullline[19:])
 

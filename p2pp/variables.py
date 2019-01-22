@@ -98,6 +98,10 @@ pingIntervalLength = 350
 maxPingIntervalLength = 3000
 pingLengthMultiplier = 1.03
 sidewipecorrection=1.0
+sidewiperetract = 0.4
+correctWipeRetract = False
+
+volumetricE = False
 
 
 # currenttool/lastLocation are variables required to generate O30 splice info.   splice info is generated at the end of the tool path
