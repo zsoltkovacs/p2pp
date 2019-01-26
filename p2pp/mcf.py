@@ -11,208 +11,23 @@ __status__ = 'Beta'
 
 import os
 import p2pp.gui as gui
-from p2pp.formatnumbers import hexify_short, hexify_long, hexify_float
-from p2pp.colornames import findNearestColor
+from p2pp.formatnumbers import hexify_float
+import p2pp.parameters as parameters
+import p2pp.sidewipe as sidewipe
 import p2pp.variables as v
-
-
-# ################################################################
-# ######################### COMPOSE WARNING BLOCK ################
-# ################################################################
-def log_warning(text):
-    v.processWarnings.append(";" + text)
-
-
-# ################################################################
-# ######################### ALGORITHM PROCESSING ################
-# ################################################################
-
-def algorithm_createprocessstring(heating, compression, cooling):
-    return "{} {} {}".format(hexify_short(int(heating)),
-                             hexify_short(int(compression)),
-                             hexify_short(int(cooling))
-                             )
-
-
-def algorithm_processmaterialconfiguration(splice_info):
-    fields = splice_info.split("_")
-    numfields = len(fields)
-
-    if fields[0] == "DEFAULT" and numfields == 4:
-        v.defaultSpliceAlgorithm = algorithm_createprocessstring(fields[1],
-                                                                 fields[2],
-                                                                 fields[3])
-
-    if numfields == 5:
-        key = "{}-{}".format(fields[0],
-                             fields[1])
-        v.spliceAlgorithmDictionary[key] = algorithm_createprocessstring(fields[2],
-                                                                         fields[3],
-                                                                         fields[4])
-
-
-def algorithm_transitionused(fromInput, toInput):
-    if len(v.spliceUsedTool)>0 :
-
-       for idx in range(len(v.spliceUsedTool)-1):
-           if  v.spliceUsedTool[idx] == fromInput and v.spliceUsedTool[idx+1] == toInput:
-               return True
-
-    return False
-
-def algorithm_createtable():
-
-    spliceAlgoList = []
-    for i in range(4):
-        for j in range(4):
-
-            if i==j:
-                continue
-
-            try:
-                algoKey = "{}{}".format(v.usedFilamentTypes.index(v.filamentType[i])+1,v.usedFilamentTypes.index(v.filamentType[j])+1)
-                if algoKey in spliceAlgoList:
-                    continue
-            except:
-                continue
-
-            if not algorithm_transitionused(i,j):
-                continue
-
-            spliceAlgoList.append(algoKey)
-
-            try:
-                algo = v.spliceAlgorithmDictionary["{}-{}".format(v.filamentType[i], v.filamentType[j])]
-            except KeyError:
-                log_warning("WARNING: No Algorithm defined for transitioning {} to {}. Using Default".format(v.filamentType[i],
-                                                                                                             v.filamentType[j]))
-                algo = v.defaultSpliceAlgorithm
-
-
-            v.spliceAlgorithmTable.append("D{} {}".format(algoKey,algo))
-
-
-# Generate the Omega - Header that drives the Palette to generate filament
-def header_generateomegaheader(job_name, splice_offset):
-
-    if v.printerProfileString == '':
-        log_warning("Printerprofile identifier is missing, add \n;P2PP PRINTERPROFILE=<your printer profile ID> to the Printer Start GCode block\n")
-    if len(v.spliceExtruderPosition) == 0:
-        log_warning("This does not look lie a multi color file......\n")
-
-    algorithm_createtable()
-
-    header = []
-    summary = []
-    warnings = []
-    header.append('O21 ' + hexify_short(20) + "\n")  # MSF2.0
-    header.append('O22 D' + v.printerProfileString.strip("\n") + "\n")  # printerprofile used in Palette2
-    header.append('O23 D0001' + "\n")              # unused
-    header.append('O24 D0000' + "\n")              # unused
-
-    header.append("O25 ")
-
-
-    for i in range(4):
-        if v.paletteInputsUsed[i]:
-            if v.filamentType[i] == "":
-                log_warning(
-                    "Filament #{} is missing Material Type, make sure to add ;P2PP FT=[filament_type] to filament GCode".format(
-                        i))
-
-            if v.filamentDescription[i] == "Unnamed":
-                log_warning(
-                    "Filament #{} is missing job_name, make sure to add ;P2PP FN=[filament_preset] to filament GCode".format(
-                        i))
-            if v.filamentDescription[i] == "-":
-                log_warning(
-                    "Filament #{} is missing Color info, make sure to add ;P2PP FC=[extruder_colour] to filament GCode".format(
-                        i))
-                v.filamentDescription[i] = '000000'
-
-            header.append("D{}{}{}_{} ".format(v.usedFilamentTypes.index(v.filamentType[i])+1,
-                                            v.filamentColorCode[i].strip("\n"),
-                                            findNearestColor(v.filamentColorCode[i].strip("\n")),
-                                            v.filamentType[i].strip("\n")
-                                            ))
-        else:
-            header.append("D0 ")
-
-    header.append("\n")
-
-    header.append('O26 ' + hexify_short(len(v.spliceExtruderPosition)) + "\n")
-    header.append('O27 ' + hexify_short(len(v.pingExtruderPosition)) + "\n")
-    if len(v.spliceAlgorithmTable) > 9:
-        log_warning("ATTENTION: THIS FILE WILL NOT POTENTIALLY NOT WORK CORRECTY DUE TO A BUG IN PALETTE2 PLUGIN")
-        header.append("O28 D{:0>4d}\n".format(len(v.spliceAlgorithmTable)))
-    else:
-        header.append('O28 ' + hexify_short(len(v.spliceAlgorithmTable)) + "\n")
-    header.append('O29 ' + hexify_short(v.hotSwapCount) + "\n")
-
-    for i in range(len(v.spliceExtruderPosition)):
-        header.append("O30 D{:0>1d} {}\n".format(v.spliceUsedTool[i],
-                                                 hexify_float(v.spliceExtruderPosition[i])
-                                                 )
-                      )
-
-    for i in range(len(v.spliceAlgorithmTable)):
-        header.append("O32 {}\n".format(v.spliceAlgorithmTable[i]))
-
-    if len(v.spliceExtruderPosition) > 0:
-        header.append("O1 D{} {}\n".format(job_name, hexify_float(v.spliceExtruderPosition[-1])))
-    else:
-        header.append("O1 D{} {}\n".format(job_name, hexify_float(v.totalMaterialExtruded + splice_offset)))
-
-    header.append("M0\n")
-    header.append("T0\n")
-
-    summary.append(";------------------:\n")
-    summary.append(";SPLICE INFORMATION:\n")
-    summary.append(";------------------:\n")
-    summary.append(";       Splice Offset = {:-8.2f}mm\n\n".format(splice_offset))
-
-    for i in range(len(v.spliceExtruderPosition)):
-        summary.append(";{:04}   Tool: {}  Location: {:-8.2f}mm   length {:-8.2f}mm \n".format(i + 1,
-                                                                                               v.spliceUsedTool[i],
-                                                                                               v.spliceExtruderPosition[i],
-                                                                                               v.spliceLength[i],
-                                                                                               )
-                       )
-
-    summary.append("\n")
-    summary.append(";------------------:\n")
-    summary.append(";PING  INFORMATION:\n")
-    summary.append(";------------------:\n")
-
-    for i in range(len(v.pingExtruderPosition)):
-        summary.append(";Ping {:04} at {:-8.2f}mm\n".format(i + 1,
-                                                            v.pingExtruderPosition[i]
-                                                            )
-                       )
-
-    warnings.append("\n")
-    warnings.append(";------------------:\n")
-    warnings.append(";PROCESS WARNINGS:\n")
-    warnings.append(";------------------:\n")
-
-    if len(v.processWarnings) == 0:
-        warnings.append(";None\n")
-    else:
-        for i in range(len(v.processWarnings)):
-            warnings.append("{}\n".format(v.processWarnings[i]))
-        gui.show_warnings(warnings)
-
-    return {'header': header, 'summary': summary, 'warnings': warnings}
+from p2pp.gcodeparser import gcode_removeparams , get_gcode_parameter, parseSlic3rConfig
+from p2pp.omega import header_generateomegaheader, algorithm_processmaterialconfiguration
+from p2pp.logfile import log_warning
 
 
 # ################### GCODE PROCESSING ###########################
-def gcode_processtoolchange(new_tool, location, splice_offset):
+def gcode_processtoolchange(new_tool, location):
 
     # some commands are generated at the end to unload filament, they appear as a reload of current filament - messing up things
     if new_tool == v.currentTool:
         return
 
-    location += splice_offset
+    location += v.splice_offset
 
     if new_tool == -1:
         location += v.extraRunoutFilament
@@ -238,23 +53,9 @@ def gcode_processtoolchange(new_tool, location, splice_offset):
     v.currentTool = new_tool
 
 
-def gcode_removeparams(gcode, params):
-    result = ""
-    parts = gcode.split(" ")
 
-    for subcommand in parts:
-        if subcommand == "":
-            continue
-        if not subcommand[0] in params:
-            result += subcommand+" "
 
-    result.strip(" ")
-    if len(result) < 4:
-        return ";--- P2PP Removed "+gcode
-
-    return result
-
-def gcode_filtertoolchangeblock(line, gcode_command_2, gcode_command_4):
+def gcode_filtertoolchangeblock(line):
     # --------------------------------------------------------------
     # Do not perform this part of the GCode for MMU filament unload
     # --------------------------------------------------------------
@@ -264,16 +65,16 @@ def gcode_filtertoolchangeblock(line, gcode_command_2, gcode_command_4):
                        "G1 E1.5000"
                        ]
 
-    if gcode_command_2 == "G1":
+    if line.startswith("G1"):
         for gcode_filter in discarded_moves:
             if gcode_filter in line:         # remove specific MMU2 extruder moves
                 return ";--- P2PP removed "+line
         return gcode_removeparams(line,["F"])
 
-    if gcode_command_4 == "M907":
+    if line.startswith("M907"):
         return ";P2PP removed " + line   # remove motor power instructions
 
-    if gcode_command_4 == "M220":
+    if line.startswith("M220"):
         return ";--- P2PP removed " + line   # remove feedrate instructions
 
     if line.startswith("G4 S0"):
@@ -282,189 +83,71 @@ def gcode_filtertoolchangeblock(line, gcode_command_2, gcode_command_4):
     return line
 
 
-def get_gcode_parameter(gcode, parameter):
-    fields = gcode.split()
-    for parm in fields:
-        if parm[0] == parameter:
-            return float(parm[1:])
-    return ""
-
-
-# restrospective cleanup of generated code AFTER detectinf a purge volume in print
-
-def retro_cleanup():
-
-
-    if not v.side_wipe:
-        return
-    idx = len(v.processedGCode) - 1
-    while idx > -1 and not v.processedGCode[idx].startswith("M900"):
-        if v.processedGCode[idx][0:1] == "G1":
-            extruder_movement = get_gcode_parameter(v.processedGCode[idx], "E")
-            if extruder_movement != "":
-                v.side_wipe_length += extruder_movement
-        if not v.processedGCode[idx].startswith("M73"):
-            v.processedGCode[idx] = ";--- P2PP removed " + v.processedGCode[idx]
-        idx -= 1
-
 # G Code parsing routine
 def MovedInTower():
     if v.currentPositionX >= v.wipe_tower_info['minx'] and v.currentPositionX <= v.wipe_tower_info['maxx'] and v.currentPositionY >= v.wipe_tower_info['miny'] and v.currentPositionY <=v.wipe_tower_info['maxy']:
         return True
     return False
 
-def parseSlic3rConfig():
 
-    gotFilamentColor = False
-    gotFilamentType = False
-    gotFilamentDesc = False
+def gcode_parseline(gcode_fullline):
 
-    for idx in reversed(range(len(v.inputGcode))):
-        gcodeline = v.inputGcode[idx].rstrip("\n")
-
-        if gcodeline.startswith("; avoid_crossing_perimeters"):
-            break
-
-        # if gcodeline.startswith("; extruder_colour"):
-        #
-        #     parmstart = gcodeline.find("#")
-        #     if parmstart != -1:
-        #         gcodeline = gcodeline[parmstart+1:].replace(";","")
-        #         filamentColor = gcodeline.split("#")
-        #
-        #     gotFilamentColor = (len(filamentColor)==4)
-        #
-        #     if gotFilamentColor:
-        #         v.filamentColorCode = filamentColor
-        #         for item in v.filamentColorCode:
-        #             if not item in v.usedFilamentTypes:
-        #                 v.usedFilamentTypes.append(item)
-        #     continue
-        #
-        # if gcodeline.startswith("; filament_settings_id"):
-        #
-        #     parmstart = gcodeline.find("=")
-        #     if parmstart != -1:
-        #         gcodeline = gcodeline[parmstart+1:].strip(" ").replace(" ","_").replace('"',"")
-        #         filamentDesc = gcodeline.split(";")
-        #
-        #     gotFilamentDesc = (len(filamentDesc)==4)
-        #
-        #     if gotFilamentDesc:
-        #         v.filamentDescription = filamentDesc
-        #     continue
-        #
-        # if gcodeline.startswith("; filament_type"):
-        #     parmstart = gcodeline.find("=")
-        #     if parmstart != -1:
-        #         gcodeline = gcodeline[parmstart+1:].strip(" ").replace(" ","_").replace('"',"")
-        #         filamentType = gcodeline.split(";")
-        #
-        #     gotFilamentType= (len(filamentType)==4)
-        #
-        #     if gotFilamentType:
-        #         v.filamentType = filamentType
-        #     continue
-
-        if gcodeline.startswith("; wiping_volumes_matrix"):
-            parmstart = gcodeline.find("=")
-            if parmstart != -1:
-                wipinginfo = gcodeline[parmstart+1:].strip(" ").split(",")
-                if len(wipinginfo) != 16:
-                    continue
-                for idx in range(len(wipinginfo)):
-                    wipinginfo[idx] = int(wipinginfo[idx])
-
-            if gotFilamentType:
-                v.maxWipe = max(wipinginfo)
-
-            continue
-
-def gcode_parseline(splice_offset, gcode_fullline):
+    __towerremove = False
 
     if not gcode_fullline[0] == ";":
         gcode_fullline = gcode_fullline.split(';')[0]
 
+
     gcode_fullline = gcode_fullline.rstrip('\n')
 
-    if len(gcode_fullline) < 2 or gcode_fullline.startswith("M73") or gcode_fullline.startswith("M900"):
-        return {'gcode': gcode_fullline, 'splice_offset': splice_offset}
 
-    gcode_command  = gcode_fullline[0]
-    gcode_command2 = gcode_fullline[0:2]
-    gcode_command4 = gcode_fullline[0:4]
-
-    if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM START"):
-        v.defineTower = True
-
-    if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM END"):
-        v.defineTower = False
-        v.wipe_tower_info['minx']-=2
-        v.wipe_tower_info['miny']-=2
-        v.wipe_tower_info['maxx']+=2
-        v.wipe_tower_info['maxy']+=2
-        v.processedGCode.append("; TOWER COORDINATES ({:-8.2f},{:-8.2f}) to ({:-8.2f},{:-8.2f})\n".format(
-            v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy']
-        ))
-
-    if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM START") or \
-       gcode_fullline.startswith("; CP EMPTY GRID START"):
-
-        if not v.withinToolchangeBlock:
-            retro_cleanup()
-            v.side_wipe_skip = v.side_wipe
-
-    if gcode_fullline.startswith("; CP WIPE TOWER FIRST LAYER BRIM END") or \
-       gcode_fullline.startswith("; CP EMPTY GRID END"):
-       v.side_wipe_skip = False
-
-    ### Find wipe tower coordinates
-    ###############################
-    if gcode_command == "G":
-
-        parmX = get_gcode_parameter(gcode_fullline, "X")
-        parmY = get_gcode_parameter(gcode_fullline, "Y")
+    if gcode_fullline.startswith("M73")  or gcode_fullline == "":
+        v.processedGCode.append(gcode_fullline + "\n")
+        return
 
 
-        if parmX != "":
-            if v.defineTower:
-                v.wipe_tower_info['maxx'] = max (v.wipe_tower_info['maxx'],parmX)
-                v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], parmX)
-            if not v.side_wipe_skip:
-                   v.currentPositionX = parmX
+    if gcode_fullline.startswith('T'):
+        new_tool = int(gcode_fullline[1])
+        gcode_processtoolchange(new_tool, v.totalMaterialExtruded)
+        v.allowFilamentInformationUpdate = True
+        v.processedGCode.append(';--- P2PP removed ' + gcode_fullline+"\n")
+        return
 
-        if parmY != "":
-            if v.defineTower:
-                v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], parmY)
-                v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], parmY)
-            if not v.side_wipe_skip:
-                v.currentPositionY = parmY
+
+    if v.side_wipe:
+        sidewipe.collect_wiprtower_info(gcode_fullline)
+
+        if v.side_wipe_skip:
+            v.processedGCode.append (";--- P2PP removed "+gcode_fullline+"\n")
+            return
 
         if MovedInTower() and v.side_wipe and not v.side_wipe_skip:
-            v.processedGCode.append(";--- P2PP removed - action in purgetower "+gcode_fullline+"\n")
-            gcode_fullline = gcode_removeparams(gcode_fullline, ["X","Y"])
-
-    if v.side_wipe_skip:
-        return {'gcode': ";--- P2PP removed "+gcode_fullline , 'splice_offset': splice_offset}
+            if gcode_fullline[0] != ";":
+                v.processedGCode.append(";--- P2PP  - Purge Tower - " + gcode_fullline + "\n")
+            gcode_fullline = gcode_removeparams(gcode_fullline, ["X", "Y"])
+            __towerremove = True
 
 
 
 
     # Processing of extrusion speed commands
     # ############################################
-    if gcode_command4 == "M220":
+    if gcode_fullline.startswith("M220"):
         new_feedrate = get_gcode_parameter(gcode_fullline, "S")
         if new_feedrate != "":
             v.currentprintFeedrate = new_feedrate / 100
 
     # Processing of extrusion multiplier commands
     # ############################################
-    if gcode_command4 == "M221":
+    if gcode_fullline.startswith("M221"):
         new_multiplier = get_gcode_parameter(gcode_fullline, "S")
         if new_multiplier != "":
             v.extrusionMultiplier = new_multiplier / 100
 
-    if gcode_command2 == "G1":
+
+    # Processing of print head movements
+    #############################################
+    if gcode_fullline.startswith("G1"):
 
             extruder_movement = get_gcode_parameter(gcode_fullline, "E")
 
@@ -489,82 +172,33 @@ def gcode_parseline(splice_offset, gcode_fullline):
                     v.processedGCode.append("O31 {}\n".format(hexify_float(v.lastPingExtruderPosition)))
 
             if v.withinToolchangeBlock and v.side_wipe:
-                return {'gcode': ';--- P2PP removed ' + gcode_fullline, 'splice_offset': splice_offset}
+                if not __towerremove:
+                    v.processedGCode.append(';--- P2PP removed ' + gcode_fullline+"\n")
+                return
 
+            if not v.withinToolchangeBlock and v.wipeRetracted:
+                sidewipe.unretract()
 
-    # Process Toolchanges. Build up the O30 table with Splice info
-    ##############################################################
-    if gcode_fullline[0] == 'T':
-        new_tool = int(gcode_fullline[1])
-        gcode_processtoolchange(new_tool, v.totalMaterialExtruded, splice_offset)
-        v.allowFilamentInformationUpdate = True
-        return {'gcode': ';--- P2PP removed ' + gcode_fullline, 'splice_offset': splice_offset}
-
-    # Build up the O32 table with Algo info
-    #######################################
-
-    if gcode_fullline.startswith(";P2PP FT=") and v.allowFilamentInformationUpdate:  # filament type information
-        v.filamentType[v.currentTool] = gcode_fullline[9:].strip("\n")
-        if not v.filamentType[v.currentTool] in v.usedFilamentTypes:
-            v.usedFilamentTypes.append(v.filamentType[v.currentTool])
-
-    if gcode_fullline.startswith(";P2PP FN=") and v.allowFilamentInformationUpdate:  # filament color information
-        p2ppinfo = gcode_fullline[9:].strip("\n-+!@#$%^&*(){}[];:\"\',.<>/?").replace(" ", "_")
-        v.filamentDescription[v.currentTool] = p2ppinfo
-
-    if gcode_fullline.startswith(";P2PP FC=#") and v.allowFilamentInformationUpdate:  # filament color information
-        p2ppinfo = gcode_fullline[10:]
-        v.filamentColorCode[v.currentTool] = p2ppinfo
 
     # Other configuration information
     # this information should be defined in your Slic3r printer settings, startup GCode
     ###################################################################################
-    if gcode_fullline.startswith(";P2PP PRINTERPROFILE=") and v.printerProfileString == '':   # -p takes precedence over printer defined in file
-        v.printerProfileString = gcode_fullline[21:]
 
-    if gcode_fullline.startswith(";P2PP SPLICEOFFSET="):
-        splice_offset = float(gcode_fullline[19:])
+    if gcode_fullline.startswith(";P2PP"):
+        parameters.check_config_paramaters(gcode_fullline)
 
-    if gcode_fullline.startswith(";P2PP LINEARPING"):
-        v.pingLengthMultiplier = 1.0
+        if gcode_fullline.startswith(";P2PP MATERIAL_"):
+                algorithm_processmaterialconfiguration(gcode_fullline[15:])
 
-    if gcode_fullline.startswith(";P2PP LINEARPINGLENGTH="):
-        v.pingIntervalLength = float(gcode_fullline[23:])
+        # if gcode_fullline.startswith(";P2PP ENDPURGETOWER") and  v.withinToolchangeBlock and v.side_wipe:
+        #     sidewipe.create_side_wipe()
+        #     v.withinToolchangeBlock = False
 
-    if gcode_fullline.startswith(";P2PP SIDEWIPEMINY="):
-        v.sideWipeMinY=float(gcode_fullline[19:])
-
-    if gcode_fullline.startswith(";P2PP SIDEWIPEMAXY="):
-        v.sideWipeMaxY=float(gcode_fullline[19:])
-
-    if gcode_fullline.startswith(";P2PP SIDEWIPECORRECTION="):
-        v.sidewipecorrection = float(gcode_fullline[26:])
-        if v.sidewipecorrection <0.9 or v.sidewipecorrection>1.10:
-            v.sidewipecorrection = 1.0
-
-
-    if gcode_fullline.startswith(";P2PP SIDEWIPELOC="):
-        v.side_wipe_loc = gcode_fullline[18:].strip("\n")
-        v.side_wipe = True
-        #log_warning("Using the experimental Side Transition featue")
-
-    if gcode_fullline.startswith(";P2PP EXTRAENDFILAMENT="):
-        v.extraRunoutFilament = float(gcode_fullline[23:])
-
-    if gcode_fullline.startswith(";P2PP MINSTARTSPLICE="):
-        v.minimalStartSpliceLength = float(gcode_fullline[21:])
-        if v.minimalStartSpliceLength < 100:
-            v.minimalStartSpliceLength = 100
-            log_warning("Minimal first slice length adjusted to 100mm")
-
-    if gcode_fullline.startswith(";P2PP MINSPLICE="):
-        v.minimalSpliceLength = float(gcode_fullline[16:])
-        if v.minimalSpliceLength < 70:
-            v. minimalSpliceLength = 70
-            log_warning("Minimal slice length adjusted to 70mm")
-
-    if gcode_fullline.startswith(";P2PP MATERIAL_"):
-        algorithm_processmaterialconfiguration(gcode_fullline[15:])
+    if gcode_fullline.startswith("M900"):
+        KFactor = get_gcode_parameter(gcode_fullline, "K")
+        if int(KFactor) > 0:
+            sidewipe.create_side_wipe()
+            v.withinToolchangeBlock = False
 
     # Next section(s) clean up the GCode generated for the MMU
     # specially the rather violent unload/reload required for the MMU2
@@ -574,75 +208,42 @@ def gcode_parseline(splice_offset, gcode_fullline):
     if "TOOLCHANGE START" in gcode_fullline:
         v.allowFilamentInformationUpdate = False
         v.withinToolchangeBlock = True
-        if v.side_wipe:
-            v.side_wipe_length = 0
-            v.wipe_start_extrusion= v.totalMaterialExtruded
-            retro_cleanup()
+        sidewipe.sidewipe_toolchangestart()
+
 
     if ("TOOLCHANGE END" in gcode_fullline) and not v.side_wipe:
         v.withinToolchangeBlock = False
 
-    if ("P2PP ENDPURGETOWER" in gcode_fullline) and  v.withinToolchangeBlock and v.side_wipe:
 
-        # Top off the extrusion purge to the max value in the matrix, this is to prevent brim etc that are extra NOT to be included in the purge
-        if (v.maxWipe>0) and (v.side_wipe_length > v.maxWipe):
-            v.totalMaterialExtruded = v.totalMaterialExtruded -v.side_wipe_length + v.maxWipe
-            v.side_wipe_length = v.maxWipe
-
-        if v.side_wipe_length>0:
-            v.processedGCode.append(";P2PP Side Wipe\n")
-            v.processedGCode.append("G1 F8640\n")
-            v.processedGCode.append("G0 {} Y{} F2500\n".format(v.side_wipe_loc, v.sideWipeMinY))
-            sweepBaseSpeed = 25000 * abs(v.sideWipeMaxY - v.sideWipeMinY)/150
-            sweeplen = 20 *abs(v.sideWipeMaxY - v.sideWipeMinY)/150
-            feedRate =  -1
-            moveto = v.sideWipeMaxY
-            while v.side_wipe_length > 0:
-                sweep =  min(v.side_wipe_length, sweeplen)
-                v.side_wipe_length -=sweeplen
-
-                wipespeed = int(sweepBaseSpeed/sweep)
-                wipespeed = min( wipespeed, 5000)
-                if feedRate != wipespeed:
-                    v.processedGCode.append("G1 F{}\n".format( wipespeed))
-                    feedRate = wipespeed
-
-                v.processedGCode.append("G1 {} Y{} E{}\n".format(v.side_wipe_loc, moveto, sweep * v.sidewipecorrection))
-
-                if moveto == v.sideWipeMaxY:
-                    moveto = v.sideWipeMinY
-                else:
-                    moveto = v.sideWipeMaxY
-
-            v.processedGCode.append("G1 X245 F200\n")
-            v.side_wipe_length = 0
-        v.withinToolchangeBlock = False
 
     if "TOOLCHANGE UNLOAD" in gcode_fullline and not  v.side_wipe:
         v.processedGCode.append(";P2PP Set Wipe Speed\n")
         v.processedGCode.append("G1 F2000\n")
         v.currentprintFeed = 2000.0 / 60.0
 
+
     # Layer Information
     if gcode_fullline.startswith(";LAYER "):
         v.currentLayer = gcode_fullline[7:]
-        return {'gcode': gcode_fullline, 'splice_offset': splice_offset}
 
     if v.withinToolchangeBlock:
-        return {'gcode': gcode_filtertoolchangeblock(gcode_fullline, gcode_command2, gcode_command4), 'splice_offset': splice_offset}
+        v.processedGCode.append(gcode_filtertoolchangeblock(gcode_fullline)+"\n")
+        return
 
     # Catch All
-    return {'gcode': gcode_fullline, 'splice_offset': splice_offset}
+    v.processedGCode.append(gcode_fullline+"\n")
 
 
 # Generate the file and glue it all together!
 # #####################################################################
-def generate(input_file, output_file, printer_profile, splice_offset, silent):
+def generate(input_file, output_file, printer_profile, splice_offset , silent):
 
 
     v.printerProfileString = printer_profile
     basename = os.path.basename(input_file)
     _taskName = os.path.splitext(basename)[0]
+
+    v.splice_offset = splice_offset
 
     try:
         opf = open(input_file, encoding='utf-8')
@@ -663,13 +264,12 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     # Process the file
     # #################
     for line in v.inputGcode:
-        result = gcode_parseline(splice_offset, line)
-        splice_offset = float(result['splice_offset'])
-        v.processedGCode.append(result['gcode'] + "\n")
+        gcode_parseline(line)
 
 
-    gcode_processtoolchange(-1, v.totalMaterialExtruded, splice_offset)
-    omega_result = header_generateomegaheader(_taskName, splice_offset)
+
+    gcode_processtoolchange(-1, v.totalMaterialExtruded)
+    omega_result = header_generateomegaheader(_taskName)
     header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
 
     if not silent:
