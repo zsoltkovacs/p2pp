@@ -125,7 +125,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ;P2PP SPLICEOFFSET=30
   ``` 
   
-  ![splice offset](https://github.com/tomvandeneede/p2pp/blob/master/docs/spliceoffset.png)
+  ![splice offset](https://github.com/tomvandeneede/p2pp/blob/dev/docs/spliceoffset.png)
   
   
 > **MATERIAL_XXX_XXX\_#\_#\_#**
@@ -203,7 +203,7 @@ When setup correctly the script will be triggered automatically from Slic3r PE a
 During the conversion the script may come up with a window stating possible warninngs.
 
 The purge settings in Slic3r PE are defined under the purge volumes settings.  This button is only visible on the "Plater Tab" and only when a Multi-Material Printer Profile is selected when "Multi Material, Single Extruder" is enabled.  The information entered in this screen is volumetric. This means that you have to roughly multiply the number in these fields by a factor 2.4 in order to get the filament length. We've found that 180mm3 (75mm of Filament) works well.
-![purging volumes](https://github.com/tomvandeneede/p2pp/blob/master/docs/Unloading_settings.JPG)
+![purging volumes](https://github.com/tomvandeneede/p2pp/blob/dev/docs/Unloading_settings.JPG)
 > You do not need to set any volume for "Unloaded" - Leave this as 0. 
 
 
