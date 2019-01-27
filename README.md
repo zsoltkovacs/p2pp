@@ -125,6 +125,9 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ;P2PP SPLICEOFFSET=30
   ``` 
   
+  ![splice offset](https://github.com/tomvandeneede/p2pp/blob/master/docs/spliceoffset.png)
+  
+  
 > **MATERIAL_XXX_XXX\_#\_#\_#**
     This is used to to define heat/compression/cooling settings for the splice between materials. The MATERIAL_DEFAULT setting provides a configurable fallback in case no profile is defined for the material combination. Please be aware that entries are not symmetrical and you need to define the settings for both directions in order to specify a complete process. The definition is as per standard Chroma and Canvas profiles. Order of parameters is CURRENT-MATERIAL/NEW-MATERIAL/HEAT/COMPRESSION/COOLING. Default is all 0 as per standard in Chroma and Canvas.
    ```
