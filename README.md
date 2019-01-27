@@ -106,6 +106,8 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     
     ```
 
+ ![splice offset](https://github.com/tomvandeneede/p2pp/blob/dev/docs/overallconfig.png)
+
 5. In the "After layer change G-code" INSERT (not overwrite) the following line.
     ```
     ;LAYER [layer_num]
