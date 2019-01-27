@@ -12,27 +12,31 @@ __status__ = 'Beta'
 import struct
 
 
-# hexify_short is used to turn a short integer into the specific notation used by Mosaic
 def hexify_short(num):
+    # hexify_short: Converts a short integer into the specific notation used by Mosaic
     return "D" + '{0:04x}'.format(num)
 
 
-# hexify_long is used to turn a 32-bit integer into the specific notation used by Mosaic
 def hexify_long(num):
+    # hexify_long: Converts a 32-bit integer into the specific notation used by Mosaic
     return "D" + '{0:08x}'.format(num)
 
-# hexify_float is used to turn a 32-but floating point number into the specific notation used by Mosaic
+
 def hexify_float(f):
+    # hexify_float: Converts a 32-bit floating point number into the specific notation used by Mosaic
     return "D" + (hex(struct.unpack('<I', struct.pack('<f', f))[0]))[2:]
 
-def hours( sec ):
-    return int(sec/3600)
 
-def minutes( sec ):
-    return int((sec%3600)/60)
+def hours(sec):
+    return int(sec / 3600)
+
+
+def minutes(sec):
+    return int((sec % 3600) / 60)
+
 
 def seconds(sec):
-    return int(sec%60)
+    return int(sec % 60)
 
 
 def comment_out(line):

@@ -51,7 +51,7 @@ processedGCode = []  # final output array with Gcode
 # spliceoffset allows for a correction of the position at which the transition occurs.   When the first transition is scheduled
 # to occur at 120mm in GCode, you can add a number of mm to push the transition further in the purge tower.  This serves a similar
 # function as the transition offset in chroma
-spliceOffset = 0
+splice_offset = 0
 spliceExtruderPosition = []
 spliceUsedTool = []
 spliceLength = []
@@ -100,6 +100,7 @@ pingLengthMultiplier = 1.03
 sidewipecorrection=1.0
 sidewiperetract = 0.4
 correctWipeRetract = False
+wipeRetracted = False
 
 volumetricE = False
 
