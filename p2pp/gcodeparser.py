@@ -75,3 +75,12 @@ def parse_slic3r_config():
                     wiping_info[i] = int(wiping_info[i])
             v.maxWipe = max(wiping_info)
             continue
+
+        if gcode_line.startswith("; bed_shape"):
+            pass
+
+        if gcode_line.startswith("; retract_before_travel"):
+            pass
+
+
+

@@ -71,7 +71,7 @@ def gcode_filter_toolchange_block(line):
         return gcode_remove_params(line, ["F"])
 
     if line.startswith("M907"):
-        return ";P2PP removed " + line   # remove motor power instructions
+        return ";--- P2PP removed " + line   # remove motor power instructions
 
     if line.startswith("M220"):
         return ";--- P2PP removed " + line   # remove feedrate instructions
@@ -80,7 +80,7 @@ def gcode_filter_toolchange_block(line):
         return ";--- P2PP removed " + line   # remove dwelling instructions
 
     return line
-
+`
 
 # G Code parsing routine
 def moved_in_tower():
@@ -98,9 +98,6 @@ def gcode_parseline(gcode_fullline):
 
     gcode_fullline = gcode_fullline.rstrip('\n')
 
-    if gcode_fullline.startswith("M73") or gcode_fullline == "":
-        v.processedGCode.append(gcode_fullline + "\n")
-        return
 
     if gcode_fullline.startswith('T'):
         new_tool = int(gcode_fullline[1])
@@ -156,7 +153,7 @@ def gcode_parseline(gcode_fullline):
                     v.lastPingExtruderPosition = v.totalMaterialExtruded
                     v.pingExtruderPosition.append(v.lastPingExtruderPosition)
                     v.processedGCode.append(";Palette 2 - PING\n")
-                    v.processedGCode.append("G4 S0\n")
+                    #v.processedGCode.append("G4 S0\n")
                     v.processedGCode.append("O31 {}\n".format(hexify_float(v.lastPingExtruderPosition)))
 
             if v.withinToolchangeBlock and v.side_wipe:
