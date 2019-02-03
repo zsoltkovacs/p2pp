@@ -91,12 +91,17 @@ def moved_in_tower():
 
 
 def gcode_parseline(gcode_fullline):
+
     __tower_remove = False
 
     if not gcode_fullline[0] == ";":
         gcode_fullline = gcode_fullline.split(';')[0]
 
     gcode_fullline = gcode_fullline.rstrip('\n')
+
+    if gcode_fullline == "":
+        v.processedGCode.append("\n")
+        return
 
 
     if gcode_fullline.startswith('T'):
@@ -114,7 +119,7 @@ def gcode_parseline(gcode_fullline):
             return
 
         if moved_in_tower() and v.side_wipe and not v.side_wipe_skip:
-            if gcode_fullline[0] != ";":
+            if not gcode_fullline[0] == ";":
                 v.processedGCode.append(";--- P2PP  - Purge Tower - " + gcode_fullline + "\n")
             gcode_fullline = gcode_remove_params(gcode_fullline, ["X", "Y"])
             __tower_remove = True

@@ -103,7 +103,7 @@ def collect_wipetower_info(line):
     if line.startswith("; CP WIPE TOWER FIRST LAYER BRIM END") or line.startswith("; CP EMPTY GRID END"):
         v.side_wipe_skip = False
 
-    if line[0] == "G":
+    if line.startswith("G"):
         parm_x = get_gcode_parameter(line, "X")
         parm_y = get_gcode_parameter(line, "Y")
 
