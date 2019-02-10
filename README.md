@@ -213,7 +213,8 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 > The minimal first slice length is 100mm. This is required to make the filament reach the outgoing drive. Minimum slice distance for following slices can be set as low as 40, however this will impact the speed at which filament can be created and so print speed may have to be adjusted accordingly
 
 
-### Filament Settings
+
+### Filament Settings [**OBSOLETE**]
 1. In Slic3r, Click the "Filament Settings Tab"
 2. Add the following lines exactly as shown to *EACH* filament profile you want to use with the palette 2. These changes will not interfere with the normal working under other profiles as only comments are added to the gcode file.
 ```
