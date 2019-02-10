@@ -220,6 +220,34 @@ On your first prints make sure you review the output file to make sure it contai
 > Increase the purge volumes until the required length is met (or lower the P2PP_MINSPLICE setting). If the start slice is too short, you can add a brim or skirt to use more filament in the first color.
 
 
+## Extrusion Multipliers with P2PP
+
+Extrusion multipliers increase or decrease the effective extrusion by a factor defined in the **M221** Gcode command.  Prusa MK3 users may know the following piece of text appearing in their startup Gcode:
+
+```
+	M221 S{if layer_height==0.05}100{else}95{endif}
+```
+
+This piece of code sets a specific extruder mulpiplier depending on the chosen layer height.
+
+So….  What does this mean in real life?
+
+When you issue **M221 M95** (standard on a Prusa, 0.20mm layer),  you will tell the printer to use only 95% of the material specified in the Gcode file.    **G1 E100**  - the command to extrude 100mm of filament - will make the printer consume *only 95mm* of filament… 
+
+In this examply, when you calibrate yur P2 or P2Pro using an extrusion multiplier, P2/P2Pro will assume your printer  is underconsuming filament. On a standard Prusa MK3 with a keychain sliced using SLic3R PE it would not be uncommon to see PINGS in range of 95%.
+
+For good measure, it is therefor important to make sure your extrusion multiplier is set to 100% during the first calibration print.  You can achieve this by (temporarely) adding the following line at the end of your startup GCODE:
+
+```
+	M221 S100
+```
+
+For all future prints using **Chroma** or **Canvas**, make sure to keep the same line in the code!  Removing the line will potentially generate a gap that P2/P2P will not be able to correct for.... 
+
+**P2PP** however takes the extrusion multiplier into consideration when calculating splice lengths and the ping locations, so even when the printer was calibrated with a value of 100, it will happily print with any other extrusion multiplier (like the 95 on prusa).  Important though to also here use 100% extrusion during the Calibration.
+
+**One big exception:**  Extrusion multiplication settings in *Octoprint* or on the *Printer control panel* should be left at 100% AT ALL TIMES.   P2 and the printer have  filament lengths defined during the GCode-processing.  After the GCode is generated, all actions that affect the amount of filament used will make the printer wander off from its set path.... P2 will try to correct for the error and it may succeed but it puts yout print at risk....
+
 Happy printing.
 
 
