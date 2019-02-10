@@ -86,7 +86,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP PRINTERPROFILE=REPLACE_WITH_YOUR_PRINTER_PROFILE_OBTAINED_FROM_ABOVE
     ;P2PP SPLICEOFFSET=30
     ;P2PP MINSTARTSPLICE=100
-    ;P2PP MINSPLICE=70
+    ;P2PP MINSPLICE=80
     ;P2PP MATERIAL_DEFAULT_0_0_0
     ;P2PP MATERIAL_PVA_PVA_0_0_0
     ;P2PP MATERIAL_PVA_PLA_0_0_0
@@ -99,10 +99,17 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP EXTRAENDFILAMENT=150
     
     ; Following optional settings control the SIDE TRANSITIONING (see description below)
+    ;P2PP BEDORIGINX=0
+    ;P2PP BEDORIGINY=-10
+    ;P2PP BEDSIZEX=250
+    ;P2PP BEDSIZEY=220
     ;P2PP SIDEWIPELOC=X253.9
     ;P2PP SIDEWIPEMINY=45
     ;P2PP SIDEWIPEMAXY=195
     ;P2PP SIDEWIPECORRECTION=1.0
+    
+    ;P2PP BEFORESIDEWIPEGCODE ;--ENTER GCODE TO BE EXECUTED BEFORE SIDEWIPE (one coomand per line,can be multiple lines)
+    ;P2PP AFTERSIDEWIPEGCODE ;--- ENTER GCODE TO BE EXECUTED AFTER SIDEWIPE (one coomand per line,can be multiple lines)
     
     ```
 
@@ -144,14 +151,34 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ![splice offset](https://github.com/tomvandeneede/p2pp/blob/dev/docs/linearping.png)
     
 > **EXTRAENDFILAMENT=\#** *[OPTIONAL]*
-  This parameter is used to configure the extra length (in mm) of filament P2 will generate at the end of the print.  The default parameter value is defined as 150mm.  The value should at least be the length between the extruder motor to the nozzle.
+  This parameter is used to configure the extra length (in mm) of filament P2 will generate at the end of the print.  The default parameter value is defined as 150mm.  The value should at least be the length between the extruder motor to the nozzle. 
   
    ```
   ;P2PP EXTRAENDFILAMENT=150
   ```
+ 
+  > **BEDORIGINX=nnn  and BEDORIGINY=nnn#** 
+   
+   Sets the origin of the bed.  The default value is as defined below and should suite MK3 users.  Users of other printers can override the defaults by using the below lines with the correct values in the printer Startup GCode sectio.   These parameters are used to determine if the purge tower is located on the bed or not.
+   
+   ```
+  ;P2PP BEDORIGINX=0.0
+  ;P2PP BEDORIGINY=-1.0
+  ```
   
+  > **BEDSIZEX=nnn  and BEDSIZEY=nnn#** 
+  
+      Sets the size of the bed.  The default value is as defined below and should suite MK3 users.  Users of other printers can override the defaults by using the below lines with the correct values in the printer Startup GCode section.   These parameters are used to determine if the purge tower is located on the bed or not.
+      
+   ```
+  ;P2PP BEDSIZEX=250
+  ;P2PP BEDSIZEY=220
+  ```
+
+  
+ 
  > **SIDEWIPELOC=X#** *[EXPERIMENTAL]*
-  This is used to define the location on the X-Axis the printer needs to go to to do a side transition instead of doing a tower purge.  In Slic3r all still needs to be setup with a purge tower.  p2pp will convert the tower purges into side wipes and fileter out all purges that are not necessary (i.e. empty towe shells). 
+  This is used to define the location on the X-Axis the printer needs to go to to do a side transition instead of doing a tower purge.  In Slic3r all still needs to be setup with a purge, tower, but the tower needs to be **MOVE COMPLETELY OFF THE BED** to enable the SIDE WIPE .  p2pp will convert the tower purges into side wipes and fileter out all purges that are not necessary (i.e. empty towe shells). 
   If you want to perform a side wipe on the MK3 use the following line.  
   ```
   ;P2PP SIDEWIPELOC=X254
@@ -169,6 +196,9 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ```
   ;P2PP SIDEWIPECORRECTION=1.0
   ```
+
+> **;P2PP BEFORESIDEWIPEGCODE** and **;P2PP AFTERSIDEWIPEGCODE**
+  These parameters allow the user to insert blocks of GCode right before or after the side wipe purge block is executed.  There can be only one GCode command per line but you can include multiple BEFORE/AFTERSIDEWIPEGCODE commands in the section.  The commands are always executed in the given order.
 
 ### Print Settings
 1. In Slic3r, Click the "Print Settings Tab"
@@ -248,15 +278,15 @@ For all future prints using **Chroma** or **Canvas**, make sure to keep the same
 
 **One big exception:**  Extrusion multiplication settings in *Octoprint* or on the *Printer control panel* should be left at 100% AT ALL TIMES.   P2 and the printer have  filament lengths defined during the GCode-processing.  After the GCode is generated, all actions that affect the amount of filament used will make the printer wander off from its set path.... P2 will try to correct for the error and it may succeed but it puts yout print at risk....
 
-Happy printing.
-
 
 ## Acknowledgements
 
-Thanks to Tim Brookman for the co-development of this plugin and for all who tested and provided feedback.
+Thanks to Tim Brookman for the co-development of this plugin.
+
+Many thanks also to Klaus Knute, Khalil Nurullah, Casey Eberle (and all others) for the endless testing and valuable feedback...it's them driving the improvements...
 
 
-Good luck & happy printing !!!
+## **Good luck & happy printing !!!**
 
 
 
