@@ -144,14 +144,34 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ![splice offset](https://github.com/tomvandeneede/p2pp/blob/dev/docs/linearping.png)
     
 > **EXTRAENDFILAMENT=\#** *[OPTIONAL]*
-  This parameter is used to configure the extra length (in mm) of filament P2 will generate at the end of the print.  The default parameter value is defined as 150mm.  The value should at least be the length between the extruder motor to the nozzle.
+  This parameter is used to configure the extra length (in mm) of filament P2 will generate at the end of the print.  The default parameter value is defined as 150mm.  The value should at least be the length between the extruder motor to the nozzle. 
   
    ```
   ;P2PP EXTRAENDFILAMENT=150
   ```
+ 
+  > **BEDORIGINX=nnn  and BEDORIGINY=nnn#** 
+   
+   Sets the origin of the bed.  The default value is as defined below and should suite MK3 users.  Users of other printers can override the defaults by using the below lines with the correct values in the printer Startup GCode sectio.   These parameters are used to determine if the purge tower is located on the bed or not.
+   
+   ```
+  ;P2PP BEDORIGINX=0.0
+  ;P2PP BEDORIGINY=-1.0
+  ```
   
+  > **BEDSIZEX=nnn  and BEDSIZEY=nnn#** 
+  
+      Sets the size of the bed.  The default value is as defined below and should suite MK3 users.  Users of other printers can override the defaults by using the below lines with the correct values in the printer Startup GCode section.   These parameters are used to determine if the purge tower is located on the bed or not.
+      
+   ```
+  ;P2PP BEDSIZEX=250
+  ;P2PP BEDSIZEY=220
+  ```
+
+  
+ 
  > **SIDEWIPELOC=X#** *[EXPERIMENTAL]*
-  This is used to define the location on the X-Axis the printer needs to go to to do a side transition instead of doing a tower purge.  In Slic3r all still needs to be setup with a purge tower.  p2pp will convert the tower purges into side wipes and fileter out all purges that are not necessary (i.e. empty towe shells). 
+  This is used to define the location on the X-Axis the printer needs to go to to do a side transition instead of doing a tower purge.  In Slic3r all still needs to be setup with a purge, tower, but the tower needs to be **MOVE COMPLETELY OFF THE BED** to enable the SIDE WIPE .  p2pp will convert the tower purges into side wipes and fileter out all purges that are not necessary (i.e. empty towe shells). 
   If you want to perform a side wipe on the MK3 use the following line.  
   ```
   ;P2PP SIDEWIPELOC=X254
