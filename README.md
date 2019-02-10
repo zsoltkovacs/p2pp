@@ -100,7 +100,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     
     ; Following optional settings control the SIDE TRANSITIONING (see description below)
     ;P2PP BEDORIGINX=0
-    ;P2PP BEDORIGINY=-1
+    ;P2PP BEDORIGINY=-10
     ;P2PP BEDSIZEX=250
     ;P2PP BEDSIZEY=220
     ;P2PP SIDEWIPELOC=X253.9
