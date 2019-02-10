@@ -108,8 +108,8 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP SIDEWIPEMAXY=195
     ;P2PP SIDEWIPECORRECTION=1.0
     
-    ;P2PP BEFORESIDEWIPEGCODE ;--ENTER GCODE TO BE EXECUTED BEFORE SIDEWIPE (one command per line,can be multiple lines)
-    ;P2PP AFTERSIDEWIPEGCODE ;--- ENTER GCODE TO BE EXECUTED AFTER SIDEWIPE (one command per line,can be multiple lines)
+    ;P2PP BEFORESIDEWIPEGCODE ;--ENTER GCODE TO BE EXECUTED BEFORE SIDEWIPE (one coomand per line,can be multiple lines)
+    ;P2PP AFTERSIDEWIPEGCODE ;--- ENTER GCODE TO BE EXECUTED AFTER SIDEWIPE (one coomand per line,can be multiple lines)
     
     ```
 
@@ -219,13 +219,12 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 > The minimal first slice length is 100mm. This is required to make the filament reach the outgoing drive. Minimum slice distance for following slices can be set as low as 40, however this will impact the speed at which filament can be created and so print speed may have to be adjusted accordingly
 
 
-### Filament Settings
+### Filament Settings (!!!)
 1. In Slic3r, Click the "Filament Settings Tab"
-2. Add the following lines exactly as shown to *EACH* filament profile you want to use with the palette 2. These changes will not interfere with the normal working under other profiles as only comments are added to the gcode file.
+2. Each filament should define a linear advance factor of greater than 0 (nn value).  
+Normally filament has this value defined based on bowden or direct drive so no action is required.
 ```
-;P2PP FN=[filament_preset]
-;P2PP FT=[filament_type]
-;P2PP FC=[extruder_colour]
+M900 Knn
 ```
 3. Remember to click the floppy-disk icon to save!
 
@@ -287,6 +286,8 @@ Many thanks also to Klaus Knute, Khalil Nurullah, Casey Eberle (and all others) 
 
 
 ## **Good luck & happy printing !!!**
+
+
 
 
 
