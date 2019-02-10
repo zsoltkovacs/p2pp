@@ -1,7 +1,7 @@
 # p2pp - **Palette2 Post Processing tool for Slic3r PE**
 
 
-**Tested with version 1.41.2 and 1.42.0 Alpha 1/2/5**
+**Tested with version 1.41.2 and 1.42.0 Alpha 1**
 earlier versions may generate different code patterns and may not work correctly
 
 
@@ -108,6 +108,9 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP SIDEWIPEMAXY=195
     ;P2PP SIDEWIPECORRECTION=1.0
     
+    ;P2PP BEFORESIDEWIPEGCODE ;--ENTER GCODE TO BE EXECUTED BEFORE SIDEWIPE (one coomand per line,can be multiple lines)
+    ;P2PP AFTERSIDEWIPEGCODE ;--- ENTER GCODE TO BE EXECUTED AFTER SIDEWIPE (one coomand per line,can be multiple lines)
+    
     ```
 
  ![splice offset](https://github.com/tomvandeneede/p2pp/blob/dev/docs/overallconfig.png)
@@ -194,6 +197,9 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ;P2PP SIDEWIPECORRECTION=1.0
   ```
 
+> **;P2PP BEFORESIDEWIPEGCODE** and **;P2PP AFTERSIDEWIPEGCODE**
+  These parameters allow the user to insert blocks of GCode right before or after the side wipe purge block is executed.  There can be only one GCode command per line but you can include multiple BEFORE/AFTERSIDEWIPEGCODE commands in the section.  The commands are always executed in the given order.
+
 ### Print Settings
 1. In Slic3r, Click the "Print Settings Tab"
 2. Click the "Multiple Extruders" menu item
@@ -213,21 +219,15 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 > The minimal first slice length is 100mm. This is required to make the filament reach the outgoing drive. Minimum slice distance for following slices can be set as low as 40, however this will impact the speed at which filament can be created and so print speed may have to be adjusted accordingly
 
 
-
-### Filament Settings [** READ CAREFULLY , CONFIG COMMANDS HAVE BECOME OBSOLETE BUT...**]
+### Filament Settings
 1. In Slic3r, Click the "Filament Settings Tab"
 2. Add the following lines exactly as shown to *EACH* filament profile you want to use with the palette 2. These changes will not interfere with the normal working under other profiles as only comments are added to the gcode file.
 ```
-M900 K{if printer_notes=~/.*PRINTER_HAS_BOWDEN.*/}200{else}30{endif}; Filament gcode
 ;P2PP FN=[filament_preset]
 ;P2PP FT=[filament_type]
 ;P2PP FC=[extruder_colour]
 ```
 3. Remember to click the floppy-disk icon to save!
-
-**Make sure there is a non-zero  M900 statementin the startup code for your filament (Prusa by default has that) **
-If you don't have this, the majority of your print will be purged to the side of the bed...**
-
 
 ## Usage
 
