@@ -172,7 +172,7 @@ def gcode_parseline(gcode_fullline):
                     v.lastPingExtruderPosition = v.totalMaterialExtruded
                     v.pingExtruderPosition.append(v.lastPingExtruderPosition)
                     v.processedGCode.append(";Palette 2 - PING\n")
-                    v.progessedGCode.append("G4 S0\n")
+                    v.processedGCode.append("G4 S0\n")
                     v.processedGCode.append("O31 {}\n".format(hexify_float(v.lastPingExtruderPosition)))
 
             if v.withinToolchangeBlock and v.side_wipe:
