@@ -144,18 +144,20 @@ def gcode_parseline(gcode_fullline):
     if gcode_fullline.startswith("G"):
         toX = get_gcode_parameter(gcode_fullline, "X")
         toY = get_gcode_parameter(gcode_fullline, "Y")
+        prevx = v.currentPositionX
+        prevy = v.currentPositionY
         if toX != "":
             v.currentPositionX = float(toX)
         if toY != "":
             v.currentPositionY = float(toY)
+        if not CoordinateOnBed(v.currentPositionX, v.currentPositionY) and  CoordinateOnBed(prevx,prevy):
+            gcode_fullline = ";"+gcode_fullline
 
     if v.mmu_unload_remove and not "TOOLCHANGE WIPE" in gcode_fullline:
         v.processedGCode.append(';--- P2PP removed ' + gcode_fullline + "\n")
         return
 
     if gcode_fullline.startswith("G1"):
-
-
             extruder_movement = get_gcode_parameter(gcode_fullline, "E")
             if extruder_movement != "":
 
@@ -182,6 +184,7 @@ def gcode_parseline(gcode_fullline):
 
             if not v.withinToolchangeBlock and v.wipeRetracted:
                 sidewipe.unretract()
+
 
     # Other configuration information
     # this information should be defined in your Slic3r printer settings, startup GCode
@@ -221,7 +224,8 @@ def gcode_parseline(gcode_fullline):
 
     if "TOOLCHANGE WIPE" in gcode_fullline:
         v.mmu_unload_remove = False
-        v.processedGCode.append("G0 X{} Y{}\n".format(v.currentPositionX, v.currentPositionY))
+        if CoordinateOnBed(v.currentPositionX, v.currentPositionY):
+            v.processedGCode.append("G0 X{} Y{}\n".format(v.currentPositionX, v.currentPositionY))
 
         # Layer Information
     if gcode_fullline.startswith(";LAYER "):
