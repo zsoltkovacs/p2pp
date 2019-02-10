@@ -38,8 +38,8 @@ def clicked():
     root.destroy()
 
 
-def usererror(body_text):
-    tkMessageBox.askcancel("P2PP - Error Occurred", body_text)
+def user_error(body_text):
+    tkMessageBox.showerror("P2PP - Error Occurred", body_text)
 
 
 def show_warnings(warning_list):
@@ -53,13 +53,13 @@ def show_warnings(warning_list):
     canvas = Canvas(root)
     canvas.pack(side=TOP, fill=BOTH, expand=1, padx=10, pady=10)
     sb = Scrollbar(canvas)
-    list = Text(canvas)
+    warn = Text(canvas)
 
     sb.pack(side=RIGHT, fill=Y)
     for warning in range(len(warning_list)-4):
-        list.insert(END, warning_list[warning+4][1:])
-    list.pack(side=LEFT, fill=BOTH, expand=1)
-    sb.config(command=list.yview)
+        warn.insert(END, warning_list[warning+4][1:])
+    warn.pack(side=LEFT, fill=BOTH, expand=1)
+    sb.config(command=warn.yview)
 
     btn = Button(root, text='Close', command=clicked)
     btn.pack(side=BOTTOM, fill=Y, pady=10)
