@@ -11,6 +11,7 @@ __status__ = 'Beta'
 
 
 import p2pp.variables as v
+from p2pp.logfile import log_warning
 
 
 def gcode_remove_params(gcode, params):
@@ -43,6 +44,17 @@ def parse_slic3r_config():
 
         if gcode_line.startswith("; avoid_crossing_perimeters"):
             break
+
+        if gcode_line.startswith("; wipe_tower_x"):
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                v.wipetower_posx = float(gcode_line[parameter_start+1:].strip())
+
+        if gcode_line.startswith("; wipe_tower_y"):
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                v.wipetower_posy = float(gcode_line[parameter_start+1:].strip())
+
 
         if gcode_line.startswith("; extruder_colour"):
             filament_colour = ''
@@ -81,6 +93,5 @@ def parse_slic3r_config():
 
         if gcode_line.startswith("; retract_before_travel"):
             pass
-
 
 

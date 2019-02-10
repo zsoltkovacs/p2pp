@@ -82,12 +82,12 @@ def gcode_filter_toolchange_block(line):
     return line
 
 
-# G Code parsing routine
+def CoordinateOnBed(x,y):
+    return (x >= v.bed_origin_x and x <= v.bed_origin_x+v.bed_size_x and y >= v.bed_origin_y and y <= v.bed_origin_y+v.bed_size_y)
+
+
 def moved_in_tower():
-    if v.currentPositionX >= v.bed_origin_x and v.currentPositionX <= v.bed_origin_x+v.bed_size_x and\
-       v.currentPositionY >= v.bed_origin_y and v.currentPositionY <= v.bed_origin_y+v.bed_size_y:
-        return False
-    return True
+    return not CoordinateOnBed(v.currentPositionX ,v.currentPositionY)
 
 
 def gcode_parseline(gcode_fullline):
@@ -253,6 +253,8 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     opf.close()
 
     parse_slic3r_config()
+
+    v.side_wipe = not CoordinateOnBed(v.wipetower_posx, v.wipetower_posy)
 
     # Process the file
     # #################

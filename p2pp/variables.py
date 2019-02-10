@@ -77,6 +77,9 @@ wipe_tower_info = {'minx': 9999,
                    'maxy': -9999
                    }
 
+wipetower_posx = 0
+wipetower_posy = 0
+
 currentPositionX = 9999
 currentPositionY = 9999
 

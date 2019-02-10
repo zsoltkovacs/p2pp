@@ -56,7 +56,6 @@ def check_config_parameters(gcode_line):
     # SIDE TRANSITIONING
     if gcode_line.startswith(";P2PP SIDEWIPELOC="):
         v.side_wipe_loc = gcode_line[18:].strip("\n")
-        v.side_wipe = True
 
     if gcode_line.startswith(";P2PP SIDEWIPEMINY="):
         v.sideWipeMinY = float(gcode_line[19:])
