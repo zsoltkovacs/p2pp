@@ -214,15 +214,20 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 
 
 
-### Filament Settings [**OBSOLETE**]
+### Filament Settings [** READ CAREFULLY , CONFIG COMMANDS HAVE BECOME OBSOLETE BUT...**]
 1. In Slic3r, Click the "Filament Settings Tab"
 2. Add the following lines exactly as shown to *EACH* filament profile you want to use with the palette 2. These changes will not interfere with the normal working under other profiles as only comments are added to the gcode file.
 ```
+M900 K{if printer_notes=~/.*PRINTER_HAS_BOWDEN.*/}200{else}30{endif}; Filament gcode
 ;P2PP FN=[filament_preset]
 ;P2PP FT=[filament_type]
 ;P2PP FC=[extruder_colour]
 ```
 3. Remember to click the floppy-disk icon to save!
+
+**Make sure there is a non-zero  M900 statementin the startup code for your filament (Prusa by default has that) **
+If you don't have this, the majority of your print will be purged to the side of the bed...**
+
 
 ## Usage
 
