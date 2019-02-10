@@ -19,8 +19,6 @@ import p2pp.gui as gui
 # ################################################################
 # ######################### ALGORITHM PROCESSING ################
 # ################################################################
-
-
 def algorithm_create_process_string(heating, compression, cooling):
     return "{} {} {}".format(hexify_short(int(heating)),
                              hexify_short(int(compression)),

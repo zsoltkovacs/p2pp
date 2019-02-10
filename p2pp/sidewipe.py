@@ -14,6 +14,10 @@ from p2pp.gcodeparser import get_gcode_parameter
 
 
 def create_side_wipe():
+
+    if not v.side_wipe:
+        return
+
     v.processedGCode.append(";P2PP SIDE WIPE CODE\n")
     v.processedGCode.append(";-------------------\n")
     v.processedGCode.append(";  Side wipe length: {}mm\n".format(v.side_wipe_length))

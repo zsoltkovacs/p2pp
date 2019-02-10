@@ -66,6 +66,11 @@ sideWipeMinY = 25
 sideWipeMaxY = 175
 maxWipe = -1
 
+bed_size_x = 250
+bed_size_y = 220
+bed_origin_x = 0
+bed_origin_y = -1.00   #eccount for the purge line at the start of the print
+
 wipe_tower_info = {'minx': 9999,
                    'miny': 9999,
                    'maxx': -9999,

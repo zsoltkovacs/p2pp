@@ -15,6 +15,7 @@ from p2pp.logfile import log_warning
 
 def check_config_parameters(gcode_line):
     # BASIC SETUP  (material setup handled in mcf.py)
+
     if gcode_line.startswith(";P2PP PRINTERPROFILE=") and v.printerProfileString == '': # -p takes precedence over printer defined in file
         v.printerProfileString = gcode_line[21:]
 
@@ -29,6 +30,15 @@ def check_config_parameters(gcode_line):
         if v.minimalStartSpliceLength < 100:
             v.minimalStartSpliceLength = 100
             log_warning("Minimal first slice length adjusted to 100mm")
+
+    if gcode_line.startswith(";P2PP BEDSIZEX="):
+        v.bed_size_x = float(gcode_line[15:])
+    if gcode_line.startswith(";P2PP BEDSIZEY="):
+        v.bed_size_y = float(gcode_line[15:])
+    if gcode_line.startswith(";P2PP BEDORIGINX="):
+        v.bed_origin_x = float(gcode_line[17:])
+    if gcode_line.startswith(";P2PP BEDORIGINY="):
+        v.bed_origin_y = float(gcode_line[17:])
 
     if gcode_line.startswith(";P2PP MINSPLICE="):
         v.minimalSpliceLength = float(gcode_line[16:])

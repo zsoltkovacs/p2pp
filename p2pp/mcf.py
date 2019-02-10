@@ -84,10 +84,10 @@ def gcode_filter_toolchange_block(line):
 
 # G Code parsing routine
 def moved_in_tower():
-    if v.currentPositionX >= v.wipe_tower_info['minx'] and v.currentPositionX <= v.wipe_tower_info['maxx'] and\
-       v.currentPositionY >= v.wipe_tower_info['miny'] and v.currentPositionY <= v.wipe_tower_info['maxy']:
-        return True
-    return False
+    if v.currentPositionX >= v.bed_originx and v.currentPositionX <= v.bed_origin_x+v.bed_size_x and\
+       v.currentPositionY >= v.bed_origin_y and v.currentPositionY <= v.bed_origin_y+v.bed_size_y:
+        return False
+    return True
 
 
 def gcode_parseline(gcode_fullline):
@@ -140,9 +140,21 @@ def gcode_parseline(gcode_fullline):
 
     # Processing of print head movements
     #############################################
-    if gcode_fullline.startswith("G1"):
-            extruder_movement = get_gcode_parameter(gcode_fullline, "E")
 
+    if gcode_fullline.startswith("G"):
+        toX = get_gcode_parameter(gcode_fullline, "X")
+        toY = get_gcode_parameter(gcode_fullline, "Y")
+        if toX != "":
+            v.currentPositionX = float(toX)
+        if toY != "":
+            v.currentPositionY = float(toY)
+
+
+    if gcode_fullline.startswith("G1"):
+
+
+
+            extruder_movement = get_gcode_parameter(gcode_fullline, "E")
             if extruder_movement != "":
 
                 if v.withinToolchangeBlock and v.side_wipe:
@@ -223,7 +235,7 @@ def gcode_parseline(gcode_fullline):
 def generate(input_file, output_file, printer_profile, splice_offset, silent):
     v.printerProfileString = printer_profile
     basename = os.path.basename(input_file)
-    _taskName = os.path.splitext(basename)[0]
+    _taskName = os.path.splitext(basename)[0].replace(" ","_")
 
     v.splice_offset = splice_offset
 

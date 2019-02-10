@@ -64,6 +64,9 @@ def parse_slic3r_config():
                     v.usedFilamentTypes = list(set(filament_string))
             continue
 
+        if gcode_line.startswith(";"):
+            pass
+
         if gcode_line.startswith("; wiping_volumes_matrix"):
             wiping_info = []
             parameter_start = gcode_line.find("=")
@@ -75,9 +78,6 @@ def parse_slic3r_config():
                     wiping_info[i] = int(wiping_info[i])
             v.maxWipe = max(wiping_info)
             continue
-
-        if gcode_line.startswith("; bed_shape"):
-            pass
 
         if gcode_line.startswith("; retract_before_travel"):
             pass
