@@ -84,7 +84,7 @@ def gcode_filter_toolchange_block(line):
 
 # G Code parsing routine
 def moved_in_tower():
-    if v.currentPositionX >= v.bed_originx and v.currentPositionX <= v.bed_origin_x+v.bed_size_x and\
+    if v.currentPositionX >= v.bed_origin_x and v.currentPositionX <= v.bed_origin_x+v.bed_size_x and\
        v.currentPositionY >= v.bed_origin_y and v.currentPositionY <= v.bed_origin_y+v.bed_size_y:
         return False
     return True
