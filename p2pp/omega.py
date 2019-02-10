@@ -4,7 +4,7 @@ __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
 __license__ = 'GPL'
-__version__ = '1.0.0'
+__version__ = '3.0.0'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 __status__ = 'Beta'
@@ -175,6 +175,9 @@ def header_generate_omega(job_name):
                                                             v.pingExtruderPosition[i]
                                                             )
                        )
+
+    if v.side_wipe and v.side_wipe_loc=="":
+        log_warning("Using sidewipe with undefined SIDEWIPELOC!!!")
 
     warnings.append("\n")
     warnings.append(";-------------------:\n")

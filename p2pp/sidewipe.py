@@ -26,7 +26,7 @@ def create_side_wipe():
 
     if (v.maxWipe > 0) and (v.side_wipe_length > v.maxWipe):
         v.totalMaterialExtruded = v.totalMaterialExtruded - v.side_wipe_length + v.maxWipe
-        v.side_wipe_length = v.maxWipe
+        v.side_wipe_length = v.maxWipe * v.extrusionMultiplier
 
 
     if v.side_wipe_length > 0:
