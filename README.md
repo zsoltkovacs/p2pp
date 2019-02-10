@@ -1,7 +1,7 @@
 # p2pp - **Palette2 Post Processing tool for Slic3r PE**
 
 
-**Tested with version 1.41.2 and 1.42.0 Alpha 1**
+**Tested with version 1.41.2 and 1.42.0 Alpha 1/2/5**
 earlier versions may generate different code patterns and may not work correctly
 
 
