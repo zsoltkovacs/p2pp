@@ -100,13 +100,16 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     
     ; Following optional settings control the SIDE TRANSITIONING (see description below)
     ;P2PP BEDORIGINX=0
-    ;P2PP BEDORIGINY=-1
+    ;P2PP BEDORIGINY=-10
     ;P2PP BEDSIZEX=250
     ;P2PP BEDSIZEY=220
     ;P2PP SIDEWIPELOC=X253.9
     ;P2PP SIDEWIPEMINY=45
     ;P2PP SIDEWIPEMAXY=195
     ;P2PP SIDEWIPECORRECTION=1.0
+    
+    ;P2PP BEFORESIDEWIPEGCODE ;--ENTER GCODE TO BE EXECUTED BEFORE SIDEWIPE (one coomand per line,can be multiple lines)
+    ;P2PP AFTERSIDEWIPEGCODE ;--- ENTER GCODE TO BE EXECUTED AFTER SIDEWIPE (one coomand per line,can be multiple lines)
     
     ```
 
@@ -193,6 +196,9 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ```
   ;P2PP SIDEWIPECORRECTION=1.0
   ```
+
+> **;P2PP BEFORESIDEWIPEGCODE** and **;P2PP AFTERSIDEWIPEGCODE**
+  These parameters allow the user to insert blocks of GCode right before or after the side wipe purge block is executed.  There can be only one GCode command per line but you can include multiple BEFORE/AFTERSIDEWIPEGCODE commands in the section.  The commands are always executed in the given order.
 
 ### Print Settings
 1. In Slic3r, Click the "Print Settings Tab"
