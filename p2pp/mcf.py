@@ -4,7 +4,7 @@ __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
 __license__ = 'GPL'
-__version__ = '2.1 RC1'
+__version__ = '3.0.0'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 __status__ = 'Beta'
@@ -149,9 +149,11 @@ def gcode_parseline(gcode_fullline):
         if toY != "":
             v.currentPositionY = float(toY)
 
+    if v.mmu_unload_remove and not "TOOLCHANGE WIPE" in gcode_fullline:
+        v.processedGCode.append(';--- P2PP removed ' + gcode_fullline + "\n")
+        return
 
     if gcode_fullline.startswith("G1"):
-
 
 
             extruder_movement = get_gcode_parameter(gcode_fullline, "E")
@@ -170,7 +172,6 @@ def gcode_parseline(gcode_fullline):
                     v.lastPingExtruderPosition = v.totalMaterialExtruded
                     v.pingExtruderPosition.append(v.lastPingExtruderPosition)
                     v.processedGCode.append(";Palette 2 - PING\n")
-                    #v.processedGCode.append("G4 S0\n")
                     v.processedGCode.append("O31 {}\n".format(hexify_float(v.lastPingExtruderPosition)))
 
             if v.withinToolchangeBlock and v.side_wipe:
@@ -190,9 +191,6 @@ def gcode_parseline(gcode_fullline):
         if gcode_fullline.startswith(";P2PP MATERIAL_"):
                 algorithm_process_material_configuration(gcode_fullline[15:])
 
-        # if gcode_fullline.startswith(";P2PP ENDPURGETOWER") and  v.withinToolchangeBlock and v.side_wipe:
-        #     sidewipe.create_side_wipe()
-        #     v.withinToolchangeBlock = False
 
     if gcode_fullline.startswith("M900"):
         k_factor = get_gcode_parameter(gcode_fullline, "K")
@@ -215,10 +213,15 @@ def gcode_parseline(gcode_fullline):
 
     if "TOOLCHANGE UNLOAD" in gcode_fullline and not v.side_wipe:
         v.processedGCode.append(";P2PP Set Wipe Speed\n")
+        v.mmu_unload_remove = True
         v.processedGCode.append("G1 F2000\n")
         v.currentprintFeed = 2000.0 / 60.0
 
-    # Layer Information
+    if "TOOLCHANGE WIPE" in gcode_fullline:
+        v.mmu_unload_remove = False
+        v.processedGCode.append("G0 X{} Y{}\n".format(v.currentPositionX, v.currentPositionY))
+
+        # Layer Information
     if gcode_fullline.startswith(";LAYER "):
         v.currentLayer = gcode_fullline[7:]
 

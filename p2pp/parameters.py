@@ -4,7 +4,7 @@ __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
 __license__ = 'GPL'
-__version__ = '1.0.0'
+__version__ = '3.0.0'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 __status__ = 'Beta'
@@ -24,6 +24,12 @@ def check_config_parameters(gcode_line):
 
     if gcode_line.startswith(";P2PP EXTRAENDFILAMENT="):
         v.extraRunoutFilament = float(gcode_line[23:])
+
+    if gcode_line.startswith(";P2PP BEFORESIDEWIPEGCODE"):
+        v.before_sidewipe_gcode.append(gcode_line[25:].strip())
+
+    if gcode_line.startswith(";P2PP AFTERSIDEWIPEGCODE"):
+        v.after_sidewipe_gcode.append(gcode_line[24:].strip())
 
     if gcode_line.startswith(";P2PP MINSTARTSPLICE="):
         v.minimalStartSpliceLength = float(gcode_line[21:])
@@ -55,7 +61,7 @@ def check_config_parameters(gcode_line):
 
     # SIDE TRANSITIONING
     if gcode_line.startswith(";P2PP SIDEWIPELOC="):
-        v.side_wipe_loc = gcode_line[18:].strip("\n")
+        v.side_wipe_loc = gcode_line[18:].strip()
 
     if gcode_line.startswith(";P2PP SIDEWIPEMINY="):
         v.sideWipeMinY = float(gcode_line[19:])

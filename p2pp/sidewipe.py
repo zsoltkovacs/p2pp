@@ -4,7 +4,7 @@ __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
 __license__ = 'GPL'
-__version__ = '1.0.0'
+__version__ = '3.0.0'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 __status__ = 'Beta'
@@ -22,11 +22,17 @@ def create_side_wipe():
     v.processedGCode.append(";-------------------\n")
     v.processedGCode.append(";  Side wipe length: {}mm\n".format(v.side_wipe_length))
 
+
+
     if (v.maxWipe > 0) and (v.side_wipe_length > v.maxWipe):
         v.totalMaterialExtruded = v.totalMaterialExtruded - v.side_wipe_length + v.maxWipe
         v.side_wipe_length = v.maxWipe
 
+
     if v.side_wipe_length > 0:
+        for line in v.before_sidewipe_gcode:
+            v.processedGCode.append(line+"\n")
+
         v.processedGCode.append("G1 E{}\n".format(-v.sidewiperetract))
         v.wipeRetracted = True
         v.processedGCode.append("G1 F8640\n")
@@ -56,7 +62,8 @@ def create_side_wipe():
 
         v.processedGCode.append(";-------------------\n")
         v.side_wipe_length = 0
-
+        for line in v.after_sidewipe_gcode:
+            v.processedGCode.append(line+"\n")
 
 def unretract():
     v.processedGCode.append("G1 E{}\n".format(v.sidewiperetract))
