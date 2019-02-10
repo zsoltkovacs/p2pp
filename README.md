@@ -272,15 +272,15 @@ For all future prints using **Chroma** or **Canvas**, make sure to keep the same
 
 **One big exception:**  Extrusion multiplication settings in *Octoprint* or on the *Printer control panel* should be left at 100% AT ALL TIMES.   P2 and the printer have  filament lengths defined during the GCode-processing.  After the GCode is generated, all actions that affect the amount of filament used will make the printer wander off from its set path.... P2 will try to correct for the error and it may succeed but it puts yout print at risk....
 
-Happy printing.
-
 
 ## Acknowledgements
 
-Thanks to Tim Brookman for the co-development of this plugin and for all who tested and provided feedback.
+Thanks to Tim Brookman for the co-development of this plugin.
+
+Many thanks also to Klaus Knute, Khalil Nurullah, Casey Eberle (and all others) for the endless testing and valuable feedback...it's them driving the improvements...
 
 
-Good luck & happy printing !!!
+## **Good luck & happy printing !!!**
 
 
 
