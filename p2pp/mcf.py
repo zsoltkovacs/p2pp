@@ -245,6 +245,8 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     v.printerProfileString = printer_profile
     basename = os.path.basename(input_file)
     _taskName = os.path.splitext(basename)[0].replace(" ","_")
+    _taskName = _taskName.replace(".mcf","")
+
 
     v.splice_offset = splice_offset
 

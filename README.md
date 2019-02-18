@@ -144,9 +144,9 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ``` 
 
 > **LINEARPING**  *[OPTIONAL]*
-    This is used to keep the filament disctance between pings constant to 350mm.  When this parameter is not set, the ping distance is exponentially growing during the print resulting in filament distances up to 3m between pings in very long prints.
+    This is used to keep the filament disctance between pings constant to 350mm.  When this parameter is not set, the ping distance is exponentially growing during the print resulting in filament distances up to 3m between pings in very long prints.  ** WARNING ** Smoe users have reported issues when setting LINEARPING to values below 350mm.  It is suggested to keep 350 as a minimum.
    ```
-  ;P2PP LINEARPING=150
+  ;P2PP LINEARPING=350
   ```    
   ![splice offset](https://github.com/tomvandeneede/p2pp/blob/dev/docs/linearping.png)
     
