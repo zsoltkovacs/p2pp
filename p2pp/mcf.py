@@ -150,12 +150,8 @@ def gcode_parseline(gcode_fullline):
             v.currentPositionX = float(toX)
         if toY != "":
             v.currentPositionY = float(toY)
-        if not CoordinateOnBed(v.currentPositionX, v.currentPositionY) and  CoordinateOnBed(prevx,prevy):
+        if not CoordinateOnBed(v.currentPositionX, v.currentPositionY) and CoordinateOnBed(prevx, prevy):
             gcode_fullline = ";"+gcode_fullline
-
-    if v.mmu_unload_remove and not "TOOLCHANGE WIPE" in gcode_fullline:
-        v.processedGCode.append(';--- P2PP removed ' + gcode_fullline + "\n")
-        return
 
     if gcode_fullline.startswith("G1"):
             extruder_movement = get_gcode_parameter(gcode_fullline, "E")
@@ -185,7 +181,6 @@ def gcode_parseline(gcode_fullline):
             if not v.withinToolchangeBlock and v.wipeRetracted:
                 sidewipe.unretract()
 
-
     # Other configuration information
     # this information should be defined in your Slic3r printer settings, startup GCode
     ###################################################################################
@@ -196,12 +191,16 @@ def gcode_parseline(gcode_fullline):
         if gcode_fullline.startswith(";P2PP MATERIAL_"):
                 algorithm_process_material_configuration(gcode_fullline[15:])
 
-
     if gcode_fullline.startswith("M900"):
         k_factor = get_gcode_parameter(gcode_fullline, "K")
         if int(k_factor) > 0:
             sidewipe.create_side_wipe()
             v.withinToolchangeBlock = False
+            v.mmu_unload_remove = False
+
+    if v.mmu_unload_remove and "TOOLCHANGE WIPE" not in gcode_fullline:
+        v.processedGCode.append(';--- P2PP removed ' + gcode_fullline + "\n")
+        return
 
     # Next section(s) clean up the GCode generated for the MMU
     # specially the rather violent unload/reload required for the MMU2
