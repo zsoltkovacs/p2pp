@@ -88,6 +88,8 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 2. Click the "Custom G-code" menu item.
 3. Locate the "Start G-code" input box at the top.
 4. INSERT (not overwrite) the following lines at the TOP of the Start G-code. You'll note that they are all commented out and are in no way going to interfere with the print.
+5. all movements outside the defined bedsize WILL be commented out.   If you do a pruge line outside of the bed area make sure to include this part of the bed in the bed definition
+
     ```
     ;P2PP PRINTERPROFILE=REPLACE_WITH_YOUR_PRINTER_PROFILE_OBTAINED_FROM_ABOVE
     ;P2PP SPLICEOFFSET=30
