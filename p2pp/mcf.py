@@ -153,6 +153,10 @@ def gcode_parseline(gcode_fullline):
         if not CoordinateOnBed(v.currentPositionX, v.currentPositionY) and CoordinateOnBed(prevx, prevy):
             gcode_fullline = ";"+gcode_fullline
 
+    if v.mmu_unload_remove and not (("TOOLCHANGE WIPE"   in gcode_fullline) or ("TOOLCHANGE END"   in gcode_fullline)) :
+        v.processedGCode.append(';--- P2PP removed ' + gcode_fullline + "\n")
+        return
+
     if gcode_fullline.startswith("G1"):
             extruder_movement = get_gcode_parameter(gcode_fullline, "E")
             if extruder_movement != "":
@@ -198,9 +202,6 @@ def gcode_parseline(gcode_fullline):
             v.withinToolchangeBlock = False
             v.mmu_unload_remove = False
 
-    if v.mmu_unload_remove and "TOOLCHANGE WIPE" not in gcode_fullline:
-        v.processedGCode.append(';--- P2PP removed ' + gcode_fullline + "\n")
-        return
 
     # Next section(s) clean up the GCode generated for the MMU
     # specially the rather violent unload/reload required for the MMU2
@@ -214,6 +215,7 @@ def gcode_parseline(gcode_fullline):
 
     if ("TOOLCHANGE END" in gcode_fullline) and not v.side_wipe:
         v.withinToolchangeBlock = False
+        v.mmu_unload_remove = False
 
     if "TOOLCHANGE UNLOAD" in gcode_fullline and not v.side_wipe:
         v.processedGCode.append(";P2PP Set Wipe Speed\n")
