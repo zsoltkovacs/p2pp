@@ -58,6 +58,9 @@ def check_config_parameters(gcode_line):
 
     if gcode_line.startswith(";P2PP LINEARPINGLENGTH="):
         v.pingIntervalLength = float(gcode_line[23:])
+        if (v.pingIntervalLength<350):
+            v.pingIntervalLength = 300
+            log_warning("Minimal Linear Ping distance is 300mm!  Your config statet: {}".format(gcode_line))
 
     # SIDE TRANSITIONING
     if gcode_line.startswith(";P2PP SIDEWIPELOC="):
