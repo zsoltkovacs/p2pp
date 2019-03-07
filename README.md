@@ -144,9 +144,10 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ``` 
 
 > **LINEARPING**  *[OPTIONAL]*
+> **LINEARPINGLENGTH= *[OPTIONAL]*
     This is used to keep the filament disctance between pings constant to 350mm.  When this parameter is not set, the ping distance is exponentially growing during the print resulting in filament distances up to 3m between pings in very long prints.  Problems have been reported with LINEARPING values below 350.  It may work but due to the shorter than normal range even the slightest deviation will results in a large percentage throwing off the P2 algorithm.   
    ```
-  ;P2PP LINEARPING=350
+  ;P2PP LINEARPINGLENGTH=350
   ```    
   ![splice offset](https://github.com/tomvandeneede/p2pp/blob/dev/docs/linearping.png)
     
