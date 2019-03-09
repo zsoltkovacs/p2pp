@@ -1,8 +1,8 @@
 # p2pp - **Palette2 Post Processing tool for Slic3r PE**
 
 
-**Tested with version 1.41.2 and 1.42.0 Alpha 1**
-earlier versions may generate different code patterns and may not work correctly
+**Tested with version 1.41.2 and 1.42.0 Alpha 1/2/3/5/7**
+earlier versions may generate different code patterns and may not work correctly.  When using alpha versions of the slicer, please check the associated version bug logs to make sure it is not a slic3r pe known issue prior to reporting here.  The alpha versions seem to work well, but they are not fnal release and still could hold issues affecting the p2pp script or the p2 functionality as a whole.
 
 
 ## Purpose
