@@ -235,12 +235,15 @@ When setup correctly the script will be triggered automatically from Slic3r PE a
 
 During the conversion the script may come up with a window stating possible warninngs.
 
-The purge settings in Slic3r PE are defined under the purge volumes settings.  This button is only visible on the "Plater Tab" and only when a Multi-Material Printer Profile is selected when "Multi Material, Single Extruder" is enabled.  The information entered in this screen is volumetric. This means that you have to roughly multiply the number in these fields by a factor 2.4 in order to get the filament length. We've found that 180mm3 (75mm of Filament) works well.
-![purging volumes](https://github.com/tomvandeneede/p2pp/blob/master/docs/Unloading_settings.JPG)
-> You do not need to set any volume for "Unloaded" - Leave this as 0. 
-
+The purge settings in Slic3r PE are defined under the purge volumes settings.  This button is only visible on the "Plater Tab" and only when a Multi-Material Printer Profile is selected when "Multi Material, Single Extruder" is enabled.  
+![purgelengths](https://github.com/tomvandeneede/p2pp/blob/master/docs/purgelengths.png)
 
 > SLIC3R PE uses _volume_ instead of _length_ in the purge settings.  For 1.75mm filament, 1mm of filament repesents a volume of approx 2.4mm3.  In order to relate to values used in Chroma or Canvas from previous successful prints, you have to divide the Slic3r PE values by a factor 2.4.
+
+The default is "70" unload and "70" load in Slic3r PE. The output of this and how it controls the purge lengths to prevent bleeding and rogue lines is demonstrated below:
+![purgelengths_overview](https://github.com/tomvandeneede/p2pp/blob/master/docs/purgelengths_overview.JPG)
+
+> The numbers in the boxes are added together using the following formula: "Unloaded Old filament" + "Loaded New Filament" = Purge Length in mm3. A good starting point is to enter "100 Unloaded / 180 Loaded" for STRONG coloured filaments (Red, Black, Blue) and use "0 Unloaded / 180 Loaded" for Light coloured filaments. This will get you pretty close but may require additional purge from the strong colours to the light colours. 
 
 
 On your first prints make sure you review the output file to make sure it contains the Omega header. (bunch of commands starting with capital letter O (oh))
