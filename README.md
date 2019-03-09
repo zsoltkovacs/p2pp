@@ -241,7 +241,7 @@ The purge settings in Slic3r PE are defined under the purge volumes settings.  T
 > SLIC3R PE uses _volume_ instead of _length_ in the purge settings.  For 1.75mm filament, 1mm of filament repesents a volume of approx 2.4mm3.  In order to relate to values used in Chroma or Canvas from previous successful prints, you have to divide the Slic3r PE values by a factor 2.4.
 
 The default is "70" unload and "70" load in Slic3r PE. The output of this and how it controls the purge lengths to prevent bleeding and rogue lines is demonstrated below:
-![purgelengths_overview](https://github.com/tomvandeneede/p2pp/blob/master/docs/purgelengths_overview.JPG)
+![purgelengths_overview](https://github.com/tomvandeneede/p2pp/blob/master/docs/purge_lengths.jpg)
 
 > The numbers in the boxes are added together using the following formula: "Unloaded Old filament" + "Loaded New Filament" = Purge Length in mm3. A good starting point is to enter "100 Unloaded / 180 Loaded" for STRONG coloured filaments (Red, Black, Blue) and use "0 Unloaded / 180 Loaded" for Light coloured filaments. This will get you pretty close but may require additional purge from the strong colours to the light colours. 
 
