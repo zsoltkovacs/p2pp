@@ -144,18 +144,20 @@ def gcode_parseline(gcode_fullline):
     if gcode_fullline.startswith("G"):
         toX = get_gcode_parameter(gcode_fullline, "X")
         toY = get_gcode_parameter(gcode_fullline, "Y")
+        prevx = v.currentPositionX
+        prevy = v.currentPositionY
         if toX != "":
             v.currentPositionX = float(toX)
         if toY != "":
             v.currentPositionY = float(toY)
+        if not CoordinateOnBed(v.currentPositionX, v.currentPositionY) and CoordinateOnBed(prevx, prevy):
+            gcode_fullline = ";"+gcode_fullline
 
-    if v.mmu_unload_remove and not "TOOLCHANGE WIPE" in gcode_fullline:
+    if v.mmu_unload_remove and not (("TOOLCHANGE WIPE"   in gcode_fullline) or ("TOOLCHANGE END"   in gcode_fullline)) :
         v.processedGCode.append(';--- P2PP removed ' + gcode_fullline + "\n")
         return
 
     if gcode_fullline.startswith("G1"):
-
-
             extruder_movement = get_gcode_parameter(gcode_fullline, "E")
             if extruder_movement != "":
 
@@ -193,12 +195,13 @@ def gcode_parseline(gcode_fullline):
         if gcode_fullline.startswith(";P2PP MATERIAL_"):
                 algorithm_process_material_configuration(gcode_fullline[15:])
 
-
     if gcode_fullline.startswith("M900"):
         k_factor = get_gcode_parameter(gcode_fullline, "K")
         if int(k_factor) > 0:
             sidewipe.create_side_wipe()
             v.withinToolchangeBlock = False
+            v.mmu_unload_remove = False
+
 
     # Next section(s) clean up the GCode generated for the MMU
     # specially the rather violent unload/reload required for the MMU2
@@ -212,6 +215,7 @@ def gcode_parseline(gcode_fullline):
 
     if ("TOOLCHANGE END" in gcode_fullline) and not v.side_wipe:
         v.withinToolchangeBlock = False
+        v.mmu_unload_remove = False
 
     if "TOOLCHANGE UNLOAD" in gcode_fullline and not v.side_wipe:
         v.processedGCode.append(";P2PP Set Wipe Speed\n")
@@ -221,7 +225,8 @@ def gcode_parseline(gcode_fullline):
 
     if "TOOLCHANGE WIPE" in gcode_fullline:
         v.mmu_unload_remove = False
-        v.processedGCode.append("G0 X{} Y{}\n".format(v.currentPositionX, v.currentPositionY))
+        if CoordinateOnBed(v.currentPositionX, v.currentPositionY):
+            v.processedGCode.append("G0 X{} Y{}\n".format(v.currentPositionX, v.currentPositionY))
 
         # Layer Information
     if gcode_fullline.startswith(";LAYER "):
@@ -241,6 +246,8 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     v.printerProfileString = printer_profile
     basename = os.path.basename(input_file)
     _taskName = os.path.splitext(basename)[0].replace(" ","_")
+    _taskName = _taskName.replace(".mcf","")
+
 
     v.splice_offset = splice_offset
 

@@ -10,7 +10,7 @@ __email__ = 'P2PP@pandora.be'
 __status__ = 'Beta'
 
 
-from p2pp.formatnumbers import hexify_short,  hexify_float
+from p2pp.formatnumbers import hexify_short,  hexify_float, hexify_long
 import p2pp.variables as v
 from p2pp.colornames import findNearestColor
 from p2pp.logfile import log_warning
@@ -145,9 +145,9 @@ def header_generate_omega(job_name):
         header.append("O32 {}\n".format(v.spliceAlgorithmTable[i]))
 
     if len(v.spliceExtruderPosition) > 0:
-        header.append("O1 D{} {}\n".format(job_name, hexify_float(v.spliceExtruderPosition[-1])))
+        header.append("O1 D{} {}\n".format(job_name, hexify_long(int(v.spliceExtruderPosition[-1]+0.5))))
     else:
-        header.append("O1 D{} {}\n".format(job_name, hexify_float(v.totalMaterialExtruded + v.splice_offset)))
+        header.append("O1 D{} {}\n".format(job_name, hexify_long(int(v.totalMaterialExtruded + v.splice_offset+0.5))))
 
     header.append("M0\n")
     header.append("T0\n")
