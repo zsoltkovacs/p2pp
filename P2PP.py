@@ -5,10 +5,10 @@ __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
 __license__ = 'GPL'
-__version__ = '2.1'
+__version__ = '3.0.0'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
-__status__ = 'Stable'
+__status__ = 'Beta'
 
 import p2pp.mcf as mcf
 import argparse
