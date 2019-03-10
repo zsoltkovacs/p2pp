@@ -141,6 +141,9 @@ def gcode_parseline(gcode_fullline):
     # Processing of print head movements
     #############################################
 
+    if v.emptyGrid and (v.wipeFeedRate != 2000):
+        gcode_fullline = gcode_remove_params(gcode_fullline, ["F"])
+
     if gcode_fullline.startswith("G"):
         toX = get_gcode_parameter(gcode_fullline, "X")
         toY = get_gcode_parameter(gcode_fullline, "Y")
@@ -207,6 +210,14 @@ def gcode_parseline(gcode_fullline):
     # special processing for side wipes is required in this section
     #################################################################
 
+    if "CP EMPTY GRID START" in gcode_fullline and v.currentLayer>"0":
+        v.emptyGrid = True
+        v.processedGCode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.currentprintFeed))
+        v.processedGCode.append("G1 F{}\n".format(v.wipeFeedRate))
+
+    if "CP EMPTY GRID END" in gcode_fullline:
+        v.emptyGrid = False
+
     if "TOOLCHANGE START" in gcode_fullline:
         v.allowFilamentInformationUpdate = False
         v.withinToolchangeBlock = True
@@ -219,8 +230,12 @@ def gcode_parseline(gcode_fullline):
     if "TOOLCHANGE UNLOAD" in gcode_fullline and not v.side_wipe:
         v.currentprintFeed = v.wipeFeedRate / 60.0
         v.mmu_unload_remove = True
-        v.processedGCode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.currentprintFeed))
-        v.processedGCode.append("G1 F{}\n".format(v.wipeFeedRate))
+        if v.currentLayer!="0":
+            v.processedGCode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.currentprintFeed))
+            v.processedGCode.append("G1 F{}\n".format(v.wipeFeedRate))
+        else:
+            v.processedGCode.append(";P2PP Set wipe speed to 33.3mm/s\n")
+            v.processedGCode.append("G1 F2000\n")
 
 
     if "TOOLCHANGE WIPE" in gcode_fullline:
