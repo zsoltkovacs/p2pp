@@ -141,7 +141,7 @@ def gcode_parseline(gcode_fullline):
     # Processing of print head movements
     #############################################
 
-    if v.emptyGrid and (v.wipeFeedRate != 2000) :
+    if v.emptyGrid and (v.wipeFeedRate != 2000):
         gcode_fullline = gcode_remove_params(gcode_fullline, ["F"])
 
     if gcode_fullline.startswith("G"):
@@ -212,6 +212,8 @@ def gcode_parseline(gcode_fullline):
 
     if "CP EMPTY GRID START" in gcode_fullline:
         v.emptyGrid = True
+        v.processedGCode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.currentprintFeed))
+        v.processedGCode.append("G1 F{}\n".format(v.wipeFeedRate))
 
     if "CP EMPTY GRID END" in gcode_fullline:
         v.emptyGrid = False
