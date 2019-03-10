@@ -141,7 +141,7 @@ def gcode_parseline(gcode_fullline):
     # Processing of print head movements
     #############################################
 
-    if v.emptyGrid:
+    if v.emptyGrid and (v.wipeFeedRate != 2000) :
         gcode_fullline = gcode_remove_params(gcode_fullline, ["F"])
 
     if gcode_fullline.startswith("G"):
