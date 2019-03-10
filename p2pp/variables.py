@@ -123,7 +123,7 @@ volumetricE = False
 currentTool = -1
 previousToolChangeLocation = 0
 
-currentLayer = "No Layer Info"  # Capture layer information for short splice texts
+currentLayer = "0"  # Capture layer information for short splice texts
 extrusionMultiplier = 1.0  # Monitors M221 commands during the print.
 currentprintFeedrate = 100  # Monitors the current feedrate
 currentprintFeed = 2000

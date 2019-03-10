@@ -210,7 +210,7 @@ def gcode_parseline(gcode_fullline):
     # special processing for side wipes is required in this section
     #################################################################
 
-    if "CP EMPTY GRID START" in gcode_fullline:
+    if "CP EMPTY GRID START" in gcode_fullline and v.currentLayer>"0":
         v.emptyGrid = True
         v.processedGCode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.currentprintFeed))
         v.processedGCode.append("G1 F{}\n".format(v.wipeFeedRate))
