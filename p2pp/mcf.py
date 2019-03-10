@@ -153,10 +153,6 @@ def gcode_parseline(gcode_fullline):
         if not CoordinateOnBed(v.currentPositionX, v.currentPositionY) and CoordinateOnBed(prevx, prevy):
             gcode_fullline = ";"+gcode_fullline
 
-    if v.mmu_unload_remove and not (("TOOLCHANGE WIPE"   in gcode_fullline) or ("TOOLCHANGE END"   in gcode_fullline)) :
-        v.processedGCode.append(gcode_filter_toolchange_block(gcode_fullline))
-        return
-
     if gcode_fullline.startswith("G1"):
             extruder_movement = get_gcode_parameter(gcode_fullline, "E")
             if extruder_movement != "":
@@ -203,6 +199,7 @@ def gcode_parseline(gcode_fullline):
             v.mmu_unload_remove = False
 
 
+
     # Next section(s) clean up the GCode generated for the MMU
     # specially the rather violent unload/reload required for the MMU2
     # special processing for side wipes is required in this section
@@ -232,6 +229,10 @@ def gcode_parseline(gcode_fullline):
         # Layer Information
     if gcode_fullline.startswith(";LAYER "):
         v.currentLayer = gcode_fullline[7:]
+
+    if v.mmu_unload_remove :
+            v.processedGCode.append(gcode_filter_toolchange_block(gcode_fullline)+"\n")
+            return
 
     if v.withinToolchangeBlock:
         v.processedGCode.append(gcode_filter_toolchange_block(gcode_fullline) + "\n")
