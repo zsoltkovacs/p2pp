@@ -185,11 +185,17 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 
   
  
- > **SIDEWIPELOC=X#** *[EXPERIMENTAL]*
+ > **SIDEWIPELOC=X#** *[EXPERIMENTAL,OPTIONAL]*
   This is used to define the location on the X-Axis the printer needs to go to to do a side transition instead of doing a tower purge.  In Slic3r all still needs to be setup with a purge, tower, but the tower needs to be **MOVE COMPLETELY OFF THE BED** to enable the SIDE WIPE .  p2pp will convert the tower purges into side wipes and fileter out all purges that are not necessary (i.e. empty towe shells). 
   If you want to perform a side wipe on the MK3 use the following line.  
   ```
   ;P2PP SIDEWIPELOC=X254
+  ```
+
+ > **SIDEWIPEFEEDRATE=nnnn** *[OPTIONAL]*
+  This parameter is used to define the feedrate at which purging moved happens.  The default value is 2000 but an override can be set through this parameter.  
+  ```
+  ;P2PP SIDEWIPELOC=2000
   ```
 
 > **SIDEWIPEMINY=nnnn** and **SIDEWIPEMAXY=nnnn**
@@ -199,13 +205,13 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ;P2PP SIDEWIPEMAXY=195
   ```
   
-> **SIDEWIPECORRECTION=**
+> **SIDEWIPECORRECTION=** *[OPTIONAL]*
   This parameter is introduced to correct for inconsistent extrusion that may occur when doing side transitions.  If you notice that during the side transition, the printer over or underextrudes for some reason, you can enter a value here between 0.9 and 1.1 that acts as a local extrusion multiplier DURING the extrusion.  Default value is 1.0
   ```
   ;P2PP SIDEWIPECORRECTION=1.0
   ```
 
-> **;P2PP BEFORESIDEWIPEGCODE** and **;P2PP AFTERSIDEWIPEGCODE**
+> **;P2PP BEFORESIDEWIPEGCODE** and **;P2PP AFTERSIDEWIPEGCODE** *[OPTIONAL]*
   These parameters allow the user to insert blocks of GCode right before or after the side wipe purge block is executed.  There can be only one GCode command per line but you can include multiple BEFORE/AFTERSIDEWIPEGCODE commands in the section.  The commands are always executed in the given order.
 
 ### Print Settings
