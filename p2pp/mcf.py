@@ -154,7 +154,7 @@ def gcode_parseline(gcode_fullline):
             gcode_fullline = ";"+gcode_fullline
 
     if v.mmu_unload_remove and not (("TOOLCHANGE WIPE"   in gcode_fullline) or ("TOOLCHANGE END"   in gcode_fullline)) :
-        v.processedGCode.append(';--- P2PP removed ' + gcode_fullline + "\n")
+        v.processedGCode.append(gcode_filter_toolchange_block(gcode_fullline))
         return
 
     if gcode_fullline.startswith("G1"):
