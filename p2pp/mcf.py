@@ -115,7 +115,7 @@ def gcode_parseline(gcode_fullline):
         sidewipe.collect_wipetower_info(gcode_fullline)
 
         if v.side_wipe_skip:
-            v.processedGCode.append(";--- P2PP removed "+gcode_fullline+"\n")
+            v.processedGCode.append(";--- P2PP sremoved "+gcode_fullline+"\n")
             return
 
         if moved_in_tower() and v.side_wipe and not v.side_wipe_skip:
@@ -156,12 +156,11 @@ def gcode_parseline(gcode_fullline):
     if gcode_fullline.startswith("G1"):
             extruder_movement = get_gcode_parameter(gcode_fullline, "E")
             if extruder_movement != "":
-
+                extruder_movement = extruder_movement * v.extrusionMultiplier
                 if v.withinToolchangeBlock and v.side_wipe:
-                        v.side_wipe_length += extruder_movement * v.extrusionMultiplier
+                        v.side_wipe_length += extruder_movement
 
-                actual_extrusion_length = extruder_movement * v.extrusionMultiplier
-                v.totalMaterialExtruded += actual_extrusion_length
+                v.totalMaterialExtruded += extruder_movement
 
                 if (v.totalMaterialExtruded - v.lastPingExtruderPosition) > v.pingIntervalLength and\
                         v.side_wipe_length == 0:
@@ -198,7 +197,10 @@ def gcode_parseline(gcode_fullline):
             v.withinToolchangeBlock = False
             v.mmu_unload_remove = False
 
-
+    if gcode_fullline.startswith(";P2PP ENDPURGETOWER"):
+        sidewipe.create_side_wipe()
+        v.withinToolchangeBlock = False
+        v.mmu_unload_remove = False
 
     # Next section(s) clean up the GCode generated for the MMU
     # specially the rather violent unload/reload required for the MMU2
