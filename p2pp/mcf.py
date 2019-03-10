@@ -230,8 +230,12 @@ def gcode_parseline(gcode_fullline):
     if "TOOLCHANGE UNLOAD" in gcode_fullline and not v.side_wipe:
         v.currentprintFeed = v.wipeFeedRate / 60.0
         v.mmu_unload_remove = True
-        v.processedGCode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.currentprintFeed))
-        v.processedGCode.append("G1 F{}\n".format(v.wipeFeedRate))
+        if v.currentLayer!="0":
+            v.processedGCode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.currentprintFeed))
+            v.processedGCode.append("G1 F{}\n".format(v.wipeFeedRate))
+        else:
+            v.processedGCode.append(";P2PP Set wipe speed to 33.3mm/s\n")
+            v.processedGCode.append("G1 F2000\n")
 
 
     if "TOOLCHANGE WIPE" in gcode_fullline:
