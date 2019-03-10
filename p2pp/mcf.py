@@ -221,7 +221,7 @@ def gcode_parseline(gcode_fullline):
         v.processedGCode.append(";P2PP Set Wipe Speed\n")
         v.mmu_unload_remove = True
         v.processedGCode.append("G1 F{}\n".format(v.wipeFeedRate))
-        v.currentprintFeed = v.sideWipeFeedRate / 60.0
+        v.currentprintFeed = v.wipeFeedRate / 60.0
 
     if "TOOLCHANGE WIPE" in gcode_fullline:
         v.mmu_unload_remove = False
