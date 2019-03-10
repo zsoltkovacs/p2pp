@@ -65,6 +65,7 @@ defineTower = False
 sideWipeMinY = 25
 sideWipeMaxY = 175
 maxWipe = -1
+wipeFeedRate = 2000
 
 before_sidewipe_gcode = []
 after_sidewipe_gcode = []
