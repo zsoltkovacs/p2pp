@@ -67,7 +67,7 @@ def check_config_parameters(gcode_line):
         v.side_wipe_loc = gcode_line[18:].strip()
 
     if gcode_line.startswith(";P2PP WIPEFEEDRATE="):
-        v.wipeFeedRate = gcode_line[19:].strip()
+        v.wipeFeedRate = float(gcode_line[19:].strip())
 
     if gcode_line.startswith(";P2PP SIDEWIPEMINY="):
         v.sideWipeMinY = float(gcode_line[19:])
