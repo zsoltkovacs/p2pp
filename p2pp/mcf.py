@@ -141,6 +141,9 @@ def gcode_parseline(gcode_fullline):
     # Processing of print head movements
     #############################################
 
+    if v.emptyGrid:
+        gcode_fullline = gcode_remove_params(gcode_fullline, ["F"])
+
     if gcode_fullline.startswith("G"):
         toX = get_gcode_parameter(gcode_fullline, "X")
         toY = get_gcode_parameter(gcode_fullline, "Y")
@@ -206,6 +209,12 @@ def gcode_parseline(gcode_fullline):
     # specially the rather violent unload/reload required for the MMU2
     # special processing for side wipes is required in this section
     #################################################################
+
+    if "CP EMPTY GRID START" in gcode_fullline:
+        v.emptyGrid = True
+
+    if "CP EMPTY GRID END" in gcode_fullline:
+        v.emptyGrid = False
 
     if "TOOLCHANGE START" in gcode_fullline:
         v.allowFilamentInformationUpdate = False
