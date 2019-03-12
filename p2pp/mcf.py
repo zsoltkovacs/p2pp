@@ -199,6 +199,8 @@ def gcode_parseline(gcode_full_line):
             sidewipe.create_side_wipe()
             v.withinToolchangeBlock = False
             v.mmu_unload_remove = False
+        if v.reprapcompatible:
+            v.processedGCode.append(';--- P2PP removed ' + gcode_full_line + "\n")
 
     if gcode_full_line.startswith(";P2PP ENDPURGETOWER"):
         sidewipe.create_side_wipe()
