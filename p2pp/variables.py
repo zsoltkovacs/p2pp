@@ -126,10 +126,11 @@ previousToolChangeLocation = 0
 currentLayer = "0"  # Capture layer information for short splice texts
 extrusionMultiplier = 1.0  # Monitors M221 commands during the print.
 currentprintFeedrate = 100  # Monitors the current feedrate
-currentprintFeed = 2000
+current_print_feed = 2000
 extraRunoutFilament = 150 # Provide extra filament at the end of the print.
 minimalSpliceLength = 80  # Minimum overall splice length.
 minimalStartSpliceLength = 100  # Minimum first splice length.
 withinToolchangeBlock = False  # keeps track if the processed G-Code is part of a toolchange or a regular path.
 allowFilamentInformationUpdate = False  # TBA
 
+reprapcompatible = False  # Enables the cleanup/removal of M900 commands as RepRap uses M572 which is slightly different

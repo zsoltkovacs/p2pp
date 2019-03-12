@@ -82,59 +82,59 @@ def gcode_filter_toolchange_block(line):
     return line
 
 
-def CoordinateOnBed(x,y):
-    return (x >= v.bed_origin_x and x <= v.bed_origin_x+v.bed_size_x and y >= v.bed_origin_y and y <= v.bed_origin_y+v.bed_size_y)
+def coordinate_on_bed(x, y):
+    return x >= v.bed_origin_x <= v.bed_origin_x + v.bed_size_x and\
+           y >= v.bed_origin_y <= v.bed_origin_y + v.bed_size_y
 
 
 def moved_in_tower():
-    return not CoordinateOnBed(v.currentPositionX ,v.currentPositionY)
+    return not coordinate_on_bed(v.currentPositionX, v.currentPositionY)
 
 
-def gcode_parseline(gcode_fullline):
+def gcode_parseline(gcode_full_line):
 
     __tower_remove = False
 
-    if not gcode_fullline[0] == ";":
-        gcode_fullline = gcode_fullline.split(';')[0]
+    if not gcode_full_line[0] == ";":
+        gcode_full_line = gcode_full_line.split(';')[0]
 
-    gcode_fullline = gcode_fullline.rstrip('\n')
+    gcode_full_line = gcode_full_line.rstrip('\n')
 
-    if gcode_fullline == "":
+    if gcode_full_line == "":
         v.processedGCode.append("\n")
         return
 
-
-    if gcode_fullline.startswith('T'):
-        new_tool = int(gcode_fullline[1])
+    if gcode_full_line.startswith('T'):
+        new_tool = int(gcode_full_line[1])
         gcode_process_toolchange(new_tool, v.totalMaterialExtruded)
         v.allowFilamentInformationUpdate = True
-        v.processedGCode.append(';--- P2PP removed ' + gcode_fullline+"\n")
+        v.processedGCode.append(';--- P2PP removed ' + gcode_full_line + "\n")
         return
 
     if v.side_wipe:
-        sidewipe.collect_wipetower_info(gcode_fullline)
+        sidewipe.collect_wipetower_info(gcode_full_line)
 
         if v.side_wipe_skip:
-            v.processedGCode.append(";--- P2PP sremoved "+gcode_fullline+"\n")
+            v.processedGCode.append(";--- P2PP sremoved " + gcode_full_line + "\n")
             return
 
         if moved_in_tower() and v.side_wipe and not v.side_wipe_skip:
-            if not gcode_fullline[0] == ";":
-                v.processedGCode.append(";--- P2PP  - Purge Tower - " + gcode_fullline + "\n")
-            gcode_fullline = gcode_remove_params(gcode_fullline, ["X", "Y"])
+            if not gcode_full_line[0] == ";":
+                v.processedGCode.append(";--- P2PP  - Purge Tower - " + gcode_full_line + "\n")
+            gcode_full_line = gcode_remove_params(gcode_full_line, ["X", "Y"])
             __tower_remove = True
 
     # Processing of extrusion speed commands
     # ############################################
-    if gcode_fullline.startswith("M220"):
-        new_feedrate = get_gcode_parameter(gcode_fullline, "S")
+    if gcode_full_line.startswith("M220"):
+        new_feedrate = get_gcode_parameter(gcode_full_line, "S")
         if new_feedrate != "":
             v.currentprintFeedrate = new_feedrate / 100
 
     # Processing of extrusion multiplier commands
     # ############################################
-    if gcode_fullline.startswith("M221"):
-        new_multiplier = get_gcode_parameter(gcode_fullline, "S")
+    if gcode_full_line.startswith("M221"):
+        new_multiplier = get_gcode_parameter(gcode_full_line, "S")
         if new_multiplier != "":
             v.extrusionMultiplier = new_multiplier / 100
 
@@ -142,22 +142,22 @@ def gcode_parseline(gcode_fullline):
     #############################################
 
     if v.emptyGrid and (v.wipeFeedRate != 2000):
-        gcode_fullline = gcode_remove_params(gcode_fullline, ["F"])
+        gcode_full_line = gcode_remove_params(gcode_full_line, ["F"])
 
-    if gcode_fullline.startswith("G"):
-        toX = get_gcode_parameter(gcode_fullline, "X")
-        toY = get_gcode_parameter(gcode_fullline, "Y")
-        prevx = v.currentPositionX
-        prevy = v.currentPositionY
-        if toX != "":
-            v.currentPositionX = float(toX)
-        if toY != "":
-            v.currentPositionY = float(toY)
-        if not CoordinateOnBed(v.currentPositionX, v.currentPositionY) and CoordinateOnBed(prevx, prevy):
-            gcode_fullline = ";"+gcode_fullline
+    if gcode_full_line.startswith("G"):
+        to_x = get_gcode_parameter(gcode_full_line, "X")
+        to_y = get_gcode_parameter(gcode_full_line, "Y")
+        prev_x = v.currentPositionX
+        prev_y = v.currentPositionY
+        if to_x != "":
+            v.currentPositionX = float(to_x)
+        if to_y != "":
+            v.currentPositionY = float(to_y)
+        if not coordinate_on_bed(v.currentPositionX, v.currentPositionY) and coordinate_on_bed(prev_x, prev_y):
+            gcode_full_line = ";" + gcode_full_line
 
-    if gcode_fullline.startswith("G1"):
-            extruder_movement = get_gcode_parameter(gcode_fullline, "E")
+    if gcode_full_line.startswith("G1"):
+            extruder_movement = get_gcode_parameter(gcode_full_line, "E")
             if extruder_movement != "":
                 extruder_movement = extruder_movement * v.extrusionMultiplier
                 if v.withinToolchangeBlock and v.side_wipe:
@@ -177,7 +177,7 @@ def gcode_parseline(gcode_fullline):
 
             if v.withinToolchangeBlock and v.side_wipe:
                 if not __tower_remove:
-                    v.processedGCode.append(';--- P2PP removed ' + gcode_fullline+"\n")
+                    v.processedGCode.append(';--- P2PP removed ' + gcode_full_line + "\n")
                 return
 
             if not v.withinToolchangeBlock and v.wipeRetracted:
@@ -186,21 +186,21 @@ def gcode_parseline(gcode_fullline):
     # Other configuration information
     # this information should be defined in your Slic3r printer settings, startup GCode
     ###################################################################################
-    if gcode_fullline.startswith(";P2PP"):
-        parameters.check_config_parameters(gcode_fullline)
-        v.side_wipe = not CoordinateOnBed(v.wipetower_posx, v.wipetower_posy)
+    if gcode_full_line.startswith(";P2PP"):
+        parameters.check_config_parameters(gcode_full_line)
+        v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
 
-        if gcode_fullline.startswith(";P2PP MATERIAL_"):
-                algorithm_process_material_configuration(gcode_fullline[15:])
+        if gcode_full_line.startswith(";P2PP MATERIAL_"):
+                algorithm_process_material_configuration(gcode_full_line[15:])
 
-    if gcode_fullline.startswith("M900"):
-        k_factor = get_gcode_parameter(gcode_fullline, "K")
+    if gcode_full_line.startswith("M900"):
+        k_factor = get_gcode_parameter(gcode_full_line, "K")
         if int(k_factor) > 0:
             sidewipe.create_side_wipe()
             v.withinToolchangeBlock = False
             v.mmu_unload_remove = False
 
-    if gcode_fullline.startswith(";P2PP ENDPURGETOWER"):
+    if gcode_full_line.startswith(";P2PP ENDPURGETOWER"):
         sidewipe.create_side_wipe()
         v.withinToolchangeBlock = False
         v.mmu_unload_remove = False
@@ -210,53 +210,52 @@ def gcode_parseline(gcode_fullline):
     # special processing for side wipes is required in this section
     #################################################################
 
-    if "CP EMPTY GRID START" in gcode_fullline and v.currentLayer>"0":
+    if "CP EMPTY GRID START" in gcode_full_line and v.currentLayer > "0":
         v.emptyGrid = True
-        v.processedGCode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.currentprintFeed))
+        v.processedGCode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.current_print_feed))
         v.processedGCode.append("G1 F{}\n".format(v.wipeFeedRate))
 
-    if "CP EMPTY GRID END" in gcode_fullline:
+    if "CP EMPTY GRID END" in gcode_full_line:
         v.emptyGrid = False
 
-    if "TOOLCHANGE START" in gcode_fullline:
+    if "TOOLCHANGE START" in gcode_full_line:
         v.allowFilamentInformationUpdate = False
         v.withinToolchangeBlock = True
         sidewipe.sidewipe_toolchange_start()
 
-    if ("TOOLCHANGE END" in gcode_fullline) and not v.side_wipe:
+    if ("TOOLCHANGE END" in gcode_full_line) and not v.side_wipe:
         v.withinToolchangeBlock = False
         v.mmu_unload_remove = False
 
-    if "TOOLCHANGE UNLOAD" in gcode_fullline and not v.side_wipe:
-        v.currentprintFeed = v.wipeFeedRate / 60.0
+    if "TOOLCHANGE UNLOAD" in gcode_full_line and not v.side_wipe:
+        v.current_print_feed = v.wipeFeedRate / 60.0
         v.mmu_unload_remove = True
-        if v.currentLayer!="0":
-            v.processedGCode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.currentprintFeed))
+        if v.currentLayer != "0":
+            v.processedGCode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.current_print_feed))
             v.processedGCode.append("G1 F{}\n".format(v.wipeFeedRate))
         else:
             v.processedGCode.append(";P2PP Set wipe speed to 33.3mm/s\n")
             v.processedGCode.append("G1 F2000\n")
 
-
-    if "TOOLCHANGE WIPE" in gcode_fullline:
+    if "TOOLCHANGE WIPE" in gcode_full_line:
         v.mmu_unload_remove = False
-        if CoordinateOnBed(v.currentPositionX, v.currentPositionY):
+        if coordinate_on_bed(v.currentPositionX, v.currentPositionY):
             v.processedGCode.append("G0 X{} Y{}\n".format(v.currentPositionX, v.currentPositionY))
 
         # Layer Information
-    if gcode_fullline.startswith(";LAYER "):
-        v.currentLayer = gcode_fullline[7:]
+    if gcode_full_line.startswith(";LAYER "):
+        v.currentLayer = gcode_full_line[7:]
 
-    if v.mmu_unload_remove :
-            v.processedGCode.append(gcode_filter_toolchange_block(gcode_fullline)+"\n")
+    if v.mmu_unload_remove:
+            v.processedGCode.append(gcode_filter_toolchange_block(gcode_full_line) + "\n")
             return
 
     if v.withinToolchangeBlock:
-        v.processedGCode.append(gcode_filter_toolchange_block(gcode_fullline) + "\n")
+        v.processedGCode.append(gcode_filter_toolchange_block(gcode_full_line) + "\n")
         return
 
     # Catch All
-    v.processedGCode.append(gcode_fullline+"\n")
+    v.processedGCode.append(gcode_full_line + "\n")
 
 
 # Generate the file and glue it all together!
@@ -264,9 +263,8 @@ def gcode_parseline(gcode_fullline):
 def generate(input_file, output_file, printer_profile, splice_offset, silent):
     v.printerProfileString = printer_profile
     basename = os.path.basename(input_file)
-    _taskName = os.path.splitext(basename)[0].replace(" ","_")
-    _taskName = _taskName.replace(".mcf","")
-
+    _taskName = os.path.splitext(basename)[0].replace(" ", "_")
+    _taskName = _taskName.replace(".mcf", "")
 
     v.splice_offset = splice_offset
 
@@ -285,7 +283,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     parse_slic3r_config()
 
-    v.side_wipe = not CoordinateOnBed(v.wipetower_posx, v.wipetower_posy)
+    v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
 
     # Process the file
     # #################

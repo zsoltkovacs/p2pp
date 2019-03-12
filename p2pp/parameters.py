@@ -58,7 +58,7 @@ def check_config_parameters(gcode_line):
 
     if gcode_line.startswith(";P2PP LINEARPINGLENGTH="):
         v.pingIntervalLength = float(gcode_line[23:])
-        if (v.pingIntervalLength<350):
+        if (v.pingIntervalLength < 350):
             v.pingIntervalLength = 300
             log_warning("Minimal Linear Ping distance is 300mm!  Your config statet: {}".format(gcode_line))
 
@@ -79,3 +79,7 @@ def check_config_parameters(gcode_line):
         v.sidewipecorrection = float(gcode_line[26:])
         if v.sidewipecorrection < 0.9 or v.sidewipecorrection > 1.10:
             v.sidewipecorrection = 1.0
+
+    # REPRAP COMPATIBILITY
+    if gcode_line.startswith(";P2PP REPRAPCOMPATIBLE"):
+        v.reprapcompatible = True
