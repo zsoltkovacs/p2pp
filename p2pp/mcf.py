@@ -143,7 +143,7 @@ def gcode_parseline(gcode_full_line):
     if v.emptyGrid and (v.wipeFeedRate != 2000):
         gcode_full_line = gcode_remove_params(gcode_full_line, ["F"])
 
-    if gcode_full_line.startswith("G"):
+    if gcode_full_line.startswith("G") and not gcode_full_line.startswith("G28"):
         to_x = get_gcode_parameter(gcode_full_line, "X")
         to_y = get_gcode_parameter(gcode_full_line, "Y")
         prev_x = v.currentPositionX
