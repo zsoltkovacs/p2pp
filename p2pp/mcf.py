@@ -215,6 +215,7 @@ def gcode_parseline(gcode_full_line):
 
     if "CP EMPTY GRID START" in gcode_full_line and v.currentLayer > "0":
         v.emptyGrid = True
+        v.current_print_feed = v.wipeFeedRate / 60
         v.processedGCode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.current_print_feed))
         v.processedGCode.append("G1 F{}\n".format(v.wipeFeedRate))
 
@@ -231,7 +232,7 @@ def gcode_parseline(gcode_full_line):
         v.mmu_unload_remove = False
 
     if "TOOLCHANGE UNLOAD" in gcode_full_line and not v.side_wipe:
-        v.current_print_feed = v.wipeFeedRate / 60.0
+        v.current_print_feed = v.wipeFeedRate /60
         v.mmu_unload_remove = True
         if v.currentLayer != "0":
             v.processedGCode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.current_print_feed))
