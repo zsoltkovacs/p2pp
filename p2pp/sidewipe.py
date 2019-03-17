@@ -107,7 +107,7 @@ def collect_wipetower_info(line):
         ))
 
     if line.startswith("; CP WIPE TOWER FIRST LAYER BRIM START") or line.startswith("; CP EMPTY GRID START"):
-        if not v.withinToolchangeBlock:
+        if not v.within_tool_change_block:
             retro_cleanup()
             v.side_wipe_skip = v.side_wipe
 
