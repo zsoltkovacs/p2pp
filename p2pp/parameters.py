@@ -82,4 +82,4 @@ def check_config_parameters(gcode_line):
 
     # REPRAP COMPATIBILITY
     if gcode_line.startswith(";P2PP REPRAPCOMPATIBLE"):
-        v.reprapcompatible = True
+        v.reprap_compatible = True
