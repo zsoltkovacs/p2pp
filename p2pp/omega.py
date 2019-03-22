@@ -184,6 +184,7 @@ def header_generate_omega(job_name):
     warnings.append("; - PROCESS WARNINGS:\n")
     warnings.append(";-------------------:\n")
 
+    warnings.append(";Generted with P2PP version {}\n".format(v.version))
     if len(v.processWarnings) == 0:
         warnings.append(";None\n")
     else:
