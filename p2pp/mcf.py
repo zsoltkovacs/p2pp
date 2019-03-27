@@ -111,6 +111,10 @@ def gcode_parseline(gcode_full_line):
         v.processedGCode.append(';--- P2PP removed ' + gcode_full_line + "\n")
         return
 
+    if gcode_full_line[0:4] in ["M104", "M106", "M109", "M140", "M190"]:
+        v.processedGCode.append("\n")
+        return
+
     if v.side_wipe:
         sidewipe.collect_wipetower_info(gcode_full_line)
 
