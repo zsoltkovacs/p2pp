@@ -112,7 +112,7 @@ def gcode_parseline(gcode_full_line):
         return
 
     if gcode_full_line[0:4] in ["M104", "M106", "M109", "M140", "M190"]:
-        v.processedGCode.append("\n")
+        v.processedGCode.append(gcode_full_line + "\n")
         return
 
     if v.side_wipe:
