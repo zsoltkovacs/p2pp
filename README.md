@@ -187,7 +187,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 
  > **;P2PP WIPEFEEDRATE=nnnn** *[EXPERIMENTAL,OPTIONAL]*
    Sets the print speed when purging filament.  This parameter is defined in **mm/min**.  If not defined the print speed set by Slic3r is used.
-    ```
+   ``` 
   ;P2PP WIPEFEEDRATE=2400
   ;sets the print speed to 40mm/s
   ```  
