@@ -310,7 +310,7 @@ For all future prints using **Chroma** or **Canvas**, make sure to keep the same
 
 Thanks to Tim Brookman for the co-development of this plugin.
 
-Many thanks also to Klaus Knute, Khalil Nurullah, Casey Eberle (and all others) for the endless testing and valuable feedback...it's them driving the improvements...
+Many thanks also to Klaus, Khalil ,Casey, Jermaul (and all others) for the endless testing and valuable feedback...it's them driving the improvements...
 
 
 ## **Good luck & happy printing !!!**
