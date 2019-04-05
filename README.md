@@ -37,8 +37,20 @@ If you are new to printing with Splic3r PE, make sure you have the printer diale
 adding the complexity of p2pp post scripting.   It will greatly simplify the debugging if you know the print, filament and printer
 settings are porperly tuned to work with your 3d Printer hardware.
 
+## General information
 
-## WINDOWS INSTALLATION
+P2PP requires a python interpreter to be installed on your computer.  
+
+MAC OSX based computers should have the reauired Python 2.7 compiler installed by default.
+
+Windows users may not have python installed yet.  For compatibility reasonse we recommend to install version 2.7 or 3.7
+from  https://www.python.org/downloads/windows/ 
+Make sure to keep track where you installed python as you will need this information in further steps.
+
+## USERS OF SLICER 1.42.0 BETA 1 AND ABOVECAN SKIP TO THE CONFIGURATION OF SLIC3R PE
+
+## WINDOWS INSTALLATION 
+
 
 > When updating p2pp to a new version all configuration in the .bat file is overwritten.  Make sure to put the .bat file aside before replacing the directory content.  Copy the file over the newly unzipped file to complete the installation.
 
@@ -51,6 +63,8 @@ settings are porperly tuned to work with your 3d Printer hardware.
 ``` 
 c:\python27\python.exe c:\p2pp\p2pp.py -i %1
 ``` 
+
+
 
 
 ## Unix / Mac OSX INSTALLATION
@@ -236,12 +250,36 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 5. Ensure "Prime all printing extruders" is **DISABLED**
 6. Click the "Output Options" menu item
 7. Locate the "Post-processing scripts" input box at the bottom
-8. Put the full name of the .sh (unix/Mac OSX) or .bat (Windows) in this input box.  Include the full path (don't use ~ for OSX).  Add no parameters.
-    ```
+
+
+**when you are using Slic3r PE version 1.42.0 Alpha or before:**
+
+ Put the full name of the .sh (unix/Mac OSX) or .bat (Windows) in this input box.  Include the full path (don't use ~ for OSX).  Add no parameters.
+```
     For Windows: c:\yourpath\p2pp.bat
     For Mac/Unix: /yourpath/p2pp.sh
-    ```
-9. Click the floppy-disk icon, and append "Palette P2PP" to the end of the Print Settings profile name.
+```
+
+Click the floppy-disk icon, and append "Palette P2PP" to the end of the Print Settings profile name.
+    
+**when you are using Slic3r PE version 1.42.0 BETA or later:**    
+
+For Windows: 
+   
+```
+    c:\your_python_path\python.exe your_p2pp_path\P2PP.py -i
+```
+    
+For Mac/Unix: 
+
+```
+    python your_p2pp_path/p2pp/P2PP.py -i ;
+```    
+  
+  
+    
+    
+Click the floppy-disk icon, and append "Palette P2PP" to the end of the Print Settings profile name.
 
 **NOTE:**
 > The minimal first slice length is 100mm. This is required to make the filament reach the outgoing drive. Minimum slice distance for following slices can be set as low as 40, however this will impact the speed at which filament can be created and so print speed may have to be adjusted accordingly
