@@ -83,8 +83,15 @@ def gcode_filter_toolchange_block(line):
 
 
 def coordinate_on_bed(x, y):
-    return x >= v.bed_origin_x <= v.bed_origin_x + v.bed_size_x and\
-           y >= v.bed_origin_y <= v.bed_origin_y + v.bed_size_y
+    if (v.bed_origin_x > x):
+        return False
+    if (x >= v.bed_origin_x + v.bed_size_x):
+        return False
+    if (v.bed_origin_y >= y):
+        return False
+    if (y >= v.bed_origin_y + v.bed_size_y):
+        return False
+    return True
 
 
 def moved_in_tower():
@@ -291,7 +298,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     parse_slic3r_config()
 
-    v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
+    v.side_wipe = not  coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
 
     # Process the file
     # #################
