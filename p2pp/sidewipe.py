@@ -36,9 +36,9 @@ def create_side_wipe():
         v.processedGCode.append("G1 E{}\n".format(-v.sidewiperetract))
         v.wipeRetracted = True
         v.processedGCode.append("G1 F8640\n")
-        v.processedGCode.append("G0 {} Y{} F2500\n".format(v.side_wipe_loc, v.sideWipeMinY))
-        sweep_base_speed = 25000 * abs(v.sideWipeMaxY - v.sideWipeMinY)/150
-        sweep_length = 20 * abs(v.sideWipeMaxY - v.sideWipeMinY)/150
+        v.processedGCode.append("G0 {} Y{} F{}\n".format(v.side_wipe_loc, v.sideWipeMinY,v.wipeFeedRate))
+        sweep_base_speed = v.wipeFeedRate * 20 * abs(v.sideWipeMaxY - v.sideWipeMinY)/150
+        sweep_length = 20
         feed_rate = -1
 
         moveto = v.sideWipeMaxY

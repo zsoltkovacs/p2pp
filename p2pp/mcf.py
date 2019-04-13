@@ -83,8 +83,15 @@ def gcode_filter_toolchange_block(line):
 
 
 def coordinate_on_bed(x, y):
-    return x >= v.bed_origin_x <= v.bed_origin_x + v.bed_size_x and\
-           y >= v.bed_origin_y <= v.bed_origin_y + v.bed_size_y
+    if (v.bed_origin_x > x):
+        return False
+    if (x >= v.bed_origin_x + v.bed_size_x):
+        return False
+    if (v.bed_origin_y >= y):
+        return False
+    if (y >= v.bed_origin_y + v.bed_size_y):
+        return False
+    return True
 
 
 def moved_in_tower():
@@ -109,6 +116,10 @@ def gcode_parseline(gcode_full_line):
         gcode_process_toolchange(new_tool, v.totalMaterialExtruded)
         v.allowFilamentInformationUpdate = True
         v.processedGCode.append(';--- P2PP removed ' + gcode_full_line + "\n")
+        return
+
+    if gcode_full_line[0:4] in ["M104", "M106", "M109", "M140", "M190"]:
+        v.processedGCode.append(gcode_full_line + "\n")
         return
 
     if v.side_wipe:
@@ -287,7 +298,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     parse_slic3r_config()
 
-    v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
+    v.side_wipe = not  coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
 
     # Process the file
     # #################

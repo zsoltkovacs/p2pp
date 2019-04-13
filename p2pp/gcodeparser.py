@@ -11,7 +11,6 @@ __status__ = 'Beta'
 
 
 import p2pp.variables as v
-from p2pp.logfile import log_warning
 
 
 def gcode_remove_params(gcode, params):

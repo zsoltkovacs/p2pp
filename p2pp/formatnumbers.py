@@ -14,6 +14,8 @@ import struct
 
 def hexify_short(num):
     # hexify_short: Converts a short integer into the specific notation used by Mosaic
+    if num<0:
+        num+=65536
     return "D" + '{0:04x}'.format(num)
 
 

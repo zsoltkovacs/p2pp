@@ -134,3 +134,5 @@ within_tool_change_block = False  # keeps track if the processed G-Code is part 
 allowFilamentInformationUpdate = False  # TBA
 
 reprap_compatible = False  # Enables the cleanup/removal of M900 commands as RepRap uses M572 which is slightly different
+
+version="0.0.0"
