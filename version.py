@@ -9,8 +9,12 @@ __email__ = 'P2PP@pandora.be'
 __status__ = 'Beta'
 
 
-Version = "3.0.0"
+#general version info
+
+Version = "3.1.0"
 MajorVersion = 3
-MinorVersion = 0
+MinorVersion = 1
 Build        = 0
+
+
 

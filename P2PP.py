@@ -12,6 +12,8 @@ __status__ = 'Beta'
 
 import p2pp.mcf as mcf
 import argparse
+import p2pp.variables as v
+import version as ver
 
 
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
@@ -71,4 +73,5 @@ def main(args):
 
 
 if __name__ == "__main__":
+    v.version = ver.Version
     main(vars(arguments.parse_args()))
