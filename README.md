@@ -107,7 +107,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP SIDEWIPEMINY=45
     ;P2PP SIDEWIPEMAXY=195
     ;P2PP SIDEWIPECORRECTION=1.0
-    
+    ;P2PP WIPEFEEDRATE=2000
     ;P2PP BEFORESIDEWIPEGCODE ;--ENTER GCODE TO BE EXECUTED BEFORE SIDEWIPE (one coomand per line,can be multiple lines)
     ;P2PP AFTERSIDEWIPEGCODE ;--- ENTER GCODE TO BE EXECUTED AFTER SIDEWIPE (one coomand per line,can be multiple lines)
     
@@ -198,6 +198,12 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   This parameter is introduced to correct for inconsistent extrusion that may occur when doing side transitions.  If you notice that during the side transition, the printer over or underextrudes for some reason, you can enter a value here between 0.9 and 1.1 that acts as a local extrusion multiplier DURING the extrusion.  Default value is 1.0
   ```
   ;P2PP SIDEWIPECORRECTION=1.0
+  ```
+
+> **WIPEFEEDRATE=**
+	This parameter defined the speed used during the printing of the purge tower (or side transition).   The default value is 2000mm/min (33mm/s)
+  ```	
+  ;P2PP WIPEFEEDRATE=2000 
   ```
 
 > **;P2PP BEFORESIDEWIPEGCODE** and **;P2PP AFTERSIDEWIPEGCODE**
