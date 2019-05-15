@@ -18,6 +18,10 @@ def check_config_parameters(gcode_line):
 
     if gcode_line.startswith(";P2PP PRINTERPROFILE=") and v.printerProfileString == '': # -p takes precedence over printer defined in file
         v.printerProfileString = gcode_line[21:]
+        if  len(v.printerProfileString) <> 16:
+            log_warning("Invalid Printer pofile!  - Has invalid length (expect 16) - [{}]".format(v.printerProfileString))
+        if not all(char in set("0123456789ABCDEFabcdef") for char in v.printerProfileString):
+            log_warning("Invalid Printer pofile!  - Invalid cheracters  (expect 0123456789abcdef) - [{}]".format(v.printerProfileString))
 
     if gcode_line.startswith(";P2PP SPLICEOFFSET="):
         v.splice_offset = float(gcode_line[19:])
