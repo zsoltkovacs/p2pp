@@ -14,7 +14,7 @@ from p2pp.logfile import log_warning
 
 
 def check_config_parameters(gcode_line):
-    # BASIC SETUP  (material setup handled in mcf.py)
+    # BASIC SETUP  (material setup handled in mcf.py
 
     if gcode_line.startswith(";P2PP PRINTERPROFILE=") and v.printerProfileString == '': # -p takes precedence over printer defined in file
         v.printerProfileString = gcode_line[21:]
