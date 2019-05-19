@@ -17,7 +17,7 @@ def check_config_parameters(gcode_line):
     # BASIC SETUP  (material setup handled in mcf.py
 
     if gcode_line.startswith(";P2PP PRINTERPROFILE=") and v.printerProfileString == '': # -p takes precedence over printer defined in file
-        v.printerProfileString = gcode_line[21:]
+        v.printerProfileString = gcode_line[21:].strip()
         if  len(v.printerProfileString) <> 16:
             log_warning("Invalid Printer pofile!  - Has invalid length (expect 16) - [{}]".format(v.printerProfileString))
         if not all(char in set("0123456789ABCDEFabcdef") for char in v.printerProfileString):
