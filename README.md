@@ -117,7 +117,11 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP MATERIAL_PVA_PLA_0_0_0
     ;P2PP MATERIAL_PLA_PLA_0_0_0
     ;P2PP MATERIAL_PET_PET_0_0_0
-    
+    ;P2PP BEDORIGINX=0
+    ;P2PP BEDORIGINY=-10
+    ;P2PP BEDSIZEX=250
+    ;P2PP BEDSIZEY=220
+        
     ; Following settings are optional (see description below)
     
     ;P2PP LINEARPING
@@ -125,21 +129,19 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     
     ; Following optional settings control the SIDE TRANSITIONING (see description below)
     ; even is you are not using SIDE TRANSITIONS, make sure the bed is defined correctly!!
-    ;P2PP BEDORIGINX=0
-    ;P2PP BEDORIGINY=-10
-    ;P2PP BEDSIZEX=250
-    ;P2PP BEDSIZEY=220
+
     ;P2PP SIDEWIPELOC=X253.9
     ;P2PP SIDEWIPEMINY=45
     ;P2PP SIDEWIPEMAXY=195
     ;P2PP SIDEWIPECORRECTION=1.0
-    
     ;P2PP BEFORESIDEWIPEGCODE ;--ENTER GCODE TO BE EXECUTED BEFORE SIDEWIPE (one coomand per line,can be multiple lines)
     ;P2PP AFTERSIDEWIPEGCODE ;--- ENTER GCODE TO BE EXECUTED AFTER SIDEWIPE (one coomand per line,can be multiple lines)
     
     ```
 
  ![splice offset](https://github.com/tomvandeneede/p2pp/blob/dev/docs/overallconfig.png)
+
+
 
 5. In the "After layer change G-code" INSERT (not overwrite) the following line.
     ```
