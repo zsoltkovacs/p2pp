@@ -77,6 +77,7 @@ c:\python27\python.exe c:\p2pp\p2pp.py -i %1
 ```
 cd place_where_you_extracted_the_zip_file
 chmod 755 p2pp.sh
+chmod 755 P2PP.py
 ```
 
 Test your work by typing `./p2pp.sh` and it should bring up a message windows 
