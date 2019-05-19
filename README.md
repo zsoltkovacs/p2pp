@@ -117,6 +117,8 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP MATERIAL_PVA_PLA_0_0_0
     ;P2PP MATERIAL_PLA_PLA_0_0_0
     ;P2PP MATERIAL_PET_PET_0_0_0
+    ; even is you are not using SIDE TRANSITIONS, make sure the bed is defined correctly!!
+    ; the default settings will match Pruse MK3(s) printers.
     ;P2PP BEDORIGINX=0
     ;P2PP BEDORIGINY=-10
     ;P2PP BEDSIZEX=250
@@ -128,7 +130,6 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP EXTRAENDFILAMENT=150
     
     ; Following optional settings control the SIDE TRANSITIONING (see description below)
-    ; even is you are not using SIDE TRANSITIONS, make sure the bed is defined correctly!!
 
     ;P2PP SIDEWIPELOC=X253.9
     ;P2PP SIDEWIPEMINY=45
