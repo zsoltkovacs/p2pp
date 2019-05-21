@@ -1,11 +1,41 @@
 <component name="ProjectDictionaryState">
   <dictionary name="Tim">
     <words>
+      <w>aftersidewipegcode</w>
+      <w>bedoriginx</w>
+      <w>bedoriginy</w>
+      <w>bedsizex</w>
+      <w>bedsizey</w>
+      <w>beforesidewipegcode</w>
+      <w>brookman</w>
+      <w>eede</w>
+      <w>extraendfilament</w>
       <w>extruder</w>
       <w>feedrate</w>
       <w>gcode</w>
+      <w>hexify</w>
+      <w>hotswap</w>
+      <w>linearping</w>
+      <w>linearpinglength</w>
+      <w>maxx</w>
+      <w>minsplice</w>
+      <w>minstartsplice</w>
+      <w>posx</w>
+      <w>printerprofile</w>
+      <w>reprap</w>
+      <w>reprapcompatible</w>
+      <w>runout</w>
       <w>sidewipe</w>
+      <w>sidewipecorrection</w>
+      <w>sidewipeloc</w>
+      <w>sidewipemaxy</w>
+      <w>sidewipeminy</w>
+      <w>slic</w>
+      <w>spliceoffset</w>
       <w>toolchange</w>
+      <w>unretract</w>
+      <w>wipefeedrate</w>
+      <w>wipetower</w>
     </words>
   </dictionary>
 </component>

@@ -4,10 +4,8 @@ __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
 __license__ = 'GPL'
-__version__ = '3.0.0'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
-__status__ = 'Beta'
 
 
 import p2pp.variables as v
@@ -38,8 +36,8 @@ def get_gcode_parameter(gcode, parameter):
 
 
 def parse_slic3r_config():
-    for idx in reversed(range(len(v.inputGcode))):
-        gcode_line = v.inputGcode[idx].rstrip("\n")
+    for idx in reversed(range(len(v.input_gcode))):
+        gcode_line = v.input_gcode[idx].rstrip("\n")
 
         if gcode_line.startswith("; avoid_crossing_perimeters"):
             break
@@ -54,7 +52,6 @@ def parse_slic3r_config():
             if parameter_start != -1:
                 v.wipetower_posy = float(gcode_line[parameter_start+1:].strip())
 
-
         if gcode_line.startswith("; extruder_colour"):
             filament_colour = ''
             parameter_start = gcode_line.find("#")
@@ -63,7 +60,7 @@ def parse_slic3r_config():
                 filament_colour = gcode_line.split("#")
 
             if len(filament_colour) == 4:
-                v.filamentColorCode = filament_colour
+                v.filament_color_code = filament_colour
             continue
 
         if gcode_line.startswith("; filament_type"):
@@ -71,8 +68,8 @@ def parse_slic3r_config():
             if parameter_start != -1:
                 filament_string = gcode_line[parameter_start+1:].strip(" ").split(";")
                 if len(filament_string) == 4:
-                    v.filamentType = filament_string
-                    v.usedFilamentTypes = list(set(filament_string))
+                    v.filament_type = filament_string
+                    v.used_filament_types = list(set(filament_string))
             continue
 
         if gcode_line.startswith(";"):
@@ -87,10 +84,8 @@ def parse_slic3r_config():
                     continue
                 for i in range(len(wiping_info)):
                     wiping_info[i] = int(wiping_info[i])
-            v.maxWipe = max(wiping_info)
+            v.max_wipe = max(wiping_info)
             continue
 
         if gcode_line.startswith("; retract_before_travel"):
             pass
-
-

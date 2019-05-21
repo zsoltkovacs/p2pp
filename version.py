@@ -6,15 +6,15 @@ __credits__ = ['Tom Van den Eede',
 __license__ = 'GPL'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
-__status__ = 'Beta'
+__status__ = 'BETA'
 
-
-#general version info
-
-Version = "3.1.0"
+# general version info
 MajorVersion = 3
 MinorVersion = 1
-Build        = 0
+Build        = 1
+Train = 'DEVELOPMENT'
+Version = "{Major}.{Minor}.{Build}-{Train}"\
+    .format(Major=MajorVersion, Minor=MinorVersion, Build=Build, Train=Train)
 
 
 
