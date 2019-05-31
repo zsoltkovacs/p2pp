@@ -19,6 +19,7 @@ import version as ver
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
                                                 ' GCODE derived from Slic3r.')
 
+
 arguments.add_argument('-i',
                        '--input-file',
                        required=True)
@@ -38,6 +39,8 @@ arguments.add_argument('-g',
                        '--gui',
                        required=False
                        )
+
+
 arguments.add_argument('-p',
                        '--printer-profile',
                        required=False,
@@ -51,6 +54,12 @@ arguments.add_argument('-s',
                        help='Omits Summary page after processing from being printed to STDOUT'
                        )
 
+arguments.add_argument('-w',
+                       '--wait',
+                       required=False,
+                       help='--w 1 Wait for the user to press enter after processing the file.'
+                       )
+
 
 def main(args):
 
@@ -59,11 +68,13 @@ def main(args):
 
         input_file = args['input_file']
 
+
         mcf.generate(input_file,
                      args['output_file'],
                      args['printer_profile'],
                      args['splice_offset'],
                      args['silent']
+
                      )
         # for debugging purposes only - this allows running the tool outside of slicer
 
@@ -71,7 +82,12 @@ def main(args):
         # GUI Mode
         pass
 
+    if args['wait']=="1":
+        raw_input("Press Enter to continue...")
+
+
 
 if __name__ == "__main__":
     v.version = ver.Version
     main(vars(arguments.parse_args()))
+
