@@ -37,7 +37,10 @@ def clicked():
 
 
 def user_error(body_text):
-    tkMessageBox.showerror("P2PP - Error Occurred", body_text)
+    tkMessageBox.showinfo("P2PP - Error Occurred", body_text)
+    root.update()
+
+
 
 
 

@@ -14,6 +14,7 @@ import p2pp.mcf as mcf
 import argparse
 import p2pp.variables as v
 import version as ver
+import p2pp.gui as gui
 
 
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
