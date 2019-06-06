@@ -42,7 +42,8 @@ process_warnings = []
 splice_algorithm_table = []
 splice_algorithm_dictionary = {}
 
-printer_profile_string = ''  # A unique ID linked to a printer configuration profile in the Palette 2 hardware.
+printer_profile_string = ''
+default_printerprofile = '50325050494e464f'  # A unique ID linked to a printer configuration profile in the Palette 2 hardware.
 
 input_gcode = []
 processed_gcode = []  # final output array with Gcode
@@ -115,6 +116,8 @@ correct_wipe_retract = False  # type: bool
 wipe_retracted = False  # type: bool
 mmu_unload_remove = False  # type: bool
 volumetric_e = False  # type: bool
+
+isReprap_Mode = False # type: bool
 
 # currenttool/lastLocation are variables required to generate O30 splice info.   splice info is generated at the end of the tool path
 # and not at the start hence the requirement to keep the toolhead and lastlocation to perform the magic

@@ -22,7 +22,7 @@ def gcode_remove_params(gcode, params):
 
     result.strip(' ')
     if len(result) < 4:
-        return ';--- P2PP Removed ' + gcode
+        return ';--- P2PP Removed [G]' + gcode
 
     return result
 
@@ -71,6 +71,10 @@ def parse_slic3r_config():
                     v.filament_type = filament_string
                     v.used_filament_types = list(set(filament_string))
             continue
+
+        if gcode_line.startswith("; gcode_flavor"):
+            if "reprap" in gcode_line:
+                v.isReprap_Mode = True
 
         if gcode_line.startswith(";"):
             pass

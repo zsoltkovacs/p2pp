@@ -96,12 +96,22 @@ def header_generate_omega(job_name):
     header = []
     summary = []
     warnings = []
+
     header.append('O21 ' + hexify_short(20) + "\n")  # MSF2.0
+
+    if (v.printer_profile_string == ''):
+        v.printer_profile_string = v.default_printerprofile
+        log_warning("No or Invalid Printer profile ID specified, using default P2PP printer profile ID {}".format(v.default_printerprofile))
+
+
     header.append('O22 D' + v.printer_profile_string.strip("\n") + "\n")  # PRINTERPROFILE used in Palette2
     header.append('O23 D0001' + "\n")              # unused
     header.append('O24 D0000' + "\n")              # unused
 
     header.append("O25 ")
+
+
+
 
     for i in range(4):
         if v.palette_inputs_used[i]:

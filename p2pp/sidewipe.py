@@ -68,16 +68,20 @@ def unretract():
 
 def retro_cleanup():
     # retrospective cleanup of generated code AFTER detecting a purge volume in print
+    if v.isReprap_Mode:
+        lookFor = "M572"
+    else:
+        lookFor = "M900"
     if not v.side_wipe:
         return
     idx = len(v.processed_gcode) - 1
-    while idx > -1 and not v.processed_gcode[idx].startswith("M900"):
+    while idx > -1 and not v.processed_gcode[idx].startswith(lookFor):
         if v.processed_gcode[idx][0:1] == "G1":
             extruder_movement = get_gcode_parameter(v.processed_gcode[idx], "E")
             if extruder_movement != "":
                 v.side_wipe_length += extruder_movement
         if not v.processed_gcode[idx].startswith("M73"):
-            v.processed_gcode[idx] = ";--- P2PP removed " + v.processed_gcode[idx]
+            v.processed_gcode[idx] = ";--- P2PP removed [RETRO]" + v.processed_gcode[idx]
         idx -= 1
 
 

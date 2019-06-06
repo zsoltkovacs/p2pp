@@ -15,14 +15,19 @@ def check_config_parameters(gcode_line):
     # BASIC SETUP  (material setup handled in mcf.py
 
     # -p takes precedence over printer defined in file
-    if gcode_line.startswith(";P2PP PRINTERPROFILE=") and v.printer_profile_string == '':
-        v.printer_profile_string = gcode_line[21:].strip()
-        if len(v.printer_profile_string) != 16:
+    if gcode_line.startswith(";P2PP PRINTERPROFILE="):
+        tmp_string = gcode_line[21:].strip()
+        if len(tmp_string) != 16:
             log_warning("Invalid Printer profile!  - Has invalid length (expect 16) - [{}]"
-                        .format(v.printer_profile_string))
-        if not all(char in set("0123456789ABCDEFabcdef") for char in v.printer_profile_string):
+                        .format(tmp_string))
+            tmp_string= ""
+        if not all(char in set("0123456789ABCDEFabcdef") for char in tmp_string):
             log_warning("Invalid Printer profile!  - Invalid characters  (expect 0123456789abcdef) - [{}]"
-                        .format(v.printer_profile_string))
+                        .format(tmp_string))
+            tmp_string = ""
+
+        if len(tmp_string) == 16:
+            v.printer_profile_string = tmp_string
 
     if gcode_line.startswith(";P2PP SPLICEOFFSET="):
         v.splice_offset = float(gcode_line[19:])
