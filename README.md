@@ -232,6 +232,8 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 1. In Slic3r, Click the "Filament Settings Tab"
 2. Each filament should define a linear advance factor of greater than 0 (nn value).  
 Normally filament has this value defined based on bowden or direct drive so no action is required.
+(!!! CHANGE THIS nn BY A VALUE LARGER THAN 0!!)
+
 ```
 M900 Knn
 ```
