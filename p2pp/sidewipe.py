@@ -31,7 +31,7 @@ def create_side_wipe():
         v.processed_gcode.append("G1 E{}\n".format(-v.sidewipe_retract))
         v.wipe_retracted = True
         v.processed_gcode.append("G1 F8640\n")
-        v.processed_gcode.append("G0 {} Y{} F{}\n".format(v.side_wipe_loc, v.sidewipe_miny, v.wipe_feedrate))
+        v.processed_gcode.append("G0 {} Y{}\n".format(v.side_wipe_loc, v.sidewipe_miny))
         sweep_base_speed = v.wipe_feedrate * 20 * abs(v.sidewipe_maxy - v.sidewipe_miny) / 150
         sweep_length = 20
         feed_rate = -1
