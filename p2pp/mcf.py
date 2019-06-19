@@ -8,6 +8,7 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 import os
+import io
 import p2pp.gui as gui
 from p2pp.formatnumbers import hexify_float
 import p2pp.parameters as parameters
@@ -315,6 +316,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     ######################
     if not output_file:
         output_file = input_file
-    opf = open(output_file, "w", encoding="utf-8")
+    opf = open(output_file, "w")
     opf.writelines(header)
-    opf.writelines(v.processed_gcode)
+    opf.writelines(v.processedGCode)
