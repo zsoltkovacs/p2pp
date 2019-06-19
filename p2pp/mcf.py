@@ -315,6 +315,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     ######################
     if not output_file:
         output_file = input_file
-    opf = open(output_file, "w")
+    opf = open(output_file, "w", encoding="utf-8")
     opf.writelines(header)
     opf.writelines(v.processed_gcode)
