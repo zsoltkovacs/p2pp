@@ -318,4 +318,4 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         output_file = input_file
     opf = open(output_file, "w")
     opf.writelines(header)
-    opf.writelines(v.processedGCode)
+    opf.writelines(v.processed_gcode)
