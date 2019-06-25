@@ -205,7 +205,7 @@ def gcode_parseline(gcode_full_line):
 
     if gcode_full_line.startswith("M900"):
         k_factor = get_gcode_parameter(gcode_full_line, "K")
-        if int(k_factor) > 0:
+        if float(k_factor) > 0:
             sidewipe.create_side_wipe()
             v.within_tool_change_block = False
             v.mmu_unload_remove = False
