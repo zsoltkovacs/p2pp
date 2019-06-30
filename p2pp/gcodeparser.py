@@ -45,13 +45,12 @@ def parse_slic3r_config():
         if gcode_line.startswith("; wipe_tower_x"):
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
-                v.layer_height = float(gcode_line[parameter_start+1:].strip())
+                v.wipetower_posx = float(gcode_line[parameter_start + 1:].strip())
 
         if gcode_line.startswith("; layer_height"):
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
-                v.wipetower_posx = float(gcode_line[parameter_start+1:].strip())
-
+                v.layer_height = float(gcode_line[parameter_start + 1:].strip())
 
         if gcode_line.startswith("; wipe_tower_y"):
             parameter_start = gcode_line.find("=")

@@ -257,7 +257,7 @@ def gcode_parseline(gcode_full_line):
         v.empty_grid = True
         if (v.max_tower_z_delta > v.cur_tower_z_delta):
             v.cur_tower_z_delta += v.layer_height
-            log_warning(";{}, {}\n".format(v.cur_tower_z_delta, v.layer_height))
+            #log_warning(";DELTA {}, LAYER {}\n".format(v.cur_tower_z_delta, v.layer_height))
         else:
             v.current_print_feed = v.wipe_feedrate / 60
             v.processed_gcode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.current_print_feed))
