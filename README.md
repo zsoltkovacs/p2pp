@@ -15,6 +15,7 @@ earlier versions may generate different code patterns and may not work correctly
 -  25/06/2019 - Corrected for allowance of fractional linear advance values
 -  30/06/2019 - Added PROFILETYPEOVERRIDE parameter
 -  30/06/2019 - Corrected traveling speed issue to side wipe
+-  30/06/2019 - BETA - added asynchonous tower function
 
 
 ## Purpose
@@ -136,6 +137,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP BEDORIGINY=-10
     ;P2PP BEDSIZEX=250
     ;P2PP BEDSIZEY=220
+    ;P2PP  PURGETOWERDELTA=0
         
     ; Following settings are optional (see description below)
     
@@ -222,7 +224,21 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ;sets the print speed to 40mm/s
   ```  
    
-  
+ > **  ;P2PP PURGETOWERDELTA=0** *[EXPERIMENTAL,OPTIONAL]*
+ 
+ The PURGETOWERDELTA feature allows the purge tower to grow less quickly than the 
+ actual print up to a certain amount.  P2PP will remove empty grid layers from the tower
+ until the maximum height difference is reached.  This reduces filament consumption as well as time spent in the purge tower
+ 
+ It is important to assure the extruder assembly will NOT hit the already printed parts on the bed.
+ Also when the difference becomes too big the time to drop and rise will start to have an impact on the print time.
+ 
+The default value is 0 - meaning the feature is not enabled.
+
+  ``` 
+   ;P2PP PURGETOWERDELTA=10
+  ;allows the purge tower to be 10mm lower than the actual print
+  ```  
  
  > **SIDEWIPELOC=X#** *[EXPERIMENTAL,OPTIONAL]*
   This is used to define the location on the X-Axis the printer needs to go to to do a side transition instead of doing a tower purge.  In Slic3r all still needs to be setup with a purge, tower, but the tower needs to be **MOVE COMPLETELY OFF THE BED** to enable the SIDE WIPE .  p2pp will convert the tower purges into side wipes and fileter out all purges that are not necessary (i.e. empty towe shells). 
