@@ -5,6 +5,18 @@
 earlier versions may generate different code patterns and may not work correctly
 
 
+## Changelog
+
+-  21/05/2019 - Code refqctor - no functionality change
+-  31/05/2019 - Added -w [0|1] parameter to enable/disable the waiting for user feedback after rgenerating the report.
+-  06/06/2019 - Added correction for gcode patchup synchronization when generatin code in REPRAP mode
+-  06/06/2019 - Added check on the correctness of the printer profile sting (lenght/allowed characters)
+-  06/06/2019 - Added default printer profile 50325050494e464f is no user defined one exists
+-  25/06/2019 - Corrected for allowance of fractional linear advance values
+-  30/06/2019 - Added PROFILETYPEOVERRIDE parameter
+-  30/06/2019 - Corrected traveling speed issue to side wipe
+
+
 ## Purpose
 
 Allow Palette 2 users to exploit all features and functionality of the palette 2 (Pro) with the Slic3r PE functionality for multi material printing including:
