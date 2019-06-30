@@ -97,6 +97,15 @@ def coordinate_on_bed(x, y):
         return False
     return True
 
+def entertower():
+    if v.cur_tower_z_delta > 0:
+        v.processed_gcode.append("G1 Z{} F10800\n".format(v.currentPositionZ - v.cur_tower_z_delta))
+
+
+def leavetower():
+    if v.cur_tower_z_delta > 0:
+        v.processed_gcode.append("G1 Z{} F10800\n".format(v.currentPositionZ))
+
 
 def moved_in_tower():
     return not coordinate_on_bed(v.currentPositionX, v.currentPositionY)
@@ -153,6 +162,17 @@ def gcode_parseline(gcode_full_line):
         if new_multiplier != "":
             v.extrusion_multiplier = new_multiplier / 100
 
+
+    # processing tower Z delta
+
+    if "CP EMPTY GRID END" in gcode_full_line:
+        v.empty_grid = False
+        leavetower()
+
+    if v.empty_grid and (v.max_tower_z_delta > v.cur_tower_z_delta):
+        v.processed_gcode.append(';--- P2PP removed [Tower Delta]' + gcode_full_line + "\n")
+        return
+
     # Processing of print head movements
     #############################################
 
@@ -162,12 +182,17 @@ def gcode_parseline(gcode_full_line):
     if gcode_full_line.startswith("G") and not gcode_full_line.startswith("G28"):
         to_x = get_gcode_parameter(gcode_full_line, "X")
         to_y = get_gcode_parameter(gcode_full_line, "Y")
+        to_z = get_gcode_parameter(gcode_full_line, "Z")
         prev_x = v.currentPositionX
         prev_y = v.currentPositionY
+        prev_z = v.currentPositionZ
         if to_x != "":
             v.currentPositionX = float(to_x)
         if to_y != "":
             v.currentPositionY = float(to_y)
+        if to_z != "":
+            v.currentPositionZ = float(to_z)
+
         if not coordinate_on_bed(v.currentPositionX, v.currentPositionY) and coordinate_on_bed(prev_x, prev_y):
             gcode_full_line = ";" + gcode_full_line
 
@@ -230,21 +255,27 @@ def gcode_parseline(gcode_full_line):
 
     if "CP EMPTY GRID START" in gcode_full_line and v.current_layer > "0":
         v.empty_grid = True
-        v.current_print_feed = v.wipe_feedrate / 60
-        v.processed_gcode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.current_print_feed))
-        v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
-
-    if "CP EMPTY GRID END" in gcode_full_line:
-        v.empty_grid = False
+        if (v.max_tower_z_delta > v.cur_tower_z_delta):
+            v.cur_tower_z_delta += v.layer_height
+            log_warning(";{}, {}\n".format(v.cur_tower_z_delta, v.layer_height))
+        else:
+            v.current_print_feed = v.wipe_feedrate / 60
+            v.processed_gcode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.current_print_feed))
+            v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
+            entertower()
 
     if "TOOLCHANGE START" in gcode_full_line:
         v.allow_filament_information_update = False
         v.within_tool_change_block = True
         sidewipe.sidewipe_toolchange_start()
+        entertower()
 
-    if ("TOOLCHANGE END" in gcode_full_line) and not v.side_wipe:
-        v.within_tool_change_block = False
-        v.mmu_unload_remove = False
+    if ("TOOLCHANGE END" in gcode_full_line):
+        leavetower()
+        if not v.side_wipe:
+            v.within_tool_change_block = False
+            v.mmu_unload_remove = False
+
 
     if "TOOLCHANGE UNLOAD" in gcode_full_line and not v.side_wipe:
         v.current_print_feed = v.wipe_feedrate / 60
