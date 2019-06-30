@@ -67,10 +67,11 @@ def main(args):
     if not args['gui']:
         # CLI Mode
 
-        input_file = args['input_file']
+        v.filename = args['input_file']
 
 
-        mcf.generate(input_file,
+
+        mcf.generate(v.filename,
                      args['output_file'],
                      args['printer_profile'],
                      args['splice_offset'],

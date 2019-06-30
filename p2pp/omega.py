@@ -193,13 +193,14 @@ def header_generate_omega(job_name):
         log_warning("Using sidewipe with undefined SIDEWIPELOC!!!")
 
     warnings.append("\n")
-    warnings.append(";-------------------:\n")
-    warnings.append("; - PROCESS WARNINGS:\n")
-    warnings.append(";-------------------:\n")
+    warnings.append(";------------------------:\n")
+    warnings.append("; - PROCESS INFO/WARNINGS:\n")
+    warnings.append(";------------------------:\n")
 
     warnings.append(";Generated with P2PP version {}\n".format(v.version))
+    warnings.append(";Processed file:. {}\n".format(v.filename))
     if len(v.process_warnings) == 0:
-        warnings.append(";None\n")
+        warnings.append(";No warnings\n")
     else:
         for i in range(len(v.process_warnings)):
             warnings.append("{}\n".format(v.process_warnings[i]))

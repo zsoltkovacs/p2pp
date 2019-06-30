@@ -72,6 +72,8 @@ empty_grid = False  # type: bool
 before_sidewipe_gcode = []
 after_sidewipe_gcode = []
 
+filename = ""
+
 bed_size_x = 250  # type: int
 bed_size_y = 220  # type: int
 bed_origin_x = 0  # type: int
