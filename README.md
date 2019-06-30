@@ -296,7 +296,24 @@ Normally filament has this value defined based on bowden or direct drive so no a
 ```
 M900 Knn
 ```
-3. Remember to click the floppy-disk icon to save!
+
+ Remember to click the floppy-disk icon to save!
+
+ > **PROFILETYPEOVERRIDE=** *[OPTIONAL]*
+ 
+In case you are using different brands of the same type of material that require different splicing profile settings, PROFILETYPEOVERRIDE is defined in the filament start g-code as follows:
+
+```
+;P2PP PROFILETYPEOVERRIDE=PLA2
+```
+
+Doing this will allow you to specify the splice characteristics between regular PLA and the new filament type PLA2 as for other materials.
+This feature is intended for use with different brands of the same material that would otherwise not splice together properly
+
+```
+;P2PP MATERIAL_PLA2_PLA_a_b_c
+;P2PP MATERIAL_PLA_PLA2_d_e_f
+```
 
 ## Usage
 
