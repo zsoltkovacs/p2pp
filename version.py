@@ -12,7 +12,7 @@ __status__ = 'BETA'
 MajorVersion = 3
 MinorVersion = 1
 Build        = 3
-Train = 'RELEASE'
+Train = 'DEVELOPMENT'
 Version = "{Major}.{Minor}.{Build}-{Train}"\
     .format(Major=MajorVersion, Minor=MinorVersion, Build=Build, Train=Train)
 
