@@ -32,6 +32,12 @@ def check_config_parameters(gcode_line):
     if gcode_line.startswith(";P2PP SPLICEOFFSET="):
         v.splice_offset = float(gcode_line[19:])
 
+    if gcode_line.startswith(";P2PP PROFILETYPEOVERRIDE="):
+        v.filament_type[v.current_tool] = gcode_line[26:].strip()
+        v.used_filament_types.append(gcode_line[26:].strip())
+        v.used_filament_types = list(dict.fromkeys(v.used_filament_types))
+
+
     if gcode_line.startswith(";P2PP EXTRAENDFILAMENT="):
         v.extra_runout_filament = float(gcode_line[23:])
 
