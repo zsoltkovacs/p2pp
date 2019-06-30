@@ -199,9 +199,15 @@ def header_generate_omega(job_name):
 
     warnings.append(";Generated with P2PP version {}\n".format(v.version))
     warnings.append(";Processed file:. {}\n".format(v.filename))
+
     if len(v.process_warnings) == 0:
         warnings.append(";No warnings\n")
     else:
+        if len(v.process_warnings) == 1:
+            warnings.append(";There is 1 splice length warnings\n")
+        else:
+            warnings.append(";There are {} splice length warnings\n".format(len(v.process_warnings)))
+        warnings.append(";Please refer to P2PP help page for suggestions on how to resolve.\n")
         for i in range(len(v.process_warnings)):
             warnings.append("{}\n".format(v.process_warnings[i]))
         gui.show_warnings(warnings)

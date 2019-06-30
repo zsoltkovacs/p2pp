@@ -35,6 +35,9 @@ filament_color_code = ["-",
                        "-",
                        "-"]
 
+
+filament_short = [ 0,0,0,0 ]
+
 used_filament_types = []
 
 default_splice_algorithm = "D000 D000 D000"

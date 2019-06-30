@@ -44,10 +44,15 @@ def gcode_process_toolchange(new_tool, location):
             if v.splice_length[0] < v.min_start_splice_length:
                 log_warning("Warning : Short first splice (<{}mm) Length:{:-3.2f}".format(length,
                                                                                           v.min_start_splice_length))
+
+                filamentshortage = v.min_start_splice_length -  v.splice_length[0]
+                v.filament_short[new_tool] =   max(v.filament_short[new_tool] , filamentshortage )
         else:
             if v.splice_length[-1] < v.min_splice_length:
                 log_warning("Warning: Short splice (<{}mm) Length:{:-3.2f} Layer:{} Input:{}".
                             format(v.min_splice_length, length, v.current_layer, v.current_tool))
+                filamentshortage = v.min_splice_length -  v.splice_length[-1]
+                v.filament_short[new_tool] =   max(v.filament_short[new_tool] , filamentshortage )
 
     v.previous_toolchange_location = location
     v.current_tool = new_tool
