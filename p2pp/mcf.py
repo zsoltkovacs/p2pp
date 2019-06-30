@@ -111,6 +111,17 @@ def moved_in_tower():
     return not coordinate_on_bed(v.currentPositionX, v.currentPositionY)
 
 
+
+def retrocorrect_emptygrid():
+    pos = len(v.processed_gcode)-1
+    while pos>0:
+        if v.processed_gcode[pos].startswith("M900"):
+            return
+        if  v.processed_gcode[pos].startswith("G1 X"):
+            v.processed_gcode[pos] = "; P2PP removed [Tower Delta] {}".format(v.processed_gcode[pos])
+        pos = pos - 1
+
+
 def gcode_parseline(gcode_full_line):
 
     __tower_remove = False
@@ -257,6 +268,7 @@ def gcode_parseline(gcode_full_line):
         v.empty_grid = True
         if (v.max_tower_z_delta > v.cur_tower_z_delta):
             v.cur_tower_z_delta += v.layer_height
+            retrocorrect_emptygrid()
             #log_warning(";DELTA {}, LAYER {}\n".format(v.cur_tower_z_delta, v.layer_height))
         else:
             v.current_print_feed = v.wipe_feedrate / 60
