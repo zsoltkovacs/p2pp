@@ -7,7 +7,7 @@ earlier versions may generate different code patterns and may not work correctly
 
 ## Changelog
 
--  21/05/2019 - Code refqctor - no functionality change
+-  21/05/2019 - Code refactor - no functionality change
 -  31/05/2019 - Added -w [0|1] parameter to enable/disable the waiting for user feedback after rgenerating the report.
 -  06/06/2019 - Added correction for gcode patchup synchronization when generatin code in REPRAP mode
 -  06/06/2019 - Added check on the correctness of the printer profile sting (lenght/allowed characters)
