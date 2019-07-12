@@ -225,7 +225,7 @@ def gcode_parseline(gcode_full_line):
             v.currentPositionZ = float(to_z)
 
 
-        if coordinate_in_tower(to_x, to_y) and v.towerskipped:
+        if coordinate_in_tower(currentPositionX, currentPositionY) and v.towerskipped:
             gcode_full_line = gcode_remove_params(gcode_full_line, ["X","Y"])
             pass
 
