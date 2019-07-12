@@ -97,6 +97,17 @@ def coordinate_on_bed(x, y):
         return False
     return True
 
+def coordinate_in_tower(x, y):
+    if x < v.wipe_tower_info['minx']:
+        return False
+    if x > v.wipe_tower_info['maxx']:
+        return False
+    if y < v.wipe_tower_info['miny']:
+        return False
+    if y > v.wipe_tower_info['maxy']:
+        return False
+    return True
+
 def entertower():
     if v.cur_tower_z_delta > 0:
         v.processed_gcode.append("G1 Z{} F10800\n".format(v.currentPositionZ - v.cur_tower_z_delta))
@@ -176,6 +187,9 @@ def gcode_parseline(gcode_full_line):
 
     # processing tower Z delta
 
+
+
+
     if "CP EMPTY GRID END" in gcode_full_line:
         v.empty_grid = False
         leavetower()
@@ -199,10 +213,21 @@ def gcode_parseline(gcode_full_line):
         prev_z = v.currentPositionZ
         if to_x != "":
             v.currentPositionX = float(to_x)
+            if v.define_tower:
+                v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], to_x)
+                v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], to_x)
         if to_y != "":
             v.currentPositionY = float(to_y)
+            if v.define_tower:
+                v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], to_y)
+                v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], to_y)
         if to_z != "":
             v.currentPositionZ = float(to_z)
+
+
+        if coordinate_in_tower(to_x, to_y) and v.towerskipped:
+            gcode_full_line = gcode_remove_params(gcode_full_line, ["X","Y"])
+            pass
 
         if not coordinate_on_bed(v.currentPositionX, v.currentPositionY) and coordinate_on_bed(prev_x, prev_y):
             gcode_full_line = ";" + gcode_full_line
@@ -264,12 +289,26 @@ def gcode_parseline(gcode_full_line):
     # special processing for side wipes is required in this section
     #################################################################
 
+    if "CP WIPE TOWER FIRST LAYER BRIM START" in gcode_full_line:
+        v.define_tower = True
+
+    if "CP WIPE TOWER FIRST LAYER BRIM END" in gcode_full_line:
+        v.define_tower = False
+        v.wipe_tower_info['minx']-=2
+        v.wipe_tower_info['miny']-=2
+        v.wipe_tower_info['maxx']+=2
+        v.wipe_tower_info['maxy']+=2
+        v.processed_gcode.append("; TOWER COORDINATES ({:-8.2f},{:-8.2f}) to ({:-8.2f},{:-8.2f})\n".format(
+            v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy'],
+            v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy']
+        ))
+
     if "CP EMPTY GRID START" in gcode_full_line and v.current_layer > "0":
         v.empty_grid = True
         if (v.max_tower_z_delta > v.cur_tower_z_delta):
             v.cur_tower_z_delta += v.layer_height
             retrocorrect_emptygrid()
-            #log_warning(";DELTA {}, LAYER {}\n".format(v.cur_tower_z_delta, v.layer_height))
+            v.towerskipped = True
         else:
             v.current_print_feed = v.wipe_feedrate / 60
             v.processed_gcode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.current_print_feed))
@@ -307,6 +346,7 @@ def gcode_parseline(gcode_full_line):
         # Layer Information
     if gcode_full_line.startswith(";LAYER "):
         v.current_layer = gcode_full_line[7:]
+        v.towerskipped = False
 
     if v.mmu_unload_remove:
             v.processed_gcode.append(gcode_filter_toolchange_block(gcode_full_line) + "\n")

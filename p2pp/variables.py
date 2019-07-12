@@ -48,6 +48,7 @@ splice_algorithm_dictionary = {}
 max_tower_z_delta = 0.0
 cur_tower_z_delta = 0.0
 layer_height = 0.2
+towerskipped = False
 
 printer_profile_string = ''
 default_printerprofile = '50325050494e464f'  # A unique ID linked to a printer configuration profile in the Palette 2 hardware.
