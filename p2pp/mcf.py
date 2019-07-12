@@ -214,13 +214,13 @@ def gcode_parseline(gcode_full_line):
         if to_x != "":
             v.currentPositionX = float(to_x)
             if v.define_tower:
-                v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], to_x)
-                v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], to_x)
+                v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], v.currentPositionX)
+                v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], v.currentPositionX)
         if to_y != "":
             v.currentPositionY = float(to_y)
             if v.define_tower:
-                v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], to_y)
-                v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], to_y)
+                v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], v.currentPositionY)
+                v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], v.currentPositionY)
         if to_z != "":
             v.currentPositionZ = float(to_z)
 
