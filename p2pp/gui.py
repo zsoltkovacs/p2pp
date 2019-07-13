@@ -4,10 +4,8 @@ __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
 __license__ = 'GPL'
-__version__ = '3.0.0'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
-__status__ = 'Beta'
 
 
 
@@ -39,7 +37,8 @@ def clicked():
 
 
 def user_error(body_text):
-    tkMessageBox.showerror("P2PP - Error Occurred", body_text)
+    tkMessageBox.showinfo("P2PP - Error Occurred", body_text)
+    root.update()
 
 
 def show_warnings(warning_list):
@@ -67,3 +66,8 @@ def show_warnings(warning_list):
     root.attributes('-topmost', True)
     root.after_idle(root.attributes, '-topmost', False)
     root.mainloop()
+
+
+def ask_yes_no(title, message):
+    result = tkMessageBox.askquestion(title, message)
+    return result

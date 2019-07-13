@@ -4,18 +4,16 @@ __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
 __license__ = 'GPL'
-__version__ = '3.0.0'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
-__status__ = 'Beta'
 
 import struct
 
 
 def hexify_short(num):
     # hexify_short: Converts a short integer into the specific notation used by Mosaic
-    if num<0:
-        num+=65536
+    if num < 0:
+        num += 65536
     return "D" + '{0:04x}'.format(num)
 
 
