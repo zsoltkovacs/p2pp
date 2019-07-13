@@ -376,7 +376,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         try:
             opf = open(input_file)
         except:
-            gui.user_error("Could'nt read input file\n'{}'".format(input_file))
+            gui.user_error("Could not read input file\n'{}'".format(input_file))
             return
 
     v.input_gcode = opf.readlines()

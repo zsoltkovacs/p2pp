@@ -52,15 +52,23 @@ settings are porperly tuned to work with your 3d Printer hardware.
 
 ## General information
 
+Kurt made a video describing the installation process p2pp on a windows system.  Besides the windows specific part this video also contains the 
+setup instructions for Slic3r/PrusaSlicer and a full example on how p2pp is used.   The video can be found on YouTube:
+
+[![youtube video](https://img.youtube.com/vi/JuTdq-IlRj4/0.jpg)](https://www.youtube.com/watch?v=JuTdq-IlRj4&t=1s "P2PP Installation and Configuration")
+
+Some of the advanced features are not covered in this video so make sure to take the time to read through this page as well to get answers on how to tweak p2pp
+to meet your needs....
+
+
 P2PP requires a python interpreter to be installed on your computer.  
 
-MAC OSX based computers should have the reauired Python 2.7 compiler installed by default.
+MAC OSX based computers should have the required Python 2.7 compiler installed by default.
 
 Windows users may not have python installed yet.  For compatibility reasonse we recommend to install version 2.7 or 3.7
 from  https://www.python.org/downloads/windows/ 
 Make sure to keep track where you installed python as you will need this information in further steps.
 
-## USERS OF SLICER 1.42.0 BETA 1 AND ABOVECAN SKIP TO THE CONFIGURATION OF SLIC3R PE
 
 ## WINDOWS INSTALLATION 
 
@@ -395,10 +403,10 @@ For all future prints using **Chroma** or **Canvas**, make sure to keep the same
 
 ## Acknowledgements
 
-Thanks to Tim Brookman for the co-development of this plugin.
-
-Many thanks also to Klaus, Khalil ,Casey, Jermaul, Paul  (and all others) for the endless testing and valuable feedback and the ongoing P2PP support to the community...it's them driving the improvements...
-
+Thanks to.....
+Tim Brookman for the co-development of this plugin.
+Klaus, Khalil ,Casey, Jermaul, Paul  (and all others) for the endless testing and valuable feedback and the ongoing P2PP support to the community...it's them driving the improvements...
+Kurt for making the instructional video n setting up and using p2pp.
 
 ## **Good luck & happy printing !!!**
 
