@@ -145,7 +145,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP BEDORIGINY=-10
     ;P2PP BEDSIZEX=250
     ;P2PP BEDSIZEY=220
-    ;P2PP  PURGETOWERDELTA=0
+    ;P2PP PURGETOWERDELTA=0
         
     ; Following settings are optional (see description below)
     
