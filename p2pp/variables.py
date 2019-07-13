@@ -36,7 +36,7 @@ filament_color_code = ["-",
                        "-"]
 
 
-filament_short = [ 0,0,0,0 ]
+filament_short = [0, 0, 0, 0]
 
 used_filament_types = []
 
@@ -57,9 +57,9 @@ input_gcode = []
 processed_gcode = []  # final output array with Gcode
 
 # These variables are used to build the splice information table (Omega-30 commands in GCode) that drives the Palette2.
-# spliceoffset allows for a correction of the position at which the transition occurs.  When the first transition is scheduled
-# to occur at 120mm in GCode, you can add a number of mm to push the transition further in the purge tower.  This serves a similar
-# function as the transition offset in chroma.
+# spliceoffset allows for a correction of the position at which the transition occurs.
+# When the first transition is scheduled to occur at 120mm in GCode, you can add a number of mm to push the transition
+# further in the purge tower.  This serves a similar function as the transition offset in chroma.
 splice_offset = 0  # type: int
 splice_extruder_position = []
 splice_used_tool = []
@@ -118,8 +118,8 @@ total_material_extruded = 0  # type: float
 # further from the previous one.   Pings occur in random places!!! as the are non-intrusive and don't causes pauses in the
 # print they aren ot restricted to the wipe tower and they will occur as soon as the interval length for ping is exceeded.
 last_ping_extruder_position = 0
-ping_interval = 350  # type: int
-max_ping_interval = 3000  # type: int
+ping_interval = 350  # type: float
+max_ping_interval = 3000  # type: float
 ping_length_multiplier = 1.03  # type: float
 sidewipe_correction = 1.0  # type: float
 sidewipe_retract = 0.4  # type: float
@@ -128,7 +128,7 @@ wipe_retracted = False  # type: bool
 mmu_unload_remove = False  # type: bool
 volumetric_e = False  # type: bool
 
-isReprap_Mode = False # type: bool
+isReprap_Mode = False  # type: bool
 
 # currenttool/lastLocation are variables required to generate O30 splice info.   splice info is generated at the end of the tool path
 # and not at the start hence the requirement to keep the toolhead and lastlocation to perform the magic
@@ -146,5 +146,7 @@ within_tool_change_block = False  # type: bool  # State of processed G-Code to d
 allow_filament_information_update = False  # type: bool  # TBA
 
 reprap_compatible = False  # Enables the cleanup/removal of M900 commands as RepRap uses M572 which is slightly different
+
+gui = False  # Enabled/Disabled by --gui switch - enables GUI Mode which requires tkinter.
 
 version = "0.0.0"

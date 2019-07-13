@@ -20,7 +20,6 @@ import p2pp.gui as gui
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
                                                 ' GCODE derived from Slic3r.')
 
-
 arguments.add_argument('-i',
                        '--input-file',
                        required=True)
@@ -38,9 +37,9 @@ arguments.add_argument('-o',
                        )
 arguments.add_argument('-g',
                        '--gui',
+                       action='store_true',
                        required=False
                        )
-
 
 arguments.add_argument('-p',
                        '--printer-profile',
@@ -65,31 +64,22 @@ arguments.add_argument('-w',
 def main(args):
 
     if not args['gui']:
-        # CLI Mode
-
-        v.filename = args['input_file']
-
-
-
-        mcf.generate(v.filename,
-                     args['output_file'],
-                     args['printer_profile'],
-                     args['splice_offset'],
-                     args['silent']
-
-                     )
-        # for debugging purposes only - this allows running the tool outside of slicer
-
+        v.gui = False
     else:
-        # GUI Mode
-        pass
+        v.gui = True
 
-    if args['wait']=="1":
+    v.filename = args['input_file']
+    mcf.generate(v.filename,
+                 args['output_file'],
+                 args['printer_profile'],
+                 args['splice_offset'],
+                 args['silent']
+                 )
+
+    if args['wait'] == "1":
         raw_input("Press Enter to continue...")
-
 
 
 if __name__ == "__main__":
     v.version = ver.Version
     main(vars(arguments.parse_args()))
-

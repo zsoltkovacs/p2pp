@@ -37,7 +37,6 @@ def check_config_parameters(gcode_line):
         v.used_filament_types.append(gcode_line[26:].strip())
         v.used_filament_types = list(dict.fromkeys(v.used_filament_types))
 
-
     if gcode_line.startswith(";P2PP EXTRAENDFILAMENT="):
         v.extra_runout_filament = float(gcode_line[23:])
 

@@ -45,14 +45,14 @@ def gcode_process_toolchange(new_tool, location):
                 log_warning("Warning : Short first splice (<{}mm) Length:{:-3.2f}".format(length,
                                                                                           v.min_start_splice_length))
 
-                filamentshortage = v.min_start_splice_length -  v.splice_length[0]
-                v.filament_short[new_tool] =   max(v.filament_short[new_tool] , filamentshortage )
+                filamentshortage = v.min_start_splice_length - v.splice_length[0]
+                v.filament_short[new_tool] = max(v.filament_short[new_tool], filamentshortage)
         else:
             if v.splice_length[-1] < v.min_splice_length:
                 log_warning("Warning: Short splice (<{}mm) Length:{:-3.2f} Layer:{} Input:{}".
                             format(v.min_splice_length, length, v.current_layer, v.current_tool))
-                filamentshortage = v.min_splice_length -  v.splice_length[-1]
-                v.filament_short[new_tool] =   max(v.filament_short[new_tool] , filamentshortage )
+                filamentshortage = v.min_splice_length - v.splice_length[-1]
+                v.filament_short[new_tool] = max(v.filament_short[new_tool], filamentshortage)
 
     v.previous_toolchange_location = location
     v.current_tool = new_tool
@@ -97,6 +97,7 @@ def coordinate_on_bed(x, y):
         return False
     return True
 
+
 def coordinate_in_tower(x, y):
     if x < v.wipe_tower_info['minx']:
         return False
@@ -107,6 +108,7 @@ def coordinate_in_tower(x, y):
     if y > v.wipe_tower_info['maxy']:
         return False
     return True
+
 
 def entertower():
     if v.cur_tower_z_delta > 0:
@@ -122,19 +124,17 @@ def moved_in_tower():
     return not coordinate_on_bed(v.currentPositionX, v.currentPositionY)
 
 
-
 def retrocorrect_emptygrid():
     pos = len(v.processed_gcode)-1
-    while pos>0:
+    while pos > 0:
         if v.processed_gcode[pos].startswith("M900"):
             return
-        if  v.processed_gcode[pos].startswith("G1 X"):
+        if v.processed_gcode[pos].startswith("G1 X"):
             v.processed_gcode[pos] = "; P2PP removed [Tower Delta] {}".format(v.processed_gcode[pos])
         pos = pos - 1
 
 
 def gcode_parseline(gcode_full_line):
-
     __tower_remove = False
 
     if not gcode_full_line[0] == ";":
@@ -184,12 +184,7 @@ def gcode_parseline(gcode_full_line):
         if new_multiplier != "":
             v.extrusion_multiplier = new_multiplier / 100
 
-
     # processing tower Z delta
-
-
-
-
     if "CP EMPTY GRID END" in gcode_full_line:
         v.empty_grid = False
         leavetower()
@@ -210,7 +205,7 @@ def gcode_parseline(gcode_full_line):
         to_z = get_gcode_parameter(gcode_full_line, "Z")
         prev_x = v.currentPositionX
         prev_y = v.currentPositionY
-        prev_z = v.currentPositionZ
+
         if to_x != "":
             v.currentPositionX = float(to_x)
             if v.define_tower:
@@ -224,9 +219,8 @@ def gcode_parseline(gcode_full_line):
         if to_z != "":
             v.currentPositionZ = float(to_z)
 
-
         if coordinate_in_tower(v.currentPositionX, v.currentPositionY) and v.towerskipped:
-            gcode_full_line = gcode_remove_params(gcode_full_line, ["X","Y"])
+            gcode_full_line = gcode_remove_params(gcode_full_line, ["X", "Y"])
             pass
 
         if not coordinate_on_bed(v.currentPositionX, v.currentPositionY) and coordinate_on_bed(prev_x, prev_y):
@@ -294,10 +288,10 @@ def gcode_parseline(gcode_full_line):
 
     if "CP WIPE TOWER FIRST LAYER BRIM END" in gcode_full_line:
         v.define_tower = False
-        v.wipe_tower_info['minx']-=2
-        v.wipe_tower_info['miny']-=2
-        v.wipe_tower_info['maxx']+=2
-        v.wipe_tower_info['maxy']+=2
+        v.wipe_tower_info['minx'] -= 2
+        v.wipe_tower_info['miny'] -= 2
+        v.wipe_tower_info['maxx'] += 2
+        v.wipe_tower_info['maxy'] += 2
         v.processed_gcode.append("; TOWER COORDINATES ({:-8.2f},{:-8.2f}) to ({:-8.2f},{:-8.2f})\n".format(
             v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy'],
             v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy']
@@ -305,7 +299,7 @@ def gcode_parseline(gcode_full_line):
 
     if "CP EMPTY GRID START" in gcode_full_line and v.current_layer > "0":
         v.empty_grid = True
-        if (v.max_tower_z_delta > v.cur_tower_z_delta):
+        if v.max_tower_z_delta > v.cur_tower_z_delta:
             v.cur_tower_z_delta += v.layer_height
             retrocorrect_emptygrid()
             v.towerskipped = True
@@ -321,12 +315,11 @@ def gcode_parseline(gcode_full_line):
         sidewipe.sidewipe_toolchange_start()
         entertower()
 
-    if ("TOOLCHANGE END" in gcode_full_line):
+    if "TOOLCHANGE END" in gcode_full_line:
         leavetower()
         if not v.side_wipe:
             v.within_tool_change_block = False
             v.mmu_unload_remove = False
-
 
     if "TOOLCHANGE UNLOAD" in gcode_full_line and not v.side_wipe:
         v.current_print_feed = v.wipe_feedrate / 60
@@ -376,7 +369,10 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         try:
             opf = open(input_file)
         except:
-            gui.user_error("Could not read input file\n'{}'".format(input_file))
+            if v.gui:
+                gui.user_error("Could not read input file\n'{}'".format(input_file))
+            else:
+                print ("Could not read input file\n'{}".format(input_file))
             return
 
     v.input_gcode = opf.readlines()
@@ -397,6 +393,8 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
 
     if not silent:
+        if v.gui:
+            gui.show_warnings(omega_result['warnings'])
         print (''.join(omega_result['summary']))
         print (''.join(omega_result['warnings']))
 

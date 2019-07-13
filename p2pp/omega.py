@@ -8,12 +8,11 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 
-from p2pp.formatnumbers import hexify_short,  hexify_float, hexify_long
+from p2pp.formatnumbers import hexify_short, hexify_float, hexify_long
 import p2pp.variables as v
 from p2pp.colornames import find_nearest_colour
 from p2pp.logfile import log_warning
 import p2pp.gui as gui
-
 
 # ################################################################
 # ######################### ALGORITHM PROCESSING ################
@@ -87,9 +86,15 @@ def header_generate_omega(job_name):
         log_warning("The PRINTERPROFILE identifier is missing, Please add:\n" +
                     ";P2PP PRINTERPROFILE=<your printer profile ID>\n" +
                     "to your Printers Start GCODE.\n")
+
     if len(v.splice_extruder_position) == 0:
-        log_warning("This does not look lie a multi color file.. Skip P2PP Processing?\n")
-        # TODO: Implement Y/N Box
+        log_warning("This does not look like a multi-colour file.\n")
+        if v.gui:
+            if gui.ask_yes_no('Not a Multi-Colour file?', "This doesn't look like a multi-colour file. Skip processing?"):
+                exit(1)
+        else:
+            if yes_or_no("This does not look like a multi-colour file.. Skip P2PP Processing?\n"):
+                exit(1)
 
     algorithm_create_table()
 
@@ -99,19 +104,16 @@ def header_generate_omega(job_name):
 
     header.append('O21 ' + hexify_short(20) + "\n")  # MSF2.0
 
-    if (v.printer_profile_string == ''):
+    if v.printer_profile_string == '':
         v.printer_profile_string = v.default_printerprofile
-        log_warning("No or Invalid Printer profile ID specified, using default P2PP printer profile ID {}".format(v.default_printerprofile))
-
+        log_warning("No or Invalid Printer profile ID specified, using default P2PP printer profile ID {}"
+                    .format(v.default_printerprofile))
 
     header.append('O22 D' + v.printer_profile_string.strip("\n") + "\n")  # PRINTERPROFILE used in Palette2
     header.append('O23 D0001' + "\n")              # unused
     header.append('O24 D0000' + "\n")              # unused
 
     header.append("O25 ")
-
-
-
 
     for i in range(4):
         if v.palette_inputs_used[i]:
@@ -205,6 +207,18 @@ def header_generate_omega(job_name):
     else:
         for i in range(len(v.process_warnings)):
             warnings.append("{}\n".format(v.process_warnings[i]))
-        gui.show_warnings(warnings)
 
     return {'header': header, 'summary': summary, 'warnings': warnings}
+
+
+def yes_or_no(question):
+    answer = raw_input(question + "([Y]es/[N]o): ").lower().strip()
+    print("")
+    while not(answer == "y" or answer == "yes" or answer == "n" or answer == "no"):
+        print("Input yes or no")
+        answer = raw_input(question + "([Y]es/[N]o):").lower().strip()
+        print("")
+    if answer[0] == "y":
+        return True
+    else:
+        return False

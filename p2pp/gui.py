@@ -41,10 +41,6 @@ def user_error(body_text):
     root.update()
 
 
-
-
-
-
 def show_warnings(warning_list):
     root.title("P2PP - Process Warnings")
     center(root, 800, 600)
@@ -70,3 +66,8 @@ def show_warnings(warning_list):
     root.attributes('-topmost', True)
     root.after_idle(root.attributes, '-topmost', False)
     root.mainloop()
+
+
+def ask_yes_no(title, message):
+    result = tkMessageBox.askquestion(title, message)
+    return result
