@@ -14,6 +14,7 @@ import p2pp.mcf as mcf
 import argparse
 import p2pp.variables as v
 import version as ver
+import p2pp.gui as gui
 
 
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
@@ -36,8 +37,10 @@ arguments.add_argument('-o',
                        )
 arguments.add_argument('-g',
                        '--gui',
+                       action='store_true',
                        required=False
                        )
+
 arguments.add_argument('-p',
                        '--printer-profile',
                        required=False,
@@ -51,25 +54,30 @@ arguments.add_argument('-s',
                        help='Omits Summary page after processing from being printed to STDOUT'
                        )
 
+arguments.add_argument('-w',
+                       '--wait',
+                       required=False,
+                       help='--w 1 Wait for the user to press enter after processing the file.'
+                       )
+
 
 def main(args):
 
     if not args['gui']:
-        # CLI Mode
-
-        input_file = args['input_file']
-
-        mcf.generate(input_file,
-                     args['output_file'],
-                     args['printer_profile'],
-                     args['splice_offset'],
-                     args['silent']
-                     )
-        # for debugging purposes only - this allows running the tool outside of slicer
-
+        v.gui = False
     else:
-        # GUI Mode
-        pass
+        v.gui = True
+
+    v.filename = args['input_file']
+    mcf.generate(v.filename,
+                 args['output_file'],
+                 args['printer_profile'],
+                 args['splice_offset'],
+                 args['silent']
+                 )
+
+    if args['wait'] == "1":
+        raw_input("Press Enter to continue...")
 
 
 if __name__ == "__main__":
