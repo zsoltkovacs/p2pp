@@ -186,7 +186,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ;P2PP SPLICEOFFSET=30
   ``` 
   
-  ![splice offset](https://github.com/tomvandeneede/p2pp/blob/dev/master/spliceoffset.png)
+  ![splice offset](https://github.com/tomvandeneede/p2pp/blob/master/docs/spliceoffset.png)
   
   
 > **MATERIAL_XXX_XXX\_#\_#\_#**
