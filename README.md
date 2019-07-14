@@ -1,7 +1,7 @@
 # p2pp - **Palette2 Post Processing tool for PrusaSlicer/Slic3r PE**
 
 
-**Tested with version PrusaSlicer 2.0.0 Slic3r PE 1.41.2 and 1.42.0 Beta 1**
+**Tested with version PrusaSlicer 2.0.0, Slic3r PE 1.41.2 and 1.42.0 Beta 1**
 earlier versions may generate different code patterns and may not work correctly
 
 ## Changelog
