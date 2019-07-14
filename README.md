@@ -231,7 +231,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ;sets the print speed to 40mm/s
   ```  
    
- > **  ;P2PP PURGETOWERDELTA=0** *[EXPERIMENTAL,OPTIONAL]*
+ > **;P2PP PURGETOWERDELTA=0** *[EXPERIMENTAL,OPTIONAL]*
  
  The PURGETOWERDELTA feature allows the purge tower to grow less quickly than the 
  actual print up to a certain amount.  P2PP will remove empty grid layers from the tower
