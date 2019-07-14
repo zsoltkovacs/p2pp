@@ -163,7 +163,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     
     ```
 
- ![splice offset](https://github.com/tomvandeneede/p2pp/blob/dev/docs/overallconfig.png)
+ ![splice offset](https://github.com/tomvandeneede/p2pp/blob/master/docs/overallconfig.png)
 
 
 
@@ -186,7 +186,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ;P2PP SPLICEOFFSET=30
   ``` 
   
-  ![splice offset](https://github.com/tomvandeneede/p2pp/blob/dev/docs/spliceoffset.png)
+  ![splice offset](https://github.com/tomvandeneede/p2pp/blob/dev/master/spliceoffset.png)
   
   
 > **MATERIAL_XXX_XXX\_#\_#\_#**
@@ -200,7 +200,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
    ```
   ;P2PP LINEARPING=350
   ```    
-  ![splice offset](https://github.com/tomvandeneede/p2pp/blob/dev/docs/linearping.png)
+  ![splice offset](https://github.com/tomvandeneede/p2pp/blob/master/docs/linearping.png)
     
 > **EXTRAENDFILAMENT=\#** *[OPTIONAL]*
   This parameter is used to configure the extra length (in mm) of filament P2 will generate at the end of the print.  The default parameter value is defined as 150mm.  The value should at least be the length between the extruder motor to the nozzle. 
