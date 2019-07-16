@@ -96,8 +96,9 @@ def check_config_parameters(gcode_line):
             v.sidewipe_correction = 1.0
 
     if gcode_line.startswith(";P2PP PURGETOWERDELTA="):
-        v.max_tower_z_delta = abs(float(gcode_line[22:]))
-        log_warning("CAUTION --  TOWER DELTA ENABLED -- {:-2.2f}mm".format(v.max_tower_z_delta))
+        if abs(float(gcode_line[22:])) != abs(float(0)):
+            v.max_tower_z_delta = abs(float(gcode_line[22:]))
+            log_warning("CAUTION --  TOWER DELTA ENABLED -- {:-2.2f}mm".format(v.max_tower_z_delta))
 
     # REPRAP COMPATIBILITY
     if gcode_line.startswith(";P2PP REPRAPCOMPATIBLE"):

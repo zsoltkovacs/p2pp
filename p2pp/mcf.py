@@ -189,9 +189,10 @@ def gcode_parseline(gcode_full_line):
         v.empty_grid = False
         leavetower()
 
-    if v.empty_grid and (v.max_tower_z_delta > v.cur_tower_z_delta):
-        v.processed_gcode.append(';--- P2PP removed [Tower Delta]' + gcode_full_line + "\n")
-        return
+    if v.max_tower_z_delta != abs(float(0)):
+        if v.empty_grid and (v.max_tower_z_delta > v.cur_tower_z_delta):
+            v.processed_gcode.append(';--- P2PP removed [Tower Delta]' + gcode_full_line + "\n")
+            return
 
     # Processing of print head movements
     #############################################
@@ -299,10 +300,12 @@ def gcode_parseline(gcode_full_line):
 
     if "CP EMPTY GRID START" in gcode_full_line and v.current_layer > "0":
         v.empty_grid = True
-        if v.max_tower_z_delta > v.cur_tower_z_delta:
-            v.cur_tower_z_delta += v.layer_height
-            retrocorrect_emptygrid()
-            v.towerskipped = True
+
+        if v.max_tower_z_delta != abs(float(0)):
+            if v.max_tower_z_delta > v.cur_tower_z_delta:
+                v.cur_tower_z_delta += v.layer_height
+                retrocorrect_emptygrid()
+                v.towerskipped = True
         else:
             v.current_print_feed = v.wipe_feedrate / 60
             v.processed_gcode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.current_print_feed))
