@@ -242,6 +242,8 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
  
 The default value is 0 - meaning the feature is not enabled.
 
+In order to yse this feature, make sure yo have the After Layer Change G-Code inserted as specified above!!!
+
   ``` 
    ;P2PP PURGETOWERDELTA=10
   ;allows the purge tower to be 10mm lower than the actual print
