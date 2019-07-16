@@ -38,6 +38,8 @@ filament_color_code = ["-",
 
 filament_short = [0, 0, 0, 0]
 
+skippable_layer = []
+
 used_filament_types = []
 
 default_splice_algorithm = "D000 D000 D000"
@@ -48,6 +50,7 @@ splice_algorithm_dictionary = {}
 max_tower_z_delta = 0.0
 cur_tower_z_delta = 0.0
 layer_height = 0.2
+layer_count = -1
 towerskipped = False
 
 printer_profile_string = ''

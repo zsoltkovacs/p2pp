@@ -1,3 +1,4 @@
+
 __author__ = 'Tom Van den Eede'
 __copyright__ = 'Copyright 2018, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
@@ -17,6 +18,65 @@ import p2pp.variables as v
 from p2pp.gcodeparser import gcode_remove_params, get_gcode_parameter, parse_slic3r_config
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
 from p2pp.logfile import log_warning
+
+
+
+def pre_processfile():
+    emptygrid = 0
+    toolchange = 0
+    process = ""
+    filament = "->"
+
+    for line  in v.input_gcode:
+        line = line.strip()
+        if len(line)==0:
+            continue
+        if line[0]==";":
+            try:
+                layerheight = float(line[1:])
+            except:
+                pass
+
+        if line.startswith(";LAYER "):
+            if (process!=""):
+                _layerheight = layerheight
+                if (emptygrid==1) and (toolchange==0) :
+                    v.skippable_layer.append(True)
+                else:
+                    v.skippable_layer.append(False)
+
+            process = int(line[7:])
+            emptygrid = 0
+            toolchange = 0
+            filament = "->"
+
+
+        if line in ["T0","T1","T2","T3"]:
+            filament += "{}->".format(line[1])
+
+
+        if "CP EMPTY GRID START" in line:
+            emptygrid += 1
+
+        if "TOOLCHANGE START" in line:
+            toolchange += 1
+
+
+def optimize_tower_skip(skipmax , layersize):
+    v.skippable_layer.reverse()
+    skipped = 0.0
+    skipped_num = 0
+    for i in range(len(v.skippable_layer)):
+        if skipped > skipmax:
+            v.skippable_layer[i] = False
+        elif v.skippable_layer[i] == True:
+            skipped = skipped + layersize
+            skipped_num +=1
+
+    v.skippable_layer.reverse()
+    log_warning("Total Purge Tower delta : {} Layers or {}mm".format(skipped_num, skipped))
+
+
 
 
 # ################### GCODE PROCESSING ###########################
@@ -298,10 +358,10 @@ def gcode_parseline(gcode_full_line):
             v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy']
         ))
 
-    if "CP EMPTY GRID START" in gcode_full_line and v.current_layer > "0":
+    if "CP EMPTY GRID START" in gcode_full_line and v.layer_count>0 :
         v.empty_grid = True
 
-        if v.max_tower_z_delta != abs(float(0)):
+        if v.skippable_layer[v.layer_count]:
             if v.max_tower_z_delta > v.cur_tower_z_delta:
                 v.cur_tower_z_delta += v.layer_height
                 retrocorrect_emptygrid()
@@ -343,6 +403,9 @@ def gcode_parseline(gcode_full_line):
     if gcode_full_line.startswith(";LAYER "):
         v.current_layer = gcode_full_line[7:]
         v.towerskipped = False
+        v.layer_count+=1
+        if v.layer_count==0:
+            optimize_tower_skip(v.max_tower_z_delta, v.layer_height)
 
     if v.mmu_unload_remove:
             v.processed_gcode.append(gcode_filter_toolchange_block(gcode_full_line) + "\n")
@@ -378,16 +441,24 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
                 print ("Could not read input file\n'{}".format(input_file))
             return
 
+
+    print("Reading File")
     v.input_gcode = opf.readlines()
 
     opf.close()
 
+    print("Analyzing slicer parameters")
     parse_slic3r_config()
+
+    print("Analyzing layers")
+    pre_processfile()
+    print("Found {} layers in print".format(len(v.skippable_layer)))
 
     v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
 
     # Process the file
     # #################
+    print("Processing File")
     for line in v.input_gcode:
         gcode_parseline(line)
 
@@ -403,6 +474,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     # write the output file
     ######################
+    print("Generating output file")
     if not output_file:
         output_file = input_file
     opf = open(output_file, "w")
