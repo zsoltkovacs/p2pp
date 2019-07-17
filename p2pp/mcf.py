@@ -250,7 +250,7 @@ def gcode_parseline(gcode_full_line):
         leavetower()
 
     if v.max_tower_z_delta != abs(float(0)):
-        if v.empty_grid and (v.max_tower_z_delta > v.cur_tower_z_delta):
+        if v.empty_grid and v.skippable_layer[v.layer_count]:
             v.processed_gcode.append(';--- P2PP removed [Tower Delta]' + gcode_full_line + "\n")
             return
 

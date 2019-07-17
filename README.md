@@ -15,6 +15,7 @@ earlier versions may generate different code patterns and may not work correctly
 -  30/06/2019 - Added PROFILETYPEOVERRIDE parameter
 -  30/06/2019 - Corrected traveling speed issue to side wipe
 -  30/06/2019 - BETA - added asynchronous tower function
+-  16/07/2019 - Bug fix & optimization assynchronous tower function
 
 
 ## Purpose
@@ -248,6 +249,9 @@ In order to yse this feature, make sure yo have the After Layer Change G-Code in
    ;P2PP PURGETOWERDELTA=10
   ;allows the purge tower to be 10mm lower than the actual print
   ```  
+ 
+ ![purging volumes](https://github.com/tomvandeneede/p2pp/blob/master/docs/tower_delta.JPG)
+ 
  
  > **SIDEWIPELOC=X#** *[EXPERIMENTAL,OPTIONAL]*
   This is used to define the location on the X-Axis the printer needs to go to to do a side transition instead of doing a tower purge.  In Slic3r all still needs to be setup with a purge, tower, but the tower needs to be **MOVE COMPLETELY OFF THE BED** to enable the SIDE WIPE .  p2pp will convert the tower purges into side wipes and fileter out all purges that are not necessary (i.e. empty towe shells). 
