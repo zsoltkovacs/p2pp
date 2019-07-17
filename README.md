@@ -250,7 +250,7 @@ In order to yse this feature, make sure yo have the After Layer Change G-Code in
   ;allows the purge tower to be 10mm lower than the actual print
   ```  
  
- ![purging volumes](https://github.com/tomvandeneede/p2pp/blob/master/docs/tower_delta.JPG)
+ ![ptower delta](https://github.com/tomvandeneede/p2pp/blob/master/docs/tower_delta.JPG)
  
  
  > **SIDEWIPELOC=X#** *[EXPERIMENTAL,OPTIONAL]*
