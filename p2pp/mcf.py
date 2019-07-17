@@ -324,6 +324,7 @@ def gcode_parseline(gcode_full_line):
         if gcode_full_line.startswith(";P2PP MATERIAL_"):
                 algorithm_process_material_configuration(gcode_full_line[15:])
 
+
     if gcode_full_line.startswith("M900"):
         k_factor = get_gcode_parameter(gcode_full_line, "K")
         if float(k_factor) > 0:

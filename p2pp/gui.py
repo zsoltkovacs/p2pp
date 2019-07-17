@@ -19,10 +19,21 @@ except ImportError:
     from tkinter import messagebox as tkMessageBox
 
 import os
+from platform import system
 
 root = Tk()
-root.iconbitmap(os.path.dirname(sys.argv[0])+'\\favicon.ico')
+
+platformD = system()
+if platformD == 'Darwin':
+    logo_image = os.path.dirname(sys.argv[0])+'/favicon.icns'
+elif platformD == 'Windows':
+    logo_image = os.path.dirname(sys.argv[0])+'\\favicon.ico'
+print(logo_image)
+root.iconbitmap(logo_image)
 root.iconify()
+
+
+
 
 
 def center(win, width, height):

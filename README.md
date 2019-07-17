@@ -16,6 +16,7 @@ earlier versions may generate different code patterns and may not work correctly
 -  30/06/2019 - Corrected traveling speed issue to side wipe
 -  30/06/2019 - BETA - added asynchronous tower function
 -  16/07/2019 - Bug fix & optimization assynchronous tower function
+-  16/07/2019 - Further error checking in ;P2PP parameter lines 
 
 
 ## Purpose
@@ -244,6 +245,8 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 The default value is 0 - meaning the feature is not enabled.
 
 In order to yse this feature, make sure yo have the After Layer Change G-Code inserted as specified above!!!
+
+Purge Tower Delta requires the after layer change GCode to be configured as described above
 
   ``` 
    ;P2PP PURGETOWERDELTA=10
