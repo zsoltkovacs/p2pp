@@ -140,6 +140,7 @@ previous_toolchange_location = 0  # type: float
 
 current_layer = "0"    # type: str # Capture layer information for short splice texts
 extrusion_multiplier = 1.0  # type: float  # Monitors M221 commands during the print.
+extrusion_multiplier_correction = 1.0
 current_print_feedrate = 100  # type: int  # Monitors the current feedrate
 current_print_feed = 2000  # type: int
 extra_runout_filament = 150  # type: int  # Provide extra filament at the end of the print.

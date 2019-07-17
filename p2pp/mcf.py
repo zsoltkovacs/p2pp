@@ -131,17 +131,17 @@ def gcode_filter_toolchange_block(line):
     if line.startswith("G1"):
         for gcode_filter in discarded_moves:
             if gcode_filter in line:         # remove specific MMU2 extruder moves
-                return ";--- P2PP removed [M]"+line
+                return ";--- P2PP removed [Discarded Moves] - "+line
         return gcode_remove_params(line, ["F"])
 
     if line.startswith("M907"):
-        return ";--- P2PP removed [S]" + line   # remove motor power instructions
+        return ";--- P2PP removed [Motor Power Settings]" + line   # remove motor power instructions
 
     if line.startswith("M220"):
-        return ";--- P2PP removed [S]" + line   # remove feedrate instructions
+        return ";--- P2PP removed [Feedrate Overrides]" + line   # remove feedrate instructions
 
     if line.startswith("G4 S0"):
-        return ";--- P2PP removed [S}" + line   # remove dwelling instructions
+        return ";--- P2PP removed [Unneeded Dwelling}" + line   # remove dwelling instructions
 
     return line
 
@@ -210,7 +210,7 @@ def gcode_parseline(gcode_full_line):
         new_tool = int(gcode_full_line[1])
         gcode_process_toolchange(new_tool, v.total_material_extruded)
         v.allow_filament_information_update = True
-        v.processed_gcode.append(';--- P2PP removed [1]' + gcode_full_line + "\n")
+        v.processed_gcode.append(';--- P2PP removed [Tool Change]' + gcode_full_line + "\n")
         return
 
     if gcode_full_line[0:4] in ["M104", "M106", "M109", "M140", "M190"]:
@@ -221,12 +221,12 @@ def gcode_parseline(gcode_full_line):
         sidewipe.collect_wipetower_info(gcode_full_line)
 
         if v.side_wipe_skip:
-            v.processed_gcode.append(";--- P2PP removed [2]" + gcode_full_line + "\n")
+            v.processed_gcode.append(";--- P2PP removed [Side Wipe] - " + gcode_full_line + "\n")
             return
 
         if moved_in_tower() and v.side_wipe and not v.side_wipe_skip:
             if not gcode_full_line[0] == ";":
-                v.processed_gcode.append(";--- P2PP  - Purge Tower - " + gcode_full_line + "\n")
+                v.processed_gcode.append(";--- P2PP  removes [Purge Tower] -  " + gcode_full_line + "\n")
             gcode_full_line = gcode_remove_params(gcode_full_line, ["X", "Y"])
             __tower_remove = True
 
@@ -251,7 +251,7 @@ def gcode_parseline(gcode_full_line):
 
     if v.max_tower_z_delta != abs(float(0)):
         if v.empty_grid and v.skippable_layer[v.layer_count]:
-            v.processed_gcode.append(';--- P2PP removed [Tower Delta]' + gcode_full_line + "\n")
+            v.processed_gcode.append(';--- P2PP removed [Tower Delta] - ' + gcode_full_line + "\n")
             return
 
     # Processing of print head movements
@@ -290,7 +290,7 @@ def gcode_parseline(gcode_full_line):
     if gcode_full_line.startswith("G1"):
             extruder_movement = get_gcode_parameter(gcode_full_line, "E")
             if extruder_movement != "":
-                extruder_movement = extruder_movement * v.extrusion_multiplier
+                extruder_movement = extruder_movement * v.extrusion_multiplier * v.extrusion_multiplier_correction
                 if v.within_tool_change_block and v.side_wipe:
                         v.side_wipe_length += extruder_movement
 
@@ -308,7 +308,7 @@ def gcode_parseline(gcode_full_line):
 
             if v.within_tool_change_block and v.side_wipe:
                 if not __tower_remove:
-                    v.processed_gcode.append(';--- P2PP removed [3]' + gcode_full_line + "\n")
+                    v.processed_gcode.append(';--- P2PP removed [Side Wipe] - ' + gcode_full_line + "\n")
                 return
 
             if not v.within_tool_change_block and v.wipe_retracted:
@@ -331,7 +331,7 @@ def gcode_parseline(gcode_full_line):
             v.within_tool_change_block = False
             v.mmu_unload_remove = False
         if v.reprap_compatible:
-            v.processed_gcode.append(';--- P2PP removed [4]' + gcode_full_line + "\n")
+            v.processed_gcode.append(';--- P2PP removed [RepRap Processing] -' + gcode_full_line + "\n")
             return
 
     if gcode_full_line.startswith(";P2PP ENDPURGETOWER"):
