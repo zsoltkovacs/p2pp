@@ -31,7 +31,6 @@ def pre_processfile():
         line = line.strip()
         if len(line)==0:
             continue
-        if line[0]==";":
 
 
         if line.startswith(";LAYER "):
