@@ -168,10 +168,11 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
 
 
 
-5. In the "After layer change G-code" INSERT (not overwrite) the following line.
+5. In the "After layer change G-code" INSERT (not overwrite) the following line  (This step is very important when using asynchronous purge towers).
     ```
     ;LAYER [layer_num]
     ```
+    
 6. Click the "General" menu item.
 7. Locate "Capabilities".
 8. Change Extruders to "4".
