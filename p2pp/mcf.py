@@ -32,14 +32,10 @@ def pre_processfile():
         if len(line)==0:
             continue
         if line[0]==";":
-            try:
-                layerheight = float(line[1:])
-            except:
-                pass
+
 
         if line.startswith(";LAYER "):
             if (process!=""):
-                _layerheight = layerheight
                 if (emptygrid==1) and (toolchange==0) :
                     v.skippable_layer.append(True)
                 else:
