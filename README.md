@@ -89,7 +89,7 @@ c:\python27\python.exe c:\p2pp\p2pp.py -i %1
 
 ## macOS installation
 
-follow the instructions for ]simplified installation](https://github.com/tomvandeneede/p2pp/wiki/macOS-Simplified-installation) or execute the steps described for a unix installation
+follow the instructions for [simplified installation](https://github.com/tomvandeneede/p2pp/wiki/macOS-Simplified-installation) or execute the steps described for a unix installation
 
 
 ## Unix  INSTALLATION
