@@ -87,9 +87,12 @@ c:\python27\python.exe c:\p2pp\p2pp.py -i %1
 ``` 
 
 
+## macOS installation
+
+follow the instructions for ]simplified installation](https://github.com/tomvandeneede/p2pp/wiki/macOS-Simplified-installation) or execute the steps described for a unix installation
 
 
-## Unix / Mac OSX INSTALLATION
+## Unix  INSTALLATION
 
 > When updating p2pp to a new version all configuration in the .bat file is overwritten.  Make sure to put the .bat file aside before replacing the directory content.  Copy the file over the newly unzipped file to complete the installation.
 
