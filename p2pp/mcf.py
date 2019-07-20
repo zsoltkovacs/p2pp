@@ -58,6 +58,8 @@ def pre_processfile():
 
 
 def optimize_tower_skip(skipmax , layersize):
+    if v.max_tower_z_delta==0:
+        return
     v.skippable_layer.reverse()
     skipped = 0.0
     skipped_num = 0
@@ -432,7 +434,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
             opf = open(input_file)
         except:
             if v.gui:
-                gui.user_error("Could not read input file\n'{}'".format(input_file))
+                gui.user_error("P2PP - Error Occurred", "Could not read input file\n'{}'".format(input_file))
             else:
                 print ("Could not read input file\n'{}".format(input_file))
             return

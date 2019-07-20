@@ -15,6 +15,9 @@ import argparse
 import p2pp.variables as v
 import version as ver
 import p2pp.gui as gui
+import sys
+import os
+from platform import system
 
 
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
@@ -35,8 +38,8 @@ arguments.add_argument('-o',
                             'where transition occurs. Similar to transition offset in Chroma.'
                             ' GCODE ;P2PP SPLICEOFFSET=xxx takes precedence over anything set here'
                        )
-arguments.add_argument('-g',
-                       '--gui',
+arguments.add_argument('-n',
+                       '--nogui',
                        action='store_true',
                        required=False
                        )
@@ -63,10 +66,10 @@ arguments.add_argument('-w',
 
 def main(args):
 
-    if not args['gui']:
-        v.gui = False
-    else:
+    if not args['nogui']:
         v.gui = True
+    else:
+        v.gui = False
 
     v.filename = args['input_file']
     mcf.generate(v.filename,
@@ -82,4 +85,13 @@ def main(args):
 
 if __name__ == "__main__":
     v.version = ver.Version
-    main(vars(arguments.parse_args()))
+
+    if len(sys.argv)==1:
+        platformD = system()
+        if platformD == 'Darwin':
+            gui.user_error("Script name to be entered in Slic3r/PrusaSlicer", "{}/p2pp.command".format(os.path.dirname(sys.argv[0])))
+        elif platformD == 'Windows':
+            gui.user_error("Script name to be entered in Slic3r/PrusaSlicer","{}/\\2pp.bat".format(os.path.dirname(sys.argv[0])))
+
+    else:
+        main(vars(arguments.parse_args()))

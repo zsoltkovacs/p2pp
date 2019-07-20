@@ -28,8 +28,7 @@ if platformD == 'Darwin':
     logo_image = os.path.dirname(sys.argv[0])+'/favicon.icns'
 elif platformD == 'Windows':
     logo_image = os.path.dirname(sys.argv[0])+'\\favicon.ico'
-print(logo_image)
-root.iconbitmap(logo_image)
+    root.iconbitmap(logo_image)
 root.iconify()
 
 
@@ -47,8 +46,8 @@ def clicked():
     root.destroy()
 
 
-def user_error(body_text):
-    tkMessageBox.showinfo("P2PP - Error Occurred", body_text)
+def user_error(header, body_text):
+    tkMessageBox.showinfo(header, body_text)
     root.update()
 
 
