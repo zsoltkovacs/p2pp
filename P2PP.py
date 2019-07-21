@@ -80,6 +80,9 @@ def main(args):
                  )
 
     if args['wait'] == "1":
+        v.consolewait=True
+
+    if v.consolewait:
         raw_input("Press Enter to continue...")
 
 

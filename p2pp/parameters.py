@@ -147,3 +147,12 @@ def check_config_parameters(line):
     if "REPRAPCOMPATIBLE" in line:
         v.reprap_compatible = True
         return
+
+
+    # Program parameters
+    if "NOGUI" in line:
+        v.gui = False
+        return
+
+    if "CONSOLEWAIT" in line:
+        v.consolewait = True

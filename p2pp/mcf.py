@@ -71,6 +71,11 @@ def optimize_tower_skip(skipmax , layersize):
             skipped_num +=1
 
     v.skippable_layer.reverse()
+
+    if v.skippable_layer[0]==True:
+        v.skippable_layer[0]=False
+        skipped_num -=1
+
     log_warning("Total Purge Tower delta : {} Layers or {}mm".format(skipped_num, skipped))
 
 

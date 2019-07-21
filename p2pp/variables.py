@@ -151,6 +151,7 @@ allow_filament_information_update = False  # type: bool  # TBA
 
 reprap_compatible = False  # Enables the cleanup/removal of M900 commands as RepRap uses M572 which is slightly different
 
-gui = False  # Enabled/Disabled by --gui switch - enables GUI Mode which requires tkinter.
+gui = True  # Enabled/Disabled by --gui switch - enables GUI Mode which requires tkinter.
+consolewait = False
 
 version = "0.0.0"
