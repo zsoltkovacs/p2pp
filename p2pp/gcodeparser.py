@@ -22,7 +22,7 @@ def gcode_remove_params(gcode, params):
 
     result.strip(' ')
     if len(result) < 4:
-        return ';--- P2PP Removed [G]' + gcode
+        return ';--- P2PP Removed [Removed Parameters] - ' + gcode
 
     return result
 

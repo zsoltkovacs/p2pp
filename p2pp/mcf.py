@@ -76,7 +76,7 @@ def optimize_tower_skip(skipmax , layersize):
         v.skippable_layer[0]=False
         skipped_num -=1
 
-    log_warning("Total Purge Tower delta : {} Layers or {}mm".format(skipped_num, skipped))
+    log_warning("Total Purge Tower delta : {} Layers or {:-6.2f}mm".format(skipped_num, skipped))
 
 
 
@@ -137,13 +137,13 @@ def gcode_filter_toolchange_block(line):
         return gcode_remove_params(line, ["F"])
 
     if line.startswith("M907"):
-        return ";--- P2PP removed [Motor Power Settings]" + line   # remove motor power instructions
+        return ";--- P2PP removed [Motor Power Settings] - " + line   # remove motor power instructions
 
     if line.startswith("M220"):
-        return ";--- P2PP removed [Feedrate Overrides]" + line   # remove feedrate instructions
+        return ";--- P2PP removed [Feedrate Overrides] - " + line   # remove feedrate instructions
 
     if line.startswith("G4 S0"):
-        return ";--- P2PP removed [Unneeded Dwelling}" + line   # remove dwelling instructions
+        return ";--- P2PP removed [Unneeded Dwelling] - " + line   # remove dwelling instructions
 
     return line
 
@@ -189,14 +189,18 @@ def moved_in_tower():
 def retrocorrect_emptygrid():
     pos = len(v.processed_gcode)-1
     while pos > 0:
-        if v.processed_gcode[pos].startswith("M900"):
+        if v.processed_gcode[pos].startswith("M900") or v.processed_gcode[pos].startswith("; CP WIPE TOWER FIRST LAYER BRIM END"):
             return
         if v.processed_gcode[pos].startswith("G1 X"):
-            v.processed_gcode[pos] = "; P2PP removed [Tower Delta] {}".format(v.processed_gcode[pos])
+            v.processed_gcode[pos] = "; P2PP removed [Tower Delta] - {}".format(v.processed_gcode[pos])
         pos = pos - 1
 
 
 def gcode_parseline(gcode_full_line):
+
+    if (len(v.processed_gcode)+1)%10==0:
+        if v.total_material_extruded>0:
+            v.processed_gcode.append(";P2PP DEBUG - Filament: {:-8.2f}mm  Tool: {} TDelta: {:-8.2f}mm\n".format(v.total_material_extruded, v.current_tool, v.cur_tower_z_delta,))
     __tower_remove = False
 
     if not gcode_full_line[0] == ";":
@@ -252,7 +256,7 @@ def gcode_parseline(gcode_full_line):
         leavetower()
 
     if v.max_tower_z_delta != abs(float(0)):
-        if v.empty_grid and v.skippable_layer[v.layer_count]:
+        if v.empty_grid and v.skippable_layer[v.layer_count] and v.layer_count>0:
             v.processed_gcode.append(';--- P2PP removed [Tower Delta] - ' + gcode_full_line + "\n")
             return
 
