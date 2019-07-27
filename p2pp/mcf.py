@@ -192,7 +192,7 @@ def retrocorrect_emptygrid():
         if v.processed_gcode[pos].startswith("M900") or v.processed_gcode[pos].startswith("; CP WIPE TOWER FIRST LAYER BRIM END"):
             return
         if v.processed_gcode[pos].startswith("G1 X"):
-            v.processed_gcode[pos] = "; P2PP removed [Tower Delta] - {}".format(v.processed_gcode[pos])
+            v.processed_gcode[pos] = ";--- P2PP removed [Tower Delta] - {}".format(v.processed_gcode[pos])
         pos = pos - 1
 
 
@@ -287,8 +287,8 @@ def gcode_parseline(gcode_full_line):
         if to_z != "":
             v.currentPositionZ = float(to_z)
 
-       #if coordinate_in_tower(v.currentPositionX, v.currentPositionY) and v.towerskipped:
-       #     gcode_full_line = gcode_remove_params(gcode_full_line, ["X", "Y"])
+        if coordinate_in_tower(v.currentPositionX, v.currentPositionY) and v.towerskipped:
+            gcode_full_line = gcode_remove_params(gcode_full_line, ["X", "Y"])
 
         if not coordinate_on_bed(v.currentPositionX, v.currentPositionY) and coordinate_on_bed(prev_x, prev_y):
             gcode_full_line = ";" + gcode_full_line
@@ -365,14 +365,13 @@ def gcode_parseline(gcode_full_line):
             v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy']
         ))
 
-    if "CP EMPTY GRID START" in gcode_full_line and v.layer_count>0 :
+    if "CP EMPTY GRID START" in gcode_full_line and v.layer_count>1:
         v.empty_grid = True
 
         if v.skippable_layer[v.layer_count]:
-            if v.max_tower_z_delta > v.cur_tower_z_delta:
-                v.cur_tower_z_delta += v.layer_height
-                retrocorrect_emptygrid()
-                v.towerskipped = True
+            v.cur_tower_z_delta += v.layer_height
+            retrocorrect_emptygrid()
+            v.towerskipped = True
         else:
             v.current_print_feed = v.wipe_feedrate / 60
             v.processed_gcode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.current_print_feed))
