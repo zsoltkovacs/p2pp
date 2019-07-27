@@ -365,10 +365,10 @@ def gcode_parseline(gcode_full_line):
             v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy']
         ))
 
-    if "CP EMPTY GRID START" in gcode_full_line and v.layer_count>1:
+    if "CP EMPTY GRID START" in gcode_full_line:
         v.empty_grid = True
 
-        if v.skippable_layer[v.layer_count]:
+        if v.skippable_layer[v.layer_count] and v.layer_count>1:
             v.cur_tower_z_delta += v.layer_height
             retrocorrect_emptygrid()
             v.towerskipped = True
