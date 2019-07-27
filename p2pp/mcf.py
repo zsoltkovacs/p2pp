@@ -212,6 +212,7 @@ def gcode_parseline(gcode_full_line):
         v.processed_gcode.append("\n")
         return
 
+
     if gcode_full_line.startswith('T'):
         new_tool = int(gcode_full_line[1])
         gcode_process_toolchange(new_tool, v.total_material_extruded)
@@ -219,7 +220,7 @@ def gcode_parseline(gcode_full_line):
         v.processed_gcode.append(';--- P2PP removed [Tool Change]' + gcode_full_line + "\n")
         return
 
-    if gcode_full_line[0:4] in ["M104", "M106", "M109", "M140", "M190"]:
+    if gcode_full_line[0:4] in ["M104", "M106", "M109", "M140", "M190","M73 "]:
         v.processed_gcode.append(gcode_full_line + "\n")
         return
 
@@ -256,7 +257,7 @@ def gcode_parseline(gcode_full_line):
         leavetower()
 
     if v.max_tower_z_delta != abs(float(0)):
-        if v.empty_grid and v.skippable_layer[v.layer_count] and v.layer_count>0:
+        if v.empty_grid and v.skippable_layer[v.layer_count] and v.layer_count>1:
             v.processed_gcode.append(';--- P2PP removed [Tower Delta] - ' + gcode_full_line + "\n")
             return
 
@@ -286,9 +287,8 @@ def gcode_parseline(gcode_full_line):
         if to_z != "":
             v.currentPositionZ = float(to_z)
 
-        if coordinate_in_tower(v.currentPositionX, v.currentPositionY) and v.towerskipped:
-            gcode_full_line = gcode_remove_params(gcode_full_line, ["X", "Y"])
-            pass
+       #if coordinate_in_tower(v.currentPositionX, v.currentPositionY) and v.towerskipped:
+       #     gcode_full_line = gcode_remove_params(gcode_full_line, ["X", "Y"])
 
         if not coordinate_on_bed(v.currentPositionX, v.currentPositionY) and coordinate_on_bed(prev_x, prev_y):
             gcode_full_line = ";" + gcode_full_line
