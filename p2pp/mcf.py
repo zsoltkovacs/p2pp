@@ -198,9 +198,9 @@ def retrocorrect_emptygrid():
 
 def gcode_parseline(gcode_full_line):
 
-    if (len(v.processed_gcode)+1)%10==0:
-        if v.total_material_extruded>0:
-            v.processed_gcode.append(";P2PP DEBUG - Filament: {:-8.2f}mm  Tool: {} TDelta: {:-8.2f}mm\n".format(v.total_material_extruded, v.current_tool, v.cur_tower_z_delta,))
+ #   if (len(v.processed_gcode)+1)%10==0:
+ #       if v.total_material_extruded>0:
+ #           v.processed_gcode.append(";P2PP DEBUG - Filament: {:-8.2f}mm  Tool: {} TDelta: {:-8.2f}mm\n".format(v.total_material_extruded, v.current_tool, v.cur_tower_z_delta,))
     __tower_remove = False
 
     if not gcode_full_line[0] == ";":
