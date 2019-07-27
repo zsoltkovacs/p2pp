@@ -252,6 +252,8 @@ In order to yse this feature, make sure yo have the After Layer Change G-Code in
 
 Purge Tower Delta requires the after layer change GCode to be configured as described above
 
+The *WIPEFEEDRATE* parameter described above can be used to change the speed at which the tower is printed.
+
   ``` 
    ;P2PP PURGETOWERDELTA=10
   ;allows the purge tower to be 10mm lower than the actual print
