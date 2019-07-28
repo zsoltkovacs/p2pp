@@ -44,6 +44,8 @@ def check_config_parameters(line):
             v.printer_profile_string = tmp_string
         return
 
+    if "ACCESSORYMODE" in line:
+        v.accessory_mode = True
 
     if "SPLICEOFFSET" in line:
         v.splice_offset = floatparameter(line)

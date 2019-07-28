@@ -12,19 +12,30 @@ import p2pp.variables as v
 
 
 def gcode_remove_params(gcode, params):
+    removed = False
     result = ''
+    rempar=''
     p = gcode.split(' ')
     for s in p:
         if s == '':
             continue
         if not s[0] in params:
             result += s + ' '
+        else:
+            rempar = rempar + s + ' '
+            removed = True
 
     result.strip(' ')
+    rempar.strip(' ')
     if len(result) < 4:
         return ';--- P2PP Removed [Removed Parameters] - ' + gcode
 
-    return result
+    if removed:
+        return result +";--- P2PP Removed [Removed Parameters] - " + rempar
+    else:
+        return result
+
+
 
 
 def get_gcode_parameter(gcode, parameter):

@@ -58,13 +58,11 @@ def pre_processfile():
 
 
 def optimize_tower_skip(skipmax , layersize):
-    if v.max_tower_z_delta==0:
-        return
     v.skippable_layer.reverse()
     skipped = 0.0
     skipped_num = 0
     for i in range(len(v.skippable_layer)):
-        if skipped > skipmax:
+        if skipped >= skipmax:
             v.skippable_layer[i] = False
         elif v.skippable_layer[i] == True:
             skipped = skipped + layersize
@@ -75,8 +73,8 @@ def optimize_tower_skip(skipmax , layersize):
     if v.skippable_layer[0]==True:
         v.skippable_layer[0]=False
         skipped_num -=1
-
-    log_warning("Total Purge Tower delta : {} Layers or {:-6.2f}mm".format(skipped_num, skipped))
+    if skipped>0:
+        log_warning("Total Purge Tower delta : {} Layers or {:-6.2f}mm".format(skipped_num, skipped))
 
 
 
@@ -174,16 +172,20 @@ def coordinate_in_tower(x, y):
 
 def entertower():
     if v.cur_tower_z_delta > 0:
-        v.processed_gcode.append("G1 Z{} F10800\n".format(v.currentPositionZ - v.cur_tower_z_delta))
+        v.processed_gcode.append("G1 Z{} F10800\n".format(v.current_position_z - v.cur_tower_z_delta))
+    if v.accessory_mode and (v.total_material_extruded - v.last_ping_extruder_position) > v.ping_interval:
+        v.acc_ping_left = 20
+        v.processed_gcode.append(v.acc_first_pause)
 
 
 def leavetower():
     if v.cur_tower_z_delta > 0:
-        v.processed_gcode.append("G1 Z{} F10800\n".format(v.currentPositionZ))
+        v.processed_gcode.append("G1 Z{} F10800\n".format(v.current_position_z))
+
 
 
 def moved_in_tower():
-    return not coordinate_on_bed(v.currentPositionX, v.currentPositionY)
+    return not coordinate_on_bed(v.current_position_x, v.current_position_y)
 
 
 def retrocorrect_emptygrid():
@@ -253,13 +255,13 @@ def gcode_parseline(gcode_full_line):
 
     # processing tower Z delta
     if "CP EMPTY GRID END" in gcode_full_line:
+        v.towerskipped = False
         v.empty_grid = False
         leavetower()
 
-    if v.max_tower_z_delta != abs(float(0)):
-        if v.empty_grid and v.skippable_layer[v.layer_count] and v.layer_count>1:
-            v.processed_gcode.append(';--- P2PP removed [Tower Delta] - ' + gcode_full_line + "\n")
-            return
+    if v.towerskipped:
+        v.processed_gcode.append(';--- P2PP removed [Tower Delta] - ' + gcode_full_line + "\n")
+        return
 
     # Processing of print head movements
     #############################################
@@ -271,39 +273,77 @@ def gcode_parseline(gcode_full_line):
         to_x = get_gcode_parameter(gcode_full_line, "X")
         to_y = get_gcode_parameter(gcode_full_line, "Y")
         to_z = get_gcode_parameter(gcode_full_line, "Z")
-        prev_x = v.currentPositionX
-        prev_y = v.currentPositionY
+        to_e = get_gcode_parameter(gcode_full_line, "E")
+        prev_x = v.current_position_x
+        prev_y = v.current_position_y
+
 
         if to_x != "":
-            v.currentPositionX = float(to_x)
+            v.previous_position_x = v.current_position_x
+            v.current_position_x = float(to_x)
             if v.define_tower:
-                v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], v.currentPositionX)
-                v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], v.currentPositionX)
+                v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], v.current_position_x)
+                v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], v.current_position_x)
         if to_y != "":
-            v.currentPositionY = float(to_y)
+            v.previous_position_y = v.current_position_y
+            v.current_position_y = float(to_y)
             if v.define_tower:
-                v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], v.currentPositionY)
-                v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], v.currentPositionY)
+                v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], v.current_position_y)
+                v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], v.current_position_y)
         if to_z != "":
-            v.currentPositionZ = float(to_z)
+            v.previous_position_z = v.current_position_z
+            v.current_position_z = float(to_z)
 
-        if coordinate_in_tower(v.currentPositionX, v.currentPositionY) and v.towerskipped:
+        if coordinate_in_tower(v.current_position_x, v.current_position_y) and v.towerskipped:
             gcode_full_line = gcode_remove_params(gcode_full_line, ["X", "Y"])
 
-        if not coordinate_on_bed(v.currentPositionX, v.currentPositionY) and coordinate_on_bed(prev_x, prev_y):
+        if not coordinate_on_bed(v.current_position_x, v.current_position_y) and coordinate_on_bed(prev_x, prev_y):
             gcode_full_line = ";" + gcode_full_line
 
     if gcode_full_line.startswith("G1"):
-            extruder_movement = get_gcode_parameter(gcode_full_line, "E")
-            if extruder_movement != "":
+
+
+            if to_e != "":
+
+                extruder_movement = float(to_e)
                 extruder_movement = extruder_movement * v.extrusion_multiplier * v.extrusion_multiplier_correction
+
+                if  v.acc_ping_left > 0:
+
+                    if v.acc_ping_left >= extruder_movement:
+                        v.acc_ping_left -= extruder_movement
+
+                    else:
+                        procent = v.acc_ping_left / extruder_movement
+                        intermediate_x = v.previous_position_x + (v.current_position_x - v.previous_position_x) * procent
+                        intermediate_y = v.previous_position_y + (v.current_position_y - v.previous_position_y) * procent
+                        if to_z !="":
+                            zmove = "Z{}".format(to_z)
+                        else:
+                            zmove=""
+                        v.processed_gcode.append("G1 X{} Y{} {} E{}\n".format(intermediate_x,intermediate_y, zmove , v.acc_ping_left))
+                        extruder_movement -= v.acc_ping_left
+                        v.acc_ping_left = 0
+                        gcode_full_line = "G1 X{} Y{} E{}\n".format(v.current_position_x,v.current_position_y, extruder_movement)
+
+                    if v.acc_ping_left<=0.5:
+                        v.acc_ping_left=0
+                        v.processed_gcode.append(v.acc_second_pause)
+                        v.ping_interval = v.ping_interval * v.ping_length_multiplier
+                        v.ping_interval = min(v.max_ping_interval, v.ping_interval)
+                        v.last_ping_extruder_position = v.total_material_extruded
+                        v.ping_extruder_position.append(v.last_ping_extruder_position - to_e)
+
+
+
                 if v.within_tool_change_block and v.side_wipe:
                         v.side_wipe_length += extruder_movement
 
                 v.total_material_extruded += extruder_movement
 
                 if (v.total_material_extruded - v.last_ping_extruder_position) > v.ping_interval and\
-                        v.side_wipe_length == 0:
+                         v.side_wipe_length == 0 and not  v.accessory_mode:                             #this code is only handled for connected mode
+                                                                                                        #accessory mode is handles during the purge tower sequences only
                     v.ping_interval = v.ping_interval * v.ping_length_multiplier
                     v.ping_interval = min(v.max_ping_interval, v.ping_interval)
                     v.last_ping_extruder_position = v.total_material_extruded
@@ -325,7 +365,8 @@ def gcode_parseline(gcode_full_line):
     ###################################################################################
     if gcode_full_line.startswith(";P2PP"):
         parameters.check_config_parameters(gcode_full_line)
-        v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
+
+
 
         if gcode_full_line.startswith(";P2PP MATERIAL_"):
                 algorithm_process_material_configuration(gcode_full_line[15:])
@@ -360,10 +401,29 @@ def gcode_parseline(gcode_full_line):
         v.wipe_tower_info['miny'] -= 2
         v.wipe_tower_info['maxx'] += 2
         v.wipe_tower_info['maxy'] += 2
+        v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
         v.processed_gcode.append("; TOWER COORDINATES ({:-8.2f},{:-8.2f}) to ({:-8.2f},{:-8.2f})\n".format(
             v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy'],
             v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy']
         ))
+        if v.accessory_mode:
+            log_warning("ACCESSORY MODE enabled")
+            if v.side_wipe:
+                log_warning("ACCESSORY MODE: side wipe will be disabled")
+                v.side_wipe = False
+            grid_drop = False
+            for i in range(len(v.skippable_layer)):
+                grid_drop = grid_drop or v.skippable_layer[i]
+                v.skippable_layer[i] = False
+            if grid_drop:
+                log_warning("ACCESSORY MODE: asynchronous purge tower will be disabled")
+
+
+        if v.side_wipe:
+            if v.side_wipe_loc=="":
+                log_warning("Sidewipe configuration incomplete (SIDEWIPELOC paramter not set.. gcode will not be usable")
+            else:
+                log_warning("Side wipe enabled on position {} Y{}-{}".format(v.side_wipe_loc, v.sidewipe_miny,v.sidewipe_maxy))
 
     if "CP EMPTY GRID START" in gcode_full_line:
         v.empty_grid = True
@@ -402,13 +462,12 @@ def gcode_parseline(gcode_full_line):
 
     if "TOOLCHANGE WIPE" in gcode_full_line:
         v.mmu_unload_remove = False
-        if coordinate_on_bed(v.currentPositionX, v.currentPositionY):
-            v.processed_gcode.append("G0 X{} Y{}\n".format(v.currentPositionX, v.currentPositionY))
+        if coordinate_on_bed(v.current_position_x, v.current_position_y):
+            v.processed_gcode.append("G0 X{} Y{}\n".format(v.current_position_x, v.current_position_y))
 
         # Layer Information
     if gcode_full_line.startswith(";LAYER "):
         v.current_layer = gcode_full_line[7:]
-        v.towerskipped = False
         v.layer_count+=1
         if v.layer_count==0:
             optimize_tower_skip(v.max_tower_z_delta, v.layer_height)
@@ -460,7 +519,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     pre_processfile()
     print("Found {} layers in print".format(len(v.skippable_layer)))
 
-    v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
+    #v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
 
     # Process the file
     # #################
@@ -478,11 +537,30 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         print (''.join(omega_result['summary']))
         print (''.join(omega_result['warnings']))
 
+
     # write the output file
     ######################
     print("Generating output file")
     if not output_file:
         output_file = input_file
     opf = open(output_file, "w")
-    opf.writelines(header)
+    if not v.accessory_mode:
+        opf.writelines(header)
+        opf.write("\n\n--------- START PROCESSED GCODE ----------\n\n")
+    if  v.accessory_mode:
+        opf.write("M0\n")
+        opf.write("T0\n")
+
     opf.writelines(v.processed_gcode)
+    opf.close()
+
+    if v.accessory_mode:
+        pre, ext = os.path.splitext(output_file)
+        maffile = pre+".maf"
+        opf = open(maffile, "w")
+        for i in range(len(header)):
+            if not header[i].startswith(";"):
+                opf.write(header[i])
+
+
+

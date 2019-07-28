@@ -17,6 +17,7 @@ earlier versions may generate different code patterns and may not work correctly
 -  30/06/2019 - BETA - added asynchronous tower function
 -  16/07/2019 - Bug fix & optimization assynchronous tower function
 -  16/07/2019 - Further error checking in ;P2PP parameter lines 
+-  28/07/2019 - Added ACCESSORYMODE parameter to generate MAF/GCODE pairs [ALPHA]
 
 
 ## Purpose
@@ -295,6 +296,12 @@ The *WIPEFEEDRATE* parameter described above can be used to change the speed at 
 
 > **;P2PP REPRAPCOMPATIBLE**  *[OPTIONAL]*
   Enhances the compatibility with RepRap type boards (e.g. Duet) by filtering out Slic3r default commands that are incompatible with this firmware
+
+> **;P2PP ACCESSORYMODE**  *[OPTIONAL, ALPHA]*
+  Generates separate MAF and GCODE files with pause to run files in accessory mode.  This mode is currently NOT compatible with the Asychronous tower and side wipe functions.
+ 
+
+
 
 ### Print Settings
 1. In Slic3r, Click the "Print Settings Tab"

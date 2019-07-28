@@ -163,8 +163,9 @@ def header_generate_omega(job_name):
         header.append("O1 D{} {}\n"
                       .format(job_name, hexify_long(int(v.total_material_extruded + v.splice_offset + 0.5))))
 
-    header.append("M0\n")
-    header.append("T0\n")
+    if not v.accessory_mode:
+        header.append("M0\n")
+        header.append("T0\n")
 
     summary.append(";---------------------:\n")
     summary.append("; - SPLICE INFORMATION:\n")
