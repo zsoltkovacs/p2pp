@@ -326,14 +326,14 @@ def gcode_parseline(gcode_full_line):
                         v.acc_ping_left = 0
                         gcode_full_line = "G1 X{} Y{} E{}\n".format(v.current_position_x,v.current_position_y, extruder_movement)
 
-                    if v.acc_ping_left<=0.5:
-                        v.acc_ping_left=0
+                    if v.acc_ping_left<=0.1:
                         v.processed_gcode.append(v.acc_second_pause)
                         v.ping_interval = v.ping_interval * v.ping_length_multiplier
                         v.ping_interval = min(v.max_ping_interval, v.ping_interval)
                         v.last_ping_extruder_position = v.total_material_extruded
-                        v.ping_extruder_position.append(v.last_ping_extruder_position - extruder_movement)
+                        v.ping_extruder_position.append(v.total_material_extruded-20+v.acc_ping_left)
                         v.ping_extrusion_between_pause.append(20-v.acc_ping_left)
+                        v.acc_ping_left = 0
 
 
 
