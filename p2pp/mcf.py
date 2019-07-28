@@ -332,7 +332,9 @@ def gcode_parseline(gcode_full_line):
                         v.ping_interval = v.ping_interval * v.ping_length_multiplier
                         v.ping_interval = min(v.max_ping_interval, v.ping_interval)
                         v.last_ping_extruder_position = v.total_material_extruded
-                        v.ping_extruder_position.append(v.last_ping_extruder_position - to_e)
+                        v.ping_extruder_position.append(v.last_ping_extruder_position - extruder_movement)
+                        v.ping_extrusion_between_pause.append(20-v.acc_ping_left)
+
 
 
 

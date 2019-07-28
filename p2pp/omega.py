@@ -152,18 +152,23 @@ def header_generate_omega(job_name):
                                                  )
                       )
 
+    if v.accessory_mode:
+        for i in range(len(v.ping_extruder_position)):
+            header.append("O31 {} {}\n".format(hexify_float(v.ping_extruder_position[i]), hexify_float(v.ping_extrusion_between_pause[i])))
+
     for i in range(len(v.splice_algorithm_table)):
         header.append("O32 {}\n"
                       .format(v.splice_algorithm_table[i]))
 
-    if len(v.splice_extruder_position) > 0:
-        header.append("O1 D{} {}\n"
-                      .format(job_name, hexify_long(int(v.splice_extruder_position[-1] + 0.5))))
-    else:
-        header.append("O1 D{} {}\n"
-                      .format(job_name, hexify_long(int(v.total_material_extruded + v.splice_offset + 0.5))))
-
     if not v.accessory_mode:
+        if len(v.splice_extruder_position) > 0:
+            header.append("O1 D{} {}\n"
+                          .format(job_name, hexify_long(int(v.splice_extruder_position[-1] + 0.5))))
+        else:
+            header.append("O1 D{} {}\n"
+                          .format(job_name, hexify_long(int(v.total_material_extruded + v.splice_offset + 0.5))))
+
+
         header.append("M0\n")
         header.append("T0\n")
 
