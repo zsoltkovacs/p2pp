@@ -41,7 +41,7 @@ def algorithm_process_material_configuration(splice_info):
                                                                      fields[3])
 
     if len(fields) == 5:
-        key = "{}-{}".format(fields[0],
+        key = "{}{}".format(fields[0],
                              fields[1])
         v.splice_algorithm_dictionary[key] = algorithm_create_process_string(fields[2],
                                                                              fields[3],
@@ -64,7 +64,7 @@ def algorithm_create_table():
             if i == j:
                 continue
             try:
-                algo_key = "{}-{}".format(v.used_filament_types.index(v.filament_type[i]) + 1,
+                algo_key = "{}{}".format(v.used_filament_types.index(v.filament_type[i]) + 1,
                                          v.used_filament_types.index(v.filament_type[j]) + 1)
                 if algo_key in splice_list:
                     continue
@@ -77,7 +77,7 @@ def algorithm_create_table():
             splice_list.append(algo_key)
 
             try:
-                    algo = v.splice_algorithm_dictionary["{}-{}".format(v.filament_type[i], v.filament_type[j])]
+                    algo = v.splice_algorithm_dictionary["{}{}".format(v.filament_type[i], v.filament_type[j])]
             except KeyError:
                 log_warning("WARNING: No Algorithm defined for transitioning" +
                             " {} to {}. Using Default".format(v.filament_type[i],
