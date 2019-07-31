@@ -281,7 +281,7 @@ def gcode_parseline(gcode_full_line):
     if "CP EMPTY GRID END" in gcode_full_line:
         v.towerskipped = False
         v.empty_grid = False
-        v.emtygridfinished = True
+        v.emtygridfinished = v.towerskipped
         leavetower()
 
     if v.towerskipped:
