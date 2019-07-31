@@ -9,7 +9,6 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 import os
-import io
 import p2pp.gui as gui
 from p2pp.formatnumbers import hexify_float
 import p2pp.parameters as parameters
@@ -76,6 +75,31 @@ def optimize_tower_skip(skipmax , layersize):
     if skipped>0:
         log_warning("Total Purge Tower delta : {} Layers or {:-6.2f}mm".format(skipped_num, skipped))
 
+
+def convert_to_absolute():
+    absolute = 0.0
+
+    for i in range(len(v.processed_gcode)):
+        line = v.processed_gcode[i]
+
+        if line.startswith("G1"):
+            if "E" in line:
+                fields = line.split()
+                for j in range(1,len(fields)):
+                    if fields[j][0] == "E":
+                        to_e = float(fields[j][1:])
+                        absolute += to_e
+                        fields[j] = "E{}".format(absolute)
+                line = " ".join(fields)+"\n"
+                v.processed_gcode[i]=line
+            continue
+
+
+        if line.startswith("M83"):
+            v.processed_gcode[i] = "M82\n"
+
+        if line.startswith("G92 E"):
+            absolute = get_gcode_parameter(line,"E")
 
 
 
@@ -529,9 +553,24 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     for line in v.input_gcode:
         gcode_parseline(line)
 
+
+
+
+    if v.palette_plus:
+        if v.palette_plus_ppm==-9:
+            log_warning("P+ parameter P+PPM not set correctly in startup GCODE")
+            log_warning("Refer to README.MD on github for more information")
+        if v.palette_plus_loading_offset==-9:
+            log_warning("P+ parameter P+LOADINGOFFSET not set correctly in startup GCODE")
+            log_warning("Refer to README.MD on github for more information")
+
     gcode_process_toolchange(-1, v.total_material_extruded)
     omega_result = header_generate_omega(_taskName)
     header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
+
+    if v.absolute_extruder and v.gcode_has_relative_e:
+        print("Converting to absolute extrusion")
+        convert_to_absolute()
 
     if not silent:
         if v.gui:
@@ -558,7 +597,11 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     if v.accessory_mode:
         pre, ext = os.path.splitext(output_file)
-        maffile = pre+".maf"
+        if v.palette_plus:
+            maffile = pre + ".msf"
+        else:
+            maffile = pre+".maf"
+
         opf = open(maffile, "w")
         for i in range(len(header)):
             if not header[i].startswith(";"):

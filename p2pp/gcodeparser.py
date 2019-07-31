@@ -92,6 +92,17 @@ def parse_slic3r_config():
             if "reprap" in gcode_line:
                 v.isReprap_Mode = True
 
+        if "use_relative_e_distances" in gcode_line:
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                gcode_line = gcode_line[parameter_start + 1:].replace(";", "")
+                if "1" in gcode_line:
+                    v.gcode_has_relative_e = True
+                else:
+                    v.gcode_has_relative_e = False
+
+
+
         if gcode_line.startswith(";"):
             pass
 

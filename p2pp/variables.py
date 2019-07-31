@@ -44,6 +44,11 @@ acc_first_pause = ";PING PAUSE 1 START\nG4 P4000\nG1\nG4 P4000\nG1\nG4 P4000\nG1
 acc_second_pause = ";PING PAUSE 2 START\nG4 P4000\nG1\nG4 P3000\nG1\n;PING PAUSE 2 END\n"   #type string
 
 
+palette_plus = False
+palette_plus_loading_offset = -9
+palette_plus_ppm=-9
+
+
 skippable_layer = [] #type array of bool
 
 used_filament_types = [] #type array of string
@@ -118,7 +123,6 @@ previous_position_z = 0.0  # type: float
 ping_extruder_position = []
 ping_extrusion_between_pause = []
 
-
 # hotswapcount: The number of hot-swaps generated during the print. This feature is currently unused.
 hotswap_count = 0  # type: int
 
@@ -141,6 +145,9 @@ correct_wipe_retract = False  # type: bool
 wipe_retracted = False  # type: bool
 mmu_unload_remove = False  # type: bool
 volumetric_e = False  # type: bool
+
+gcode_has_relative_e = False
+absolute_extruder = False  # type : bool
 
 isReprap_Mode = False  # type: bool
 

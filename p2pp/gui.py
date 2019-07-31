@@ -22,13 +22,13 @@ import os
 from platform import system
 
 root = Tk()
-
+root.title("P2PP - Palette 2 Post Processing")
 platformD = system()
-if platformD == 'Darwin':
-    logo_image = os.path.dirname(sys.argv[0])+'/favicon.icns'
-elif platformD == 'Windows':
+
+if platformD == 'Windows':
     logo_image = os.path.dirname(sys.argv[0])+'\\favicon.ico'
     root.iconbitmap(logo_image)
+    root.update()
 root.iconify()
 
 

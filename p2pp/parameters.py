@@ -44,8 +44,18 @@ def check_config_parameters(line):
             v.printer_profile_string = tmp_string
         return
 
-    if "ACCESSORYMODE" in line:
+    if "ACCESSORYMODE_MAF" in line:
         v.accessory_mode = True
+
+    if "ACCESSORYMODE_MSF" in line:
+        v.accessory_mode = True
+        v.palette_plus = True
+
+    if "P+LOADINGOFFSET" in line:
+        v.palette_plus_loading_offset = int(floatparameter(line))
+
+    if "P+PPM" in line:
+        v.palette_plus_ppm =  int(floatparameter(line))
 
     if "SPLICEOFFSET" in line:
         v.splice_offset = floatparameter(line)
@@ -158,3 +168,6 @@ def check_config_parameters(line):
 
     if "CONSOLEWAIT" in line:
         v.consolewait = True
+
+    if "ABSOLUTEEXTRUDER" in line:
+        v.absolute_extruder = True

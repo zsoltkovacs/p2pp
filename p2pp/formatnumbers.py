@@ -9,6 +9,11 @@ __email__ = 'P2PP@pandora.be'
 
 import struct
 
+def hexify_byte(num):
+    # hexify_short: Converts a short integer into the specific notation used by Mosaic
+    if num < 0:
+        num += 256
+    return "D" + '{0:02x}'.format(num)
 
 def hexify_short(num):
     # hexify_short: Converts a short integer into the specific notation used by Mosaic

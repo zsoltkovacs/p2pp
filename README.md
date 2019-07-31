@@ -18,6 +18,8 @@ earlier versions may generate different code patterns and may not work correctly
 -  16/07/2019 - Bug fix & optimization assynchronous tower function
 -  16/07/2019 - Further error checking in ;P2PP parameter lines 
 -  28/07/2019 - Added ACCESSORYMODE parameter to generate MAF/GCODE pairs [ALPHA]
+-  29/07/2019 - Added support for Palette+ MSF 1.4 files [ALPHA]
+-  31/07/2019 - Added support for absolute extruder conversion [BETA]
 
 
 ## Purpose
@@ -200,6 +202,9 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
    ```
   ;P2PP MATERIAL_PLA_PLA_0_0_0
   ``` 
+  
+  **P+ NOTE**: when using the P+ accessory mode functionality, the cooling parameter does not exist.  Instead the P+ has a forward/reverse flag.
+  Setting any value other than 0 will yield a reverse splice.   Zero will yield a forward splice.
 
 > **LINEARPING**  *[OPTIONAL]*
     This is used to keep the filament disctance between pings constant to 350mm.  When this parameter is not set, the ping distance is exponentially growing during the print resulting in filament distances up to 3m between pings in very long prints.  ** WARNING ** Smoe users have reported issues when setting LINEARPING to values below 350mm.  It is suggested to keep 350 as a minimum.
@@ -214,6 +219,15 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
    ```
   ;P2PP EXTRAENDFILAMENT=150
   ```
+ 
+ 
+  > **;P2PP ABSOLUTEEXTRUDER** 
+  PrusaSlicer normally generates code in relative mode.  This means position rounding occurs at every move of the extruder.  By converting to absolute more the rounding error is evened out over the entire print so extrusion is more precise.  It may have an impact on the pings when many short moves are required.
+  
+   ```
+  ;P2PP ABSOLUTEEXTRUDER
+  ```
+  
  
   > **BEDORIGINX=nnn  and BEDORIGINY=nnn#** 
    Sets the origin of the bed.  The default value is as defined below and should suite MK3 users.  Users of other printers can override the defaults by using the below lines with the correct values in the printer Startup GCode sectio.   These parameters are used to determine if the purge tower is located on the bed or not.
@@ -238,7 +252,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   ;sets the print speed to 40mm/s
   ```  
    
- > **;P2PP PURGETOWERDELTA=0** *[EXPERIMENTAL,OPTIONAL]*
+ > **;P2PP PURGETOWERDELTA=0** *[EXPERIMENTAL,OPTIONAL, NOT FOR P+]*
  
  The PURGETOWERDELTA feature allows the purge tower to grow less quickly than the 
  actual print up to a certain amount.  P2PP will remove empty grid layers from the tower
@@ -263,7 +277,7 @@ The *WIPEFEEDRATE* parameter described above can be used to change the speed at 
  ![ptower delta](https://github.com/tomvandeneede/p2pp/blob/master/docs/tower_delta.JPG)
  
  
- > **SIDEWIPELOC=X#** *[EXPERIMENTAL,OPTIONAL]*
+ > **SIDEWIPELOC=X#** *[EXPERIMENTAL,OPTIONAL,NOT FOR P+]*
   This is used to define the location on the X-Axis the printer needs to go to to do a side transition instead of doing a tower purge.  In Slic3r all still needs to be setup with a purge, tower, but the tower needs to be **MOVE COMPLETELY OFF THE BED** to enable the SIDE WIPE .  p2pp will convert the tower purges into side wipes and fileter out all purges that are not necessary (i.e. empty towe shells). 
   If you want to perform a side wipe on the MK3 use the following line.  
   ```
@@ -297,9 +311,53 @@ The *WIPEFEEDRATE* parameter described above can be used to change the speed at 
 > **;P2PP REPRAPCOMPATIBLE**  *[OPTIONAL]*
   Enhances the compatibility with RepRap type boards (e.g. Duet) by filtering out Slic3r default commands that are incompatible with this firmware
 
-> **;P2PP ACCESSORYMODE**  *[OPTIONAL, ALPHA]*
+  ```
+  ;P2PP REPRAPCOMPATIBLE
+  ```
+
+> **;P2PP ACCESSORYMODE_MAF**  *[OPTIONAL, ALPHA, PALETTE 2]*
   Generates separate MAF and GCODE files with pause to run files in accessory mode.  This mode is currently NOT compatible with the Asychronous tower and side wipe functions.
+  In this mode, asynchronous purge tower and side wipe are currently not yet available.
+  After processing P2PP will generate a GCode file as well as a MAF file that should be loaded to a memory card and inserted in your palette
+   
+   ```
+  ;P2PP ACCESSORYMODE_MAF
+  ```
  
+ ### Palette+ Setup (Printer Startup GCode)
+ 
+ This mode is currently NOT compatible with the Asychronous tower and side wipe functions.
+  
+  After processing P2PP will generate a GCode file as well as a MSF file that should be loaded to a memory card and inserted in your palette.
+  
+  **P+ NOTE**: when using the P+ accessory mode functionality, the cooling parameter does not exist.  Instead the P+ has a forward/reverse flag.
+  Setting any value other than 0 will yield a reverse splice.   Zero will yield a forward splice.
+ 
+
+ 
+ 
+> **;P2PP ACCESSORYMODE_MSF**  *[OPTIONAL, ALPHA, PALETTE+]*
+  Generates separate MSF and GCODE files with pause to run files in accessory mode.  
+  The msf.txt file (readable information) is not yet generated.
+
+  When using this setting the next 2 parameters are mandatory to complete the configuration:
+ 
+> **;P2PP P+PPMF=nnn**  *[MANDATORY P+, ALPHA, PALETTE+]* 
+   Defines the PPM parameter used in the MSF1.4 files.  Copy this information from a working MSF1.4 msf.txt file.  
+   The line you are looking for starts with "Pulses Per MM".   nnn in this parameter is replaced by the value from the msf.txt file
+
+> **;P2PP P+LOADINGOFFSET=nnn**  *[MANDATORY P+, ALPHA, PALETTE+]*
+   Defined the loading offset parameter used in the MSF1.4 files. Copy this information from a working MSF1.4 msf.txt 
+   file. The line you are looking for starts with "Loading Offset:".
+   nnn in this parameter is replaced by the value from the msf.txt file
+
+   ```
+  ;P2PP ACCESSORYMODE_MAF
+  ;P2PP P+PPMF=nnn
+  ;P2PP P+LOADINGOFFSET=nnn
+  ;P2PP MATERIAL_DEFAULT=2_2_0
+  ;P2PP MATERIAL_PLA_PLA_[Heating]_[Compression]_[reverse] 
+  ``` 
 
 
 
@@ -428,6 +486,14 @@ Thanks to.....
 Tim Brookman for the co-development of this plugin.
 Klaus, Khalil ,Casey, Jermaul, Paul  (and all others) for the endless testing and valuable feedback and the ongoing P2PP support to the community...it's them driving the improvements...
 Kurt for making the instructional video n setting up and using p2pp.
+
+## Make a donation...
+
+If you like this software and want to support its development you can make a small donation to support further development of P2PP.
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](t.vandeneede@pandora.be)
+
+
 
 ## **Good luck & happy printing !!!**
 
