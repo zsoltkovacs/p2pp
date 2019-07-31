@@ -63,6 +63,7 @@ cur_tower_z_delta = 0.0 #type float
 layer_height = 0.2 #type float
 layer_count = -1 #type integer
 towerskipped = False #type bool
+emtygridfinished = False
 
 printer_profile_string = ''
 default_printerprofile = '50325050494e464f'  # A unique ID linked to a printer configuration profile in the Palette 2 hardware.

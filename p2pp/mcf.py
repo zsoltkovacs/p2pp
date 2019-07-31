@@ -281,6 +281,7 @@ def gcode_parseline(gcode_full_line):
     if "CP EMPTY GRID END" in gcode_full_line:
         v.towerskipped = False
         v.empty_grid = False
+        v.emtygridfinished = True
         leavetower()
 
     if v.towerskipped:
@@ -318,8 +319,10 @@ def gcode_parseline(gcode_full_line):
             v.previous_position_z = v.current_position_z
             v.current_position_z = float(to_z)
 
-        if coordinate_in_tower(v.current_position_x, v.current_position_y) and v.towerskipped:
+        if coordinate_in_tower(v.current_position_x, v.current_position_y) and (v.towerskipped or v.emtygridfinished):
             gcode_full_line = gcode_remove_params(gcode_full_line, ["X", "Y"])
+        else:
+            v.emtygridfinished = False
 
         if not coordinate_on_bed(v.current_position_x, v.current_position_y) and coordinate_on_bed(prev_x, prev_y):
             gcode_full_line = ";" + gcode_full_line
