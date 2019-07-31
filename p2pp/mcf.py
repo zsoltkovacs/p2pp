@@ -279,9 +279,9 @@ def gcode_parseline(gcode_full_line):
 
     # processing tower Z delta
     if "CP EMPTY GRID END" in gcode_full_line:
+        v.emtygridfinished = v.towerskipped
         v.towerskipped = False
         v.empty_grid = False
-        v.emtygridfinished = v.towerskipped
         leavetower()
 
     if v.towerskipped:
