@@ -122,7 +122,7 @@ def header_generate_omega_paletteplus(job_name):
     cu="cu:"
     for i in range(4):
         if v.palette_inputs_used[i]:
-            cu=cu+"{} {};".format(v.used_filament_types.index(v.filament_type[i]) + 1,
+            cu=cu+"{}{};".format(v.used_filament_types.index(v.filament_type[i]) + 1,
                                                find_nearest_colour(v.filament_color_code[i].strip("\n"))
                                                )
         else:
