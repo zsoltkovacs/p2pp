@@ -111,10 +111,10 @@ def header_generate_omega(job_name):
     if not v.palette_plus:
         return header_generate_omega_palette2(job_name)
     else:
-        return header_generate_omega_paletteplus(job_name)
+        return header_generate_omega_paletteplus()
 
 
-def header_generate_omega_paletteplus(job_name):
+def header_generate_omega_paletteplus():
     header = ["MSF1.4\n"]
 
     cu = "cu:"

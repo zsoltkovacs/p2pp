@@ -1,3 +1,5 @@
+from typing import List, Any
+
 __author__ = 'Tom Van den Eede'
 __copyright__ = 'Copyright 2018, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
@@ -80,7 +82,7 @@ processed_gcode = []  # final output array with Gcode
 # further in the purge tower.  This serves a similar function as the transition offset in chroma.
 splice_offset = 0  # type: int
 splice_extruder_position = []
-splice_used_tool = []
+splice_used_tool = []  # type: List[Any]
 splice_length = []
 
 # SIDE WIPES
