@@ -7,11 +7,13 @@ __license__ = 'GPL'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
-try:  #p ython version 2.x
+try:
+    # p ython version 2.x
     from Tkinter import *
     import Tkinter as tk
     import tkMessageBox
-except ImportError: # python version 3.x
+except ImportError:
+    # python version 3.x
     from tkinter import *
     import tkinter as tk
     from tkinter import messagebox as tkMessageBox

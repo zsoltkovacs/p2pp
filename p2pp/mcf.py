@@ -548,8 +548,6 @@ def gcode_parseline(gcode_full_line):
 # Generate the file and glue it all together!
 # #####################################################################
 def generate(input_file, output_file, printer_profile, splice_offset, silent):
-
-
     starttime = time.time()
     v.printer_profile_string = printer_profile
     basename = os.path.basename(input_file)
@@ -560,15 +558,21 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     try:
         opf = open(input_file, encoding='utf-8')
-    except:
+    except TypeError:
         try:
             opf = open(input_file)
-        except:
+        except IOError:
             if v.gui:
                 gui.user_error("P2PP - Error Occurred", "Could not read input file\n'{}'".format(input_file))
             else:
                 print ("Could not read input file\n'{}".format(input_file))
             return
+    except IOError:
+        if v.gui:
+            gui.user_error("P2PP - Error Occurred", "Could not read input file\n'{}'".format(input_file))
+        else:
+            print ("Could not read input file\n'{}".format(input_file))
+        return
 
     print("Reading File")
     v.input_gcode = opf.readlines()

@@ -12,7 +12,6 @@ import p2pp.variables as v
 from p2pp.colornames import find_nearest_colour
 from p2pp.logfile import log_warning
 import p2pp.gui as gui
-import time
 
 
 # ################################################################
@@ -68,7 +67,7 @@ def algorithm_create_table():
                                          v.used_filament_types.index(v.filament_type[j]) + 1)
                 if algo_key in splice_list:
                     continue
-            except:
+            except (IndexError, KeyError):
                 continue
 
             if not algorithm_transition_used(i, j):
@@ -78,7 +77,7 @@ def algorithm_create_table():
 
             try:
                 algo = v.splice_algorithm_dictionary["{}{}".format(v.filament_type[i], v.filament_type[j])]
-            except KeyError:
+            except (IndexError, KeyError):
                 log_warning("WARNING: No Algorithm defined for transitioning" +
                             " {} to {}. Using Default".format(v.filament_type[i],
                                                               v.filament_type[j]))
@@ -233,7 +232,7 @@ def header_generate_omega_palette2(job_name):
         summary = generatesummary()
         warnings = generatewarnings()
 
-        return {'header': header, 'summary': summary, 'warnings': warnings}
+    return {'header': header, 'summary': summary, 'warnings': warnings}
 
 
 def generatesummary():

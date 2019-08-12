@@ -15,7 +15,7 @@ def floatparameter(s):
     pos = s.find("=")
     try:
         return float(s[pos + 1:])
-    except:
+    except ValueError:
         return 0
 
 
@@ -23,7 +23,7 @@ def stringparameter(s):
     pos = s.find("=")
     try:
         return s[pos + 1:].strip()
-    except:
+    except IndexError:
         return ""
 
 
