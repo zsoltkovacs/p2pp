@@ -7,30 +7,30 @@ __license__ = 'GPL'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
-
 from p2pp.formatnumbers import hexify_short, hexify_float, hexify_long, hexify_byte
 import p2pp.variables as v
 from p2pp.colornames import find_nearest_colour
 from p2pp.logfile import log_warning
 import p2pp.gui as gui
+import time
+
 
 # ################################################################
 # ######################### ALGORITHM PROCESSING ################
 # ################################################################
 def algorithm_create_process_string(heating, compression, cooling):
-
     if v.palette_plus:
-        if int(cooling) != 0:        #cooling parameter functions as a forward/reverse
+        if int(cooling) != 0:  # cooling parameter functions as a forward/reverse
             cooling = 1
         return "{},{},{}".format(hexify_float(float(heating))[1:].zfill(8),
                                  hexify_float(float(compression))[1:].zfill(8),
                                  cooling
-                          )
+                                 )
     else:
         return "{} {} {}".format(hexify_short(int(heating)),
-                             hexify_short(int(compression)),
-                             hexify_short(int(cooling))
-                             )
+                                 hexify_short(int(compression)),
+                                 hexify_short(int(cooling))
+                                 )
 
 
 def algorithm_process_material_configuration(splice_info):
@@ -42,7 +42,7 @@ def algorithm_process_material_configuration(splice_info):
 
     if len(fields) == 5:
         key = "{}{}".format(fields[0],
-                             fields[1])
+                            fields[1])
         v.splice_algorithm_dictionary[key] = algorithm_create_process_string(fields[2],
                                                                              fields[3],
                                                                              fields[4])
@@ -77,14 +77,14 @@ def algorithm_create_table():
             splice_list.append(algo_key)
 
             try:
-                    algo = v.splice_algorithm_dictionary["{}{}".format(v.filament_type[i], v.filament_type[j])]
+                algo = v.splice_algorithm_dictionary["{}{}".format(v.filament_type[i], v.filament_type[j])]
             except KeyError:
                 log_warning("WARNING: No Algorithm defined for transitioning" +
                             " {} to {}. Using Default".format(v.filament_type[i],
                                                               v.filament_type[j]))
                 algo = v.default_splice_algorithm
             if v.palette_plus:
-                v.splice_algorithm_table.append("({},{})".format(algo_key, algo).replace("-",""))
+                v.splice_algorithm_table.append("({},{})".format(algo_key, algo).replace("-", ""))
             else:
                 v.splice_algorithm_table.append("D{} {}".format(algo_key, algo))
 
@@ -93,7 +93,6 @@ def algorithm_create_table():
 # Generate the Omega - Header that drives the Palette to generate filament
 ############################################################################
 def header_generate_omega(job_name):
-
     if v.printer_profile_string == '':
         log_warning("The PRINTERPROFILE identifier is missing, Please add:\n" +
                     ";P2PP PRINTERPROFILE=<your printer profile ID>\n" +
@@ -102,7 +101,8 @@ def header_generate_omega(job_name):
     if len(v.splice_extruder_position) == 0:
         log_warning("This does not look like a multi-colour file.\n")
         if v.gui:
-            if gui.ask_yes_no('Not a Multi-Colour file?', "This doesn't look like a multi-colour file. Skip processing?"):
+            if gui.ask_yes_no('Not a Multi-Colour file?',
+                              "This doesn't look like a multi-colour file. Skip processing?"):
                 exit(1)
         else:
             if yes_or_no("This does not look like a multi-colour file.. Skip P2PP Processing?\n"):
@@ -114,24 +114,20 @@ def header_generate_omega(job_name):
     else:
         return header_generate_omega_paletteplus(job_name)
 
+
 def header_generate_omega_paletteplus(job_name):
-    header = []
+    header = ["MSF1.4\n"]
 
-    header.append("MSF1.4\n")
-
-    cu="cu:"
+    cu = "cu:"
     for i in range(4):
         if v.palette_inputs_used[i]:
-            cu=cu+"{}{};".format(v.used_filament_types.index(v.filament_type[i]) + 1,
-                                               find_nearest_colour(v.filament_color_code[i].strip("\n"))
-                                               )
+            cu = cu + "{}{};".format(v.used_filament_types.index(v.filament_type[i]) + 1,
+                                     find_nearest_colour(v.filament_color_code[i].strip("\n"))
+                                     )
         else:
-            cu=cu+"0;"
+            cu = cu + "0;"
 
-
-
-    header.append(cu+"\n")
-
+    header.append(cu + "\n")
 
     header.append("ppm:{}\n".format((hexify_float(v.palette_plus_ppm))[1:]))
     header.append("lo:{}\n".format((hexify_short(v.palette_plus_loading_offset))[1:]))
@@ -141,8 +137,8 @@ def header_generate_omega_paletteplus(job_name):
     header.append("na:{}\n".format(hexify_short(len(v.splice_algorithm_table))[1:]))
 
     for i in range(len(v.splice_extruder_position)):
-        header.append("({},{})\n".format(hexify_byte(v.splice_used_tool[i])[1:],(hexify_float(v.splice_extruder_position[i])[1:])))
-
+        header.append("({},{})\n".format(hexify_byte(v.splice_used_tool[i])[1:],
+                                         (hexify_float(v.splice_extruder_position[i])[1:])))
 
     # make ping list
 
@@ -161,10 +157,7 @@ def header_generate_omega_paletteplus(job_name):
     return {'header': header, 'summary': summary, 'warnings': warnings}
 
 
-
 def header_generate_omega_palette2(job_name):
-
-
     header = []
     summary = []
     warnings = []
@@ -177,8 +170,8 @@ def header_generate_omega_palette2(job_name):
                     .format(v.default_printerprofile))
 
     header.append('O22 D' + v.printer_profile_string.strip("\n") + "\n")  # PRINTERPROFILE used in Palette2
-    header.append('O23 D0001' + "\n")              # unused
-    header.append('O24 D0000' + "\n")              # unused
+    header.append('O23 D0001' + "\n")  # unused
+    header.append('O24 D0000' + "\n")  # unused
 
     header.append("O25 ")
 
@@ -220,7 +213,8 @@ def header_generate_omega_palette2(job_name):
 
     if v.accessory_mode:
         for i in range(len(v.ping_extruder_position)):
-            header.append("O31 {} {}\n".format(hexify_float(v.ping_extruder_position[i]), hexify_float(v.ping_extrusion_between_pause[i])))
+            header.append("O31 {} {}\n".format(hexify_float(v.ping_extruder_position[i]),
+                                               hexify_float(v.ping_extrusion_between_pause[i])))
 
     for i in range(len(v.splice_algorithm_table)):
         header.append("O32 {}\n"
@@ -234,21 +228,19 @@ def header_generate_omega_palette2(job_name):
             header.append("O1 D{} {}\n"
                           .format(job_name, hexify_long(int(v.total_material_extruded + v.splice_offset + 0.5))))
 
-
         header.append("M0\n")
         header.append("T0\n")
         summary = generatesummary()
-        warnings =  generatewarnings()
+        warnings = generatewarnings()
 
         return {'header': header, 'summary': summary, 'warnings': warnings}
 
 
 def generatesummary():
-    summary = []
-    summary.append(";---------------------:\n")
-    summary.append("; - SPLICE INFORMATION:\n")
-    summary.append(";---------------------:\n")
-    summary.append(";       Splice Offset = {:-8.2f}mm\n\n".format(v.splice_offset))
+    summary = [";---------------------:\n",
+               "; - SPLICE INFORMATION:\n",
+               ";---------------------:\n",
+               ";       Splice Offset = {:-8.2f}mm\n\n".format(v.splice_offset)]
 
     for i in range(len(v.splice_extruder_position)):
         summary.append(";{:04}   Tool: {}  Location: {:-8.2f}mm   length {:-8.2f}mm \n"
@@ -277,14 +269,13 @@ def generatesummary():
 
 
 def generatewarnings():
-    warnings = []
-    warnings.append("\n")
-    warnings.append(";------------------------:\n")
-    warnings.append("; - PROCESS INFO/WARNINGS:\n")
-    warnings.append(";------------------------:\n")
-
-    warnings.append(";Generated with P2PP version {}\n".format(v.version))
-    warnings.append(";Processed file:. {}\n".format(v.filename))
+    warnings = ["\n",
+                ";------------------------:\n",
+                "; - PROCESS INFO/WARNINGS:\n",
+                ";------------------------:\n",
+                ";Generated with P2PP version {}\n".format(v.version),
+                ";Processed file:. {}\n".format(v.filename),
+                ";P2PP Processing time {:-5.2f}s\n".format(v.processtime)]
 
     if len(v.process_warnings) == 0:
         warnings.append(";No warnings\n")
@@ -298,7 +289,7 @@ def generatewarnings():
 def yes_or_no(question):
     answer = raw_input(question + "([Y]es/[N]o): ").lower().strip()
     print("")
-    while not(answer == "y" or answer == "yes" or answer == "n" or answer == "no"):
+    while not (answer == "y" or answer == "yes" or answer == "n" or answer == "no"):
         print("Input yes or no")
         answer = raw_input(question + "([Y]es/[N]o):").lower().strip()
         print("")

@@ -7,14 +7,13 @@ __license__ = 'GPL'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
-
 import p2pp.variables as v
 
 
 def gcode_remove_params(gcode, params):
     removed = False
     result = ''
-    rempar=''
+    rempar = ''
     p = gcode.split(' ')
     for s in p:
         if s == '':
@@ -31,11 +30,9 @@ def gcode_remove_params(gcode, params):
         return ';--- P2PP Removed [Removed Parameters] - ' + gcode
 
     if removed:
-        return result +";--- P2PP Removed [Removed Parameters] - " + rempar
+        return result + ";--- P2PP Removed [Removed Parameters] - " + rempar
     else:
         return result
-
-
 
 
 def get_gcode_parameter(gcode, parameter):
@@ -66,13 +63,13 @@ def parse_slic3r_config():
         if gcode_line.startswith("; wipe_tower_y"):
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
-                v.wipetower_posy = float(gcode_line[parameter_start+1:].strip())
+                v.wipetower_posy = float(gcode_line[parameter_start + 1:].strip())
 
         if gcode_line.startswith("; extruder_colour"):
             filament_colour = ''
             parameter_start = gcode_line.find("#")
             if parameter_start != -1:
-                gcode_line = gcode_line[parameter_start+1:].replace(";", "")
+                gcode_line = gcode_line[parameter_start + 1:].replace(";", "")
                 filament_colour = gcode_line.split("#")
 
             if len(filament_colour) == 4:
@@ -82,7 +79,7 @@ def parse_slic3r_config():
         if gcode_line.startswith("; filament_type"):
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
-                filament_string = gcode_line[parameter_start+1:].strip(" ").split(";")
+                filament_string = gcode_line[parameter_start + 1:].strip(" ").split(";")
                 if len(filament_string) == 4:
                     v.filament_type = filament_string
                     v.used_filament_types = list(set(filament_string))
@@ -101,8 +98,6 @@ def parse_slic3r_config():
                 else:
                     v.gcode_has_relative_e = False
 
-
-
         if gcode_line.startswith(";"):
             pass
 
@@ -110,7 +105,7 @@ def parse_slic3r_config():
             wiping_info = []
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
-                wiping_info = gcode_line[parameter_start+1:].strip(" ").split(",")
+                wiping_info = gcode_line[parameter_start + 1:].strip(" ").split(",")
                 if len(wiping_info) != 16:
                     continue
                 for i in range(len(wiping_info)):

@@ -19,7 +19,6 @@ import sys
 import os
 from platform import system
 
-
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
                                                 ' GCODE derived from Slic3r.')
 
@@ -65,7 +64,6 @@ arguments.add_argument('-w',
 
 
 def main(args):
-
     if not args['nogui']:
         v.gui = True
     else:
@@ -80,7 +78,7 @@ def main(args):
                  )
 
     if args['wait'] == "1":
-        v.consolewait=True
+        v.consolewait = True
 
     if v.consolewait:
         raw_input("Press Enter to continue...")
@@ -89,12 +87,14 @@ def main(args):
 if __name__ == "__main__":
     v.version = ver.Version
 
-    if len(sys.argv)==1:
+    if len(sys.argv) == 1:
         platformD = system()
         if platformD == 'Darwin':
-            gui.user_error("Script name to be entered in Slic3r/PrusaSlicer", "{}/p2pp.command".format(os.path.dirname(sys.argv[0])))
+            gui.user_error("Script name to be entered in Slic3r/PrusaSlicer",
+                           "{}/p2pp.command".format(os.path.dirname(sys.argv[0])))
         elif platformD == 'Windows':
-            gui.user_error("Script name to be entered in Slic3r/PrusaSlicer","{}/\\2pp.bat".format(os.path.dirname(sys.argv[0])))
+            gui.user_error("Script name to be entered in Slic3r/PrusaSlicer",
+                           "{}/\\2pp.bat".format(os.path.dirname(sys.argv[0])))
 
     else:
         main(vars(arguments.parse_args()))

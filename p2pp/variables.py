@@ -1,4 +1,3 @@
-
 __author__ = 'Tom Van den Eede'
 __copyright__ = 'Copyright 2018, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
@@ -7,7 +6,6 @@ __credits__ = ['Tom Van den Eede',
 __license__ = 'GPL'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
-
 
 #########################################
 # Variable default values
@@ -35,38 +33,43 @@ filament_color_code = ["-",
                        "-",
                        "-"]
 
+# part of the code section analysis , future development, see mcf.py
+# extrusion_segment_type   = []
+# extrusion_segment_length = []
+# extrusion_segment_line = []
 
 filament_short = [0, 0, 0, 0]
 
-accessory_mode = False # type Bool
-acc_ping_left = 0.0   #type float
-acc_first_pause = ";PING PAUSE 1 START\nG4 P4000\nG1\nG4 P4000\nG1\nG4 P4000\nG1\nG4 P1000\nG1\n;PING PAUSE 1 END\n"  #type string
-acc_second_pause = ";PING PAUSE 2 START\nG4 P4000\nG1\nG4 P3000\nG1\n;PING PAUSE 2 END\n"   #type string
-
+accessory_mode = False  # type Bool
+acc_ping_left = 0.0  # type float
+acc_first_pause = ";PING PAUSE 1 START\nG4 P4000\nG1\nG4 P4000\nG1\nG4 P4000\nG1\nG4 P1000\nG1\n;PING PAUSE 1 END\n"
+# type string
+acc_second_pause = ";PING PAUSE 2 START\nG4 P4000\nG1\nG4 P3000\nG1\n;PING PAUSE 2 END\n"
+# type string
 
 palette_plus = False
 palette_plus_loading_offset = -9
-palette_plus_ppm=-9
+palette_plus_ppm = -9
 
+skippable_layer = []  # type array of bool
 
-skippable_layer = [] #type array of bool
+used_filament_types = []  # type array of string
 
-used_filament_types = [] #type array of string
-
-default_splice_algorithm = "D000 D000 D000" #type string
+default_splice_algorithm = "D000 D000 D000"  # type string
 process_warnings = []  # type array of string
-splice_algorithm_table = [] # type array of string
-splice_algorithm_dictionary = {} # type dictionary Str->Str
+splice_algorithm_table = []  # type array of string
+splice_algorithm_dictionary = {}  # type dictionary Str->Str
 
-max_tower_z_delta = 0.0 #type float
-cur_tower_z_delta = 0.0 #type float
-layer_height = 0.2 #type float
-layer_count = -1 #type integer
-towerskipped = False #type bool
+max_tower_z_delta = 0.0  # type float
+cur_tower_z_delta = 0.0  # type float
+layer_height = 0.2  # type float
+layer_count = -1  # type integer
+towerskipped = False  # type bool
 emtygridfinished = False
 
 printer_profile_string = ''
-default_printerprofile = '50325050494e464f'  # A unique ID linked to a printer configuration profile in the Palette 2 hardware.
+default_printerprofile = '50325050494e464f'
+# A unique ID linked to a printer configuration profile in the Palette 2 hardware.
 
 input_gcode = []
 processed_gcode = []  # final output array with Gcode
@@ -100,7 +103,7 @@ filename = ""
 bed_size_x = 250  # type: int
 bed_size_y = 220  # type: int
 bed_origin_x = 0  # type: int
-bed_origin_y = -10.00   # type: int  # Account for the purge line at the start of the print
+bed_origin_y = -10.00  # type: int  # Account for the purge line at the start of the print
 
 wipe_tower_info = {'minx': 9999,
                    'miny': 9999,
@@ -130,12 +133,6 @@ hotswap_count = 0  # type: int
 # TotalExtrusion keeps track of the total extrusion in mm for the print taking into account the Extruder Multiplier set
 # in the GCode settings...
 total_material_extruded = 0  # type: float
-
-# The next 3 variables are used to generate pings.   A ping is scheduled every ping interval.  The LastPing option
-# keeps the last extruder position where a  ping was generated.  It is set to -100 to ping the first PING forward...
-# Not sure this is a good idea.   Ping distance increases over the print in an exponential way.   Each ping is 1.03 times
-# further from the previous one.   Pings occur in random places!!! as the are non-intrusive and don't causes pauses in the
-# print they aren ot restricted to the wipe tower and they will occur as soon as the interval length for ping is exceeded.
 last_ping_extruder_position = 0
 ping_interval = 350  # type: float
 max_ping_interval = 3000  # type: float
@@ -152,12 +149,10 @@ absolute_extruder = False  # type : bool
 
 isReprap_Mode = False  # type: bool
 
-# currenttool/lastLocation are variables required to generate O30 splice info.   splice info is generated at the end of the tool path
-# and not at the start hence the requirement to keep the toolhead and lastlocation to perform the magic
 current_tool = -1  # type: int
 previous_toolchange_location = 0  # type: float
 
-current_layer = "0"    # type: str # Capture layer information for short splice texts
+current_layer = "0"  # type: str # Capture layer information for short splice texts
 extrusion_multiplier = 1.0  # type: float  # Monitors M221 commands during the print.
 extrusion_multiplier_correction = 1.0
 current_print_feedrate = 100  # type: int  # Monitors the current feedrate
@@ -168,9 +163,11 @@ min_start_splice_length = 100  # type: int  # Minimum first splice length.
 within_tool_change_block = False  # type: bool  # State of processed G-Code to determine if part of a toolchange.
 allow_filament_information_update = False  # type: bool  # TBA
 
-reprap_compatible = False  # Enables the cleanup/removal of M900 commands as RepRap uses M572 which is slightly different
+reprap_compatible = False
+# Enables the cleanup/removal of M900 commands as RepRap uses M572 which is slightly different
 
 gui = True  # Enabled/Disabled by --gui switch - enables GUI Mode which requires tkinter.
 consolewait = False
 
 version = "0.0.0"
+processtime = 0

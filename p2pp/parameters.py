@@ -14,16 +14,18 @@ from p2pp.logfile import log_warning
 def floatparameter(s):
     pos = s.find("=")
     try:
-        return float(s[pos+1:])
+        return float(s[pos + 1:])
     except:
         return 0
+
 
 def stringparameter(s):
     pos = s.find("=")
     try:
-        return s[pos+1:].strip()
+        return s[pos + 1:].strip()
     except:
         return ""
+
 
 def check_config_parameters(line):
     # BASIC SETUP  (material setup handled in mcf.py
@@ -34,7 +36,7 @@ def check_config_parameters(line):
         if len(tmp_string) != 16:
             log_warning("Invalid Printer profile!  - Has invalid length (expect 16) - [{}]"
                         .format(tmp_string))
-            tmp_string= ""
+            tmp_string = ""
         if not all(char in set("0123456789ABCDEFabcdef") for char in tmp_string):
             log_warning("Invalid Printer profile!  - Invalid characters  (expect 0123456789abcdef) - [{}]"
                         .format(tmp_string))
@@ -55,7 +57,7 @@ def check_config_parameters(line):
         v.palette_plus_loading_offset = int(floatparameter(line))
 
     if "P+PPM" in line:
-        v.palette_plus_ppm =  int(floatparameter(line))
+        v.palette_plus_ppm = int(floatparameter(line))
 
     if "SPLICEOFFSET" in line:
         v.splice_offset = floatparameter(line)
@@ -106,12 +108,11 @@ def check_config_parameters(line):
     if "MINSPLICE" in line:
         v.min_splice_length = floatparameter(line)
         if v.min_splice_length < 70:
-            v. min_splice_length = 70
+            v.min_splice_length = 70
             log_warning("Minimal slice length adjusted to 70mm")
         return
 
     # LINEAR PING
-
 
     if "LINEARPINGLENGTH" in line:
         v.ping_interval = floatparameter(line)
@@ -124,7 +125,6 @@ def check_config_parameters(line):
     if "LINEARPING" in line:
         v.ping_length_multiplier = 1.0
         return
-
 
     # SIDE TRANSITIONING
     if "SIDEWIPELOC" in line:
@@ -159,7 +159,6 @@ def check_config_parameters(line):
     if "REPRAPCOMPATIBLE" in line:
         v.reprap_compatible = True
         return
-
 
     # Program parameters
     if "NOGUI" in line:

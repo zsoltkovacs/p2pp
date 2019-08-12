@@ -7,13 +7,11 @@ __license__ = 'GPL'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
-
-
-try:
+try:  #p ython version 2.x
     from Tkinter import *
     import Tkinter as tk
     import tkMessageBox
-except ImportError:
+except ImportError: # python version 3.x
     from tkinter import *
     import tkinter as tk
     from tkinter import messagebox as tkMessageBox
@@ -25,14 +23,12 @@ root = Tk()
 root.title("P2PP - Palette 2 Post Processing")
 platformD = system()
 
+
 if platformD == 'Windows':
-    logo_image = os.path.dirname(sys.argv[0])+'\\favicon.ico'
+    logo_image = os.path.dirname(sys.argv[0]) + '\\favicon.ico'
     root.iconbitmap(logo_image)
     root.update()
 root.iconify()
-
-
-
 
 
 def center(win, width, height):
@@ -65,8 +61,8 @@ def show_warnings(warning_list):
     warn = Text(canvas)
 
     sb.pack(side=RIGHT, fill=Y)
-    for warning in range(len(warning_list)-4):
-        warn.insert(END, warning_list[warning+4][1:])
+    for warning in range(len(warning_list) - 4):
+        warn.insert(END, warning_list[warning + 4][1:])
     warn.pack(side=LEFT, fill=BOTH, expand=1)
     sb.config(command=warn.yview)
 

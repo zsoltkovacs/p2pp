@@ -7,7 +7,6 @@ __license__ = 'GPL'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
-
 import p2pp.variables as v
 
 

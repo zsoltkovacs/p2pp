@@ -12,7 +12,6 @@ from p2pp.gcodeparser import get_gcode_parameter
 
 
 def create_side_wipe():
-
     if not v.side_wipe:
         return
 
@@ -42,7 +41,7 @@ def create_side_wipe():
             sweep = min(v.side_wipe_length, sweep_length)
             v.side_wipe_length -= sweep_length
 
-            wipe_speed = int(sweep_base_speed/sweep)
+            wipe_speed = int(sweep_base_speed / sweep)
             wipe_speed = min(wipe_speed, 5000)
             if feed_rate != wipe_speed:
                 v.processed_gcode.append("G1 F{}\n".format(wipe_speed))
