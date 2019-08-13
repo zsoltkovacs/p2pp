@@ -7,7 +7,7 @@ __license__ = 'GPL'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
-# HTML COLORS
+# HTML COLORS - see https://en.wikipedia.org/wiki/Web_colors
 color_names_sorted = ["White", "Snow", "GhostWhite", "Azure", "Ivory", "MintCream", "FloralWhite", "AliceBlue",
                       "LavenderBlush", "SeaShell", "HoneyDew", "WhiteSmoke", "LightCyan", "LightYellow", "OldLace",
                       "Cornsilk", "Linen", "Beige", "Lavender", "LemonChiffon", "LightGoldenrodYellow", "MistyRose",

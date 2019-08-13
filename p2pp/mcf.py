@@ -210,27 +210,31 @@ def gcode_filter_toolchange_block(line):
 
 
 def coordinate_on_bed(x, y):
-    if v.bed_origin_x > x:
-        return False
-    if x >= v.bed_origin_x + v.bed_size_x:
-        return False
-    if v.bed_origin_y >= y:
-        return False
-    if y >= v.bed_origin_y + v.bed_size_y:
-        return False
-    return True
+    return v.bed_origin_x >= x >= v.bed_origin_x + v.bed_size_x and\
+           v.bed_origin_y >= y >= y >= v.bed_origin_y + v.bed_size_y
+    # if v.bed_origin_x > x:
+    #     return False
+    # if x >= v.bed_origin_x + v.bed_size_x:
+    #     return False
+    # if v.bed_origin_y >= y:
+    #     return False
+    # if y >= v.bed_origin_y + v.bed_size_y:
+    #     return False
+    # return True
 
 
 def coordinate_in_tower(x, y):
-    if x < v.wipe_tower_info['minx']:
-        return False
-    if x > v.wipe_tower_info['maxx']:
-        return False
-    if y < v.wipe_tower_info['miny']:
-        return False
-    if y > v.wipe_tower_info['maxy']:
-        return False
-    return True
+    return v.wipe_tower_info['minx'] <= x <= v.wipe_tower_info['maxx'] and \
+           v.wipe_tower_info['miny'] <= y <= v.wipe_tower_info['maxy']
+    # if x < v.wipe_tower_info['minx']:
+    #     return False
+    # if x > v.wipe_tower_info['maxx']:
+    #     return False
+    # if y < v.wipe_tower_info['miny']:
+    #     return False
+    # if y > v.wipe_tower_info['maxy']:
+    #     return False
+    # return True
 
 
 def entertower():

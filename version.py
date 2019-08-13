@@ -11,7 +11,7 @@ __status__ = 'BETA'
 # general version info
 MajorVersion = 3
 MinorVersion = 3
-Build = 1
+Build = 2
 
 Version = "{Major}.{Minor}.{Build}" \
     .format(Major=MajorVersion, Minor=MinorVersion, Build=Build)

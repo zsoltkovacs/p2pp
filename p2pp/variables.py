@@ -1,4 +1,3 @@
-from typing import List, Any
 
 __author__ = 'Tom Van den Eede'
 __copyright__ = 'Copyright 2018, Palette2 Splicer Post Processing Project'
