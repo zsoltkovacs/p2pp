@@ -28,14 +28,13 @@ try:
 
     for line in versioncontents:
         if line.startswith("MajorVersion"):
-            _maj = int(line[-2:])
+            _maj = int(line[line.find("=")+1:])
         if line.startswith("MinorVersion"):
-            _min = int(line[-2:])
+            _min = int(line[line.find("=")+1:])
         if line.startswith("Build"):
-            _bld = int(line[-2:])
+            _bld = int(line[line.find("=")+1:])
 
     latest_stable_version = "{}.{}.{}".format(_maj, _min, _bld)
-
 
 except IOError:
     pass
