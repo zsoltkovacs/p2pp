@@ -16,5 +16,20 @@ Train = 'Master'
 Version = "{Major}.{Minor}.{Build}-{Train}"\
     .format(Major=MajorVersion, Minor=MinorVersion, Build=Build, Train=Train)
 
-
+##################################
+# UPDATE FILES FOR CURRENT VERSION
+##################################
+# executable_file=P2PP.py
+# file=version.py
+# file=p2pp/__init__.py
+# file=p2pp/colornames.py
+# file=p2pp/formatnumbers.py
+# file=p2pp/gcodeparser.py
+# file=p2pp/gui.py
+# file=p2pp/logfile.py
+# file=p2pp/mcf.py
+# file=p2pp/omega.py
+# file=p2pp/parameters.py
+# file=p2pp/sidewipe.py
+# file=p2pp/variables.py
 
