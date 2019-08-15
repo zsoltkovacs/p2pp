@@ -22,9 +22,9 @@ latest_stable_version = ""
 try:
     latestversionpy = urllib.urlopen("https://github.com/tomvandeneede/p2pp/raw/master/version.py")
     versioncontents = "".join(latestversionpy.read()).split('\n')
-    _maj=0
-    _min=0
-    _bld=0
+    _maj = 0
+    _min = 0
+    _bld = 0
 
     for line in versioncontents:
         if line.startswith("MajorVersion"):
@@ -41,5 +41,5 @@ except IOError:
 
 Version = "{}.{}.{}".format(MajorVersion, MinorVersion, Build)
 
-if len(latest_stable_version)>0:
-    Version = Version + "  (Latest Stable Version: " + latest_stable_version +")"
+if len(latest_stable_version) > 0:
+    Version = Version + "  (Latest Stable Version: " + latest_stable_version + ")"

@@ -164,7 +164,7 @@ loglistscroll.config(command=loglist.yview)
 buttonframe = tkinter.Frame(mainwindow, border=1, relief="sunken")
 buttonframe.pack(side=tkinter.BOTTOM, fill=tkinter.X)
 
-closebutton = tkinter.Button(buttonframe, text="OK", state=tkinter.DISABLED, command=close_window)
+closebutton = tkinter.Button(buttonframe, text="Exit", state=tkinter.DISABLED, command=close_window)
 closebutton.pack(side=tkinter.BOTTOM)
 
 
