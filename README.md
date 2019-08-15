@@ -20,6 +20,7 @@ earlier versions may generate different code patterns and may not work correctly
 -  28/07/2019 - Added ACCESSORYMODE parameter to generate MAF/GCODE pairs [ALPHA]
 -  29/07/2019 - Added support for Palette+ MSF 1.4 files [ALPHA]
 -  31/07/2019 - Added support for absolute extruder conversion [BETA]
+-  15/08/2019 - Updated GUI to be more interactive and give progress information [BETA]
 
 
 ## Purpose
