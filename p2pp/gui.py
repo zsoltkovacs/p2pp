@@ -9,28 +9,57 @@ __email__ = 'P2PP@pandora.be'
 
 try:
     # p ython version 2.x
-    from Tkinter import *
-    import Tkinter as tk
+    import Tkinter as tkinter
     import tkMessageBox
 except ImportError:
     # python version 3.x
-    from tkinter import *
-    import tkinter as tk
+    import tkinter
     from tkinter import messagebox as tkMessageBox
 
 import os
+import sys
 from platform import system
+import version
+import variables as v
 
-root = Tk()
-root.title("P2PP - Palette 2 Post Processing")
+
 platformD = system()
 
+last_pct = -1
 
-if platformD == 'Windows':
-    logo_image = os.path.dirname(sys.argv[0]) + '\\favicon.ico'
-    root.iconbitmap(logo_image)
-    root.update()
-root.iconify()
+
+def progress_string(pct):
+    global last_pct
+    if last_pct == pct:
+        return
+    if pct == 100:
+        if len(v.process_warnings) == 0:
+            progress.set("COMPLETED OK")
+            progress_field.config(font=boldfont)
+            progress_field.config(fg='#008000')
+        else:
+            progress.set("COMPLETED WITH WARNINGS")
+            progress_field.config(font=boldfont)
+            progress_field.config(fg='#800000')
+    else:
+        progress.set("{0:3}% [".format(pct) + "#" * (pct // 2) + "-" * (50-pct // 2) + "]")
+    mainwindow.update()
+    last_pct = pct
+
+
+def create_logitem(text, color="black"):
+    loglist.insert(tkinter.END, text)
+    loglist.itemconfig(tkinter.END, foreground=color)
+    mainwindow.update()
+
+
+def close_window():
+    mainwindow.destroy()
+
+
+def close_button_enable():
+    closebutton.config(state=tkinter.NORMAL)
+    mainwindow.mainloop()
 
 
 def center(win, width, height):
@@ -38,44 +67,113 @@ def center(win, width, height):
     x = (win.winfo_screenwidth() // 2) - (width // 2)  # center horizontally in screen
     y = (win.winfo_screenheight() // 2) - (height // 2)  # center vertically in screen
     win.geometry('{}x{}+{}+{}'.format(width, height, x, y))
+    win.minsize(width, height)
+    win.maxsize(width, height)
 
 
-def clicked():
-    root.destroy()
+def set_printer_id(text):
+    printerid.set(text)
+    mainwindow.update()
+
+
+def setfilename(text):
+    filename.set(text)
+    mainwindow.update()
 
 
 def user_error(header, body_text):
     tkMessageBox.showinfo(header, body_text)
-    root.update()
-
-
-def show_warnings(warning_list):
-    root.title("P2PP - Process Warnings")
-    center(root, 800, 600)
-    root.deiconify()
-
-    lbl = Label(root, text="P2PP - Process Warnings", padx=5, pady=5, font=("Arial Bold", 24), fg="red")
-    lbl.pack(side=TOP, fill=Y)
-
-    canvas = Canvas(root)
-    canvas.pack(side=TOP, fill=BOTH, expand=1, padx=10, pady=10)
-    sb = Scrollbar(canvas)
-    warn = Text(canvas)
-
-    sb.pack(side=RIGHT, fill=Y)
-    for warning in range(len(warning_list) - 4):
-        warn.insert(END, warning_list[warning + 4][1:])
-    warn.pack(side=LEFT, fill=BOTH, expand=1)
-    sb.config(command=warn.yview)
-
-    btn = Button(root, text='Close', command=clicked)
-    btn.pack(side=BOTTOM, fill=Y, pady=10)
-    root.lift()
-    root.attributes('-topmost', True)
-    root.after_idle(root.attributes, '-topmost', False)
-    root.mainloop()
 
 
 def ask_yes_no(title, message):
     result = tkMessageBox.askquestion(title, message)
     return result
+
+
+mainwindow = tkinter.Tk()
+mainwindow.title("Palette2 Post Processing for PrusaSliceer")
+center(mainwindow, 800, 600)
+
+if platformD == 'Windows':
+    logo_image = os.path.dirname(sys.argv[0]) + '\\favicon.ico'
+    mainwindow.iconbitmap(logo_image)
+    mainwindow.update()
+
+mainwindow['padx'] = 10
+mainwindow['pady'] = 10
+
+normalfont = 'Helvetica 16'
+boldfont = 'Helvetica 16 bold'
+fixedfont = 'Courier 14'
+fixedsmallfont = 'Courier 12'
+
+# Top Information Frqme
+infoframe = tkinter.Frame(mainwindow, border=3, relief='sunken', background="#808080")
+infoframe.pack(side=tkinter.TOP, fill=tkinter.X)
+
+# logo
+logoimage = tkinter.PhotoImage(file=os.path.dirname(sys.argv[0]) + "/appicon.ppm")
+logofield = tkinter.Label(infoframe, image=logoimage)
+logofield.pack(side=tkinter.LEFT, fill=tkinter.Y)
+
+infosubframe = tkinter.Frame(infoframe, background="#808080")
+infosubframe.pack(side=tkinter.LEFT, fill=tkinter.X)
+infosubframe["padx"] = 20
+
+# file name display
+tkinter.Label(infosubframe, text='Filename:', font=boldfont, background="#808080").grid(row=0, column=1, sticky="w")
+filename = tkinter.StringVar()
+setfilename("-----")
+tkinter.Label(infosubframe, textvariable=filename, font=normalfont, background="#808080").grid(row=0, column=2,
+                                                                                               sticky="w")
+
+# printer ID display
+printerid = tkinter.StringVar()
+set_printer_id("-----")
+
+tkinter.Label(infosubframe, text='Printer ID:', font=boldfont, background="#808080").grid(row=1, column=1, sticky="w")
+tkinter.Label(infosubframe, textvariable=printerid, font=normalfont, background="#808080").grid(row=1, column=2,
+                                                                                                sticky="w")
+
+
+tkinter.Label(infosubframe, text="P2PP Version:", font=boldfont, background="#808080").grid(row=2, column=1,
+                                                                                            sticky="w")
+tkinter.Label(infosubframe, text=version.Version, font=normalfont, background="#808080").grid(row=2, column=2,
+                                                                                              sticky="w")
+
+# progress bar
+progress = tkinter.StringVar()
+progress.set(progress_string(0))
+tkinter.Label(infosubframe, text='Progress:', font=boldfont, background="#808080").grid(row=3, column=1, sticky="w")
+progress_field = tkinter.Label(infosubframe, textvariable=progress, font=fixedfont, background="#808080")
+progress_field.grid(row=3, column=2, sticky="w")
+
+# Log frame
+logframe = tkinter.Frame(mainwindow, border=3, relief="sunken")
+logframe.pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
+
+loglistscroll = tkinter.Scrollbar(logframe, orient=tkinter.VERTICAL)
+loglistscroll.pack(side='right', fill=tkinter.Y)
+
+loglist = tkinter.Listbox(logframe, yscrollcommand=loglistscroll.set, font=fixedsmallfont)
+loglist.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=1)
+
+loglistscroll.config(command=loglist.yview)
+
+# Button frame
+buttonframe = tkinter.Frame(mainwindow, border=1, relief="sunken")
+buttonframe.pack(side=tkinter.BOTTOM, fill=tkinter.X)
+
+closebutton = tkinter.Button(buttonframe, text="OK", state=tkinter.DISABLED, command=close_window)
+closebutton.pack(side=tkinter.BOTTOM)
+
+
+mainwindow.rowconfigure(0, weight=1)
+mainwindow.rowconfigure(1, weight=1000)
+mainwindow.rowconfigure(2, weight=1)
+
+mainwindow.lift()
+mainwindow.attributes('-topmost', True)
+mainwindow.after_idle(mainwindow.attributes, '-topmost', False)
+mainwindow.update()
+

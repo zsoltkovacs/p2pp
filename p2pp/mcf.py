@@ -17,7 +17,27 @@ from p2pp.gcodeparser import gcode_remove_params, get_gcode_parameter, parse_sli
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
 from p2pp.logfile import log_warning
 import time
+import colornames
 
+def centertext(text,wi,ch):
+    prefixlen = (wi - len(text)) //2 - 1
+    postfixlen = wi - 2 - prefixlen - len(text)
+    return "{} {} {}".format(ch*prefixlen, text, ch*postfixlen)
+
+
+
+def print_summary():
+    gui.create_logitem("")
+    gui.create_logitem("-"*80, "blue")
+    gui.create_logitem(centertext("Print Summary",80,'-'), "blue")
+    gui.create_logitem("-"*80, "blue")
+    gui.create_logitem("\tNumber of splices: {0:5}".format(len(v.splice_extruder_position)))
+    gui.create_logitem("\tTotal print length {:-8.2f}mm".format(v.total_material_extruded))
+    gui.create_logitem("\tInputs/Materials used:")
+
+    for i in range(len(v.palette_inputs_used)):
+        if v.palette_inputs_used[i]:
+            gui.create_logitem("\t\tInput {}\t{}\t{}".format(i,v.filament_type[i],colornames.find_nearest_colour(v.filament_color_code[i])))
 
 def pre_processfile():
     emptygrid = 0
@@ -114,7 +134,9 @@ def optimize_tower_skip(skipmax, layersize):
         v.skippable_layer[0] = False
         skipped_num -= 1
     if skipped > 0:
-        log_warning("Total Purge Tower delta : {} Layers or {:-6.2f}mm".format(skipped_num, skipped))
+        log_warning("Warnnig: Purge Tower delta in effect: {} Layers or {:-6.2f}mm".format(skipped_num, skipped))
+    else:
+        gui.create_logitem("Tower Purge Delta could not be applied to this print")
 
 
 def convert_to_absolute():
@@ -210,31 +232,27 @@ def gcode_filter_toolchange_block(line):
 
 
 def coordinate_on_bed(x, y):
-    return v.bed_origin_x >= x >= v.bed_origin_x + v.bed_size_x and\
-           v.bed_origin_y >= y >= y >= v.bed_origin_y + v.bed_size_y
-    # if v.bed_origin_x > x:
-    #     return False
-    # if x >= v.bed_origin_x + v.bed_size_x:
-    #     return False
-    # if v.bed_origin_y >= y:
-    #     return False
-    # if y >= v.bed_origin_y + v.bed_size_y:
-    #     return False
-    # return True
+    if v.bed_origin_x > x:
+        return False
+    if x >= v.bed_origin_x + v.bed_size_x:
+        return False
+    if v.bed_origin_y >= y:
+        return False
+    if y >= v.bed_origin_y + v.bed_size_y:
+        return False
+    return True
 
 
 def coordinate_in_tower(x, y):
-    return v.wipe_tower_info['minx'] <= x <= v.wipe_tower_info['maxx'] and \
-           v.wipe_tower_info['miny'] <= y <= v.wipe_tower_info['maxy']
-    # if x < v.wipe_tower_info['minx']:
-    #     return False
-    # if x > v.wipe_tower_info['maxx']:
-    #     return False
-    # if y < v.wipe_tower_info['miny']:
-    #     return False
-    # if y > v.wipe_tower_info['maxy']:
-    #     return False
-    # return True
+    if x < v.wipe_tower_info['minx']:
+        return False
+    if x > v.wipe_tower_info['maxx']:
+        return False
+    if y < v.wipe_tower_info['miny']:
+        return False
+    if y > v.wipe_tower_info['maxy']:
+        return False
+    return True
 
 
 def entertower():
@@ -488,7 +506,7 @@ def gcode_parseline(gcode_full_line):
                     "Sidewipe configuration incomplete (SIDEWIPELOC paramter not set.. gcode will not be usable")
             else:
                 log_warning(
-                    "Side wipe enabled on position {} Y{}-{}".format(v.side_wipe_loc, v.sidewipe_miny, v.sidewipe_maxy))
+                    "Side wipe enabled on position X{} Y{}<->{}".format(v.side_wipe_loc, v.sidewipe_miny, v.sidewipe_maxy))
 
     if "CP EMPTY GRID START" in gcode_full_line:
         v.empty_grid = True
@@ -561,9 +579,11 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     v.splice_offset = splice_offset
 
     try:
+        # python 3.x
         opf = open(input_file, encoding='utf-8')
     except TypeError:
         try:
+            # python 2.x
             opf = open(input_file)
         except IOError:
             if v.gui:
@@ -578,25 +598,37 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
             print ("Could not read input file\n'{}".format(input_file))
         return
 
+    gui.setfilename(input_file)
+    gui.set_printer_id(v.printer_profile_string)
+    gui.create_logitem("Reading File "+input_file)
+    gui.progress_string(1)
     print("Reading File")
     v.input_gcode = opf.readlines()
 
     opf.close()
-
+    gui.create_logitem("Analyzing slicer parameters")
+    gui.progress_string(2)
     print("Analyzing slicer parameters")
     parse_slic3r_config()
 
+    gui.create_logitem("Analyzing layers")
+    gui.progress_string(4)
     print("Analyzing layers")
     pre_processfile()
+    gui.create_logitem("Found {} layers in print".format(len(v.skippable_layer)))
     print("Found {} layers in print".format(len(v.skippable_layer)))
 
     # v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
 
     # Process the file
     # #################
+    gui.create_logitem("Processing File")
+    count=0
     print("Processing File")
     for line in v.input_gcode:
         gcode_parseline(line)
+        gui.progress_string(4+96*count//len(v.input_gcode))
+        count = count + 1
 
     if v.palette_plus:
         if v.palette_plus_ppm == -9:
@@ -612,22 +644,18 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
 
     if v.absolute_extruder and v.gcode_has_relative_e:
+        gui.create_logitem("Converting to absolute extrusion")
         print("Converting to absolute extrusion")
         convert_to_absolute()
 
-    if not silent:
-        if v.gui:
-            gui.show_warnings(omega_result['warnings'])
-        print (''.join(omega_result['summary']))
-        print (''.join(omega_result['warnings']))
 
     # write the output file
     ######################
 
-
     print("Generating output file")
     if not output_file:
         output_file = input_file
+    gui.create_logitem("Generating GCODE file: "+output_file)
     opf = open(output_file, "w")
     if not v.accessory_mode:
         opf.writelines(header)
@@ -640,13 +668,19 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     opf.close()
 
     if v.accessory_mode:
+
         pre, ext = os.path.splitext(output_file)
         if v.palette_plus:
             maffile = pre + ".msf"
         else:
             maffile = pre + ".maf"
-
+        gui.create_logitem("Generating PALETTE MAF/MSF file: " + maffile)
         opf = open(maffile, "w")
         for i in range(len(header)):
             if not header[i].startswith(";"):
                 opf.write(header[i])
+
+    print_summary()
+    gui.progress_string(100)
+    if (len(v.process_warnings)>0 and  not silent) or v.consolewait:
+        gui.close_button_enable()
