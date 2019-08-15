@@ -18,6 +18,7 @@ chmod 755 p2pp_dist/p2pp.command
 
 mkdir p2pp_dist/p2pp
 cp p2pp/*py p2pp_dist/p2pp/
+cp p2pp/*ppm p2pp_dist/p2pp/
 
 
 #create zip file
