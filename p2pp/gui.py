@@ -56,9 +56,15 @@ def create_logitem(text, color="black"):
 def close_window():
     mainwindow.destroy()
 
+def update_button_pressed():
+    v.upgradeprocess(version.latest_stable_version , v.update_file_list)
+
 
 def close_button_enable():
     closebutton.config(state=tkinter.NORMAL)
+    # WIP disable upgrade for now
+    # if not (v.upgradeprocess == None):
+    #     tkinter.Button(buttonframe, text='Upgrade to '+version.latest_stable_version, command=update_button_pressed).pack(side=tkinter.RIGHT)
     mainwindow.mainloop()
 
 
@@ -165,7 +171,7 @@ buttonframe = tkinter.Frame(mainwindow, border=1, relief="sunken")
 buttonframe.pack(side=tkinter.BOTTOM, fill=tkinter.X)
 
 closebutton = tkinter.Button(buttonframe, text="Exit", state=tkinter.DISABLED, command=close_window)
-closebutton.pack(side=tkinter.BOTTOM)
+closebutton.pack(side=tkinter.LEFT)
 
 
 mainwindow.rowconfigure(0, weight=1)
