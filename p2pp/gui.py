@@ -171,7 +171,7 @@ buttonframe = tkinter.Frame(mainwindow, border=1, relief="sunken")
 buttonframe.pack(side=tkinter.BOTTOM, fill=tkinter.X)
 
 closebutton = tkinter.Button(buttonframe, text="Exit", state=tkinter.DISABLED, command=close_window)
-closebutton.pack(side=tkinter.LEFT)
+closebutton.pack(side=tkinter.RIGHT, fill=tkinter.X, expand=1)
 
 
 mainwindow.rowconfigure(0, weight=1)

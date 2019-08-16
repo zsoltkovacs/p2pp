@@ -41,6 +41,7 @@ def UpdateP2PP(version, file_list):
 
 
 def perform_version_check():
+    global Version
     try:
         latestversionpy = urllib.urlopen("https://github.com/tomvandeneede/p2pp/raw/master/version.py")
         versioncontents = "".join(latestversionpy.read()).split('\n')
@@ -64,11 +65,11 @@ def perform_version_check():
 
         if not (latest_stable_version == "0.0.0"):
             if Version > latest_stable_version:
-                Version = Version + "  (Development Version - BETA)"
+                Version = Version + "  (This is a development version"
             elif Version == latest_stable_version:
-                Version = Version + "  (Up to date)"
+                Version = Version + "  (Your version is up to date!)"
             else:
-                Version = Version + "  (Upgrade Available: " + latest_stable_version + ")"
+                Version = Version + "  (Newer version available: " + latest_stable_version + ")"
 
     except IOError:
         print"failed to load..."
