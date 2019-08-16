@@ -173,6 +173,7 @@ consolewait = False
 version = "0.0.0"
 processtime = 0
 
+versioncheck = False
 upgradeprocess = None
 update_file_list = []
 

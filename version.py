@@ -10,10 +10,7 @@ __status__ = 'BETA'
 
 
 import urllib
-import sys
 import p2pp.logfile
-import os
-import stat
 import p2pp.variables as v
 
 
@@ -43,42 +40,45 @@ def UpdateP2PP(version, file_list):
 
 
 
+def perform_version_check():
+    try:
+        latestversionpy = urllib.urlopen("https://github.com/tomvandeneede/p2pp/raw/master/version.py")
+        versioncontents = "".join(latestversionpy.read()).split('\n')
+        latestversionpy.close()
+        _maj = 0
+        _min = 0
+        _bld = 0
 
-try:
-    latestversionpy = urllib.urlopen("https://github.com/tomvandeneede/p2pp/raw/master/version.py")
-    versioncontents = "".join(latestversionpy.read()).split('\n')
-    latestversionpy.close()
-    _maj = 0
-    _min = 0
-    _bld = 0
+        for line in versioncontents:
+            if line.startswith("MajorVersion"):
+                _maj = int(line[line.find("=")+1:])
+            if line.startswith("MinorVersion"):
+                _min = int(line[line.find("=")+1:])
+            if line.startswith("Build"):
+                _bld = int(line[line.find("=")+1:])
+            if line.startswith('# zip_file'):
+                v.update_file_list.append (line[line.find("=")+1:])
 
-    for line in versioncontents:
-        if line.startswith("MajorVersion"):
-            _maj = int(line[line.find("=")+1:])
-        if line.startswith("MinorVersion"):
-            _min = int(line[line.find("=")+1:])
-        if line.startswith("Build"):
-            _bld = int(line[line.find("=")+1:])
-        if line.startswith('# zip_file'):
-            v.update_file_list.append (line[line.find("=")+1:])
+        latest_stable_version = "{}.{}.{}".format(_maj, _min, _bld)
+        v.upgradeprocess = UpdateP2PP
 
-    latest_stable_version = "{}.{}.{}".format(_maj, _min, _bld)
-    v.upgradeprocess = UpdateP2PP
+        if not (latest_stable_version == "0.0.0"):
+            if Version > latest_stable_version:
+                Version = Version + "  (Development Version - BETA)"
+            elif Version == latest_stable_version:
+                Version = Version + "  (Up to date)"
+            else:
+                Version = Version + "  (Upgrade Available: " + latest_stable_version + ")"
 
-except IOError:
-    print"failed to load..."
-    pass
+    except IOError:
+        print"failed to load..."
+        pass
+
 
 Version = "{}.{}.{}".format(MajorVersion, MinorVersion, Build)
 
-if not (latest_stable_version == "0.0.0"):
-    if Version > latest_stable_version:
-        Version = Version + "  (Development Version - BETA)"
-    elif Version == latest_stable_version:
-        Version = Version + "  (Up to date)"
-    else:
-        Version = Version + "  (Upgrade Available: " + latest_stable_version + ")"
-
+if v.versioncheck:
+    perform_version_check()
 
 ##################################
 # UPDATE FILES FOR CURRENT VERSION

@@ -56,10 +56,16 @@ arguments.add_argument('-s',
                        help='Omits Summary page after processing from being printed to STDOUT'
                        )
 
+arguments.add_argument('-v',
+                       '--versioncheck',
+                       default=False,
+                       help='Check and reports new online versions of P2PP [-v 0|1]'
+                    )
+
 arguments.add_argument('-w',
                        '--wait',
                        required=False,
-                       help='--w 1 Wait for the user to press enter after processing the file.'
+                       help='Wait for the user to press enter after processing the file. -w [0|1]'
                        )
 
 
@@ -70,6 +76,10 @@ def main(args):
         v.gui = False
 
     v.filename = args['input_file']
+
+    if args["versioncheck"] == "1":
+        v.versioncheck = True
+
     mcf.generate(v.filename,
                  args['output_file'],
                  args['printer_profile'],
