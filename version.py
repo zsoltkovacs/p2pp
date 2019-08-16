@@ -66,17 +66,18 @@ try:
     v.upgradeprocess = UpdateP2PP
 
 except IOError:
+    print"failed to load..."
     pass
 
 Version = "{}.{}.{}".format(MajorVersion, MinorVersion, Build)
 
-if len(latest_stable_version) > 0:
+if not (latest_stable_version == "0.0.0"):
     if Version > latest_stable_version:
         Version = Version + "  (Development Version - BETA)"
-    elif (Version == latest_stable_version):
+    elif Version == latest_stable_version:
         Version = Version + "  (Up to date)"
     else:
-        Version = Version + "  (Upgrade Available: "+ latest_stable_version + ")"
+        Version = Version + "  (Upgrade Available: " + latest_stable_version + ")"
 
 
 ##################################
