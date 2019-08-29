@@ -1,6 +1,6 @@
 
 __author__ = 'Tom Van den Eede'
-__copyright__ = 'Copyright 2018, Palette2 Splicer Post Processing Project'
+__copyright__ = 'Copyright 2018-2019, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
