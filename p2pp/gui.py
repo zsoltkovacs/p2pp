@@ -1,3 +1,5 @@
+import array
+
 __author__ = 'Tom Van den Eede'
 __copyright__ = 'Copyright 2018, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
@@ -92,8 +94,8 @@ def user_error(header, body_text):
 
 
 def ask_yes_no(title, message):
-    result = tkMessageBox.askquestion(title, message)
-    return result
+    return (tkMessageBox.askquestion(title, message).upper()=="YES")
+
 
 
 mainwindow = tkinter.Tk()

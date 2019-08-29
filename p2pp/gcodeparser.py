@@ -8,6 +8,7 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 import p2pp.variables as v
+import re
 
 
 def gcode_remove_params(gcode, params):
@@ -98,9 +99,14 @@ def parse_slic3r_config():
                 else:
                     v.gcode_has_relative_e = False
 
-        if gcode_line.startswith(";"):
-            pass
 
+        if gcode_line.startswith("; start_filament_gcode = "):
+            parms = re.search("; start_filament_gcode = (\".*\");(\".*\");(\".*\");(\".*\")", gcode_line)
+            print parms.group(0)
+            print parms.group(1)
+            print parms.group(2)
+            print parms.group(3)
+            pass
         if gcode_line.startswith("; wiping_volumes_matrix"):
             wiping_info = []
             parameter_start = gcode_line.find("=")
