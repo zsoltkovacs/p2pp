@@ -276,7 +276,7 @@ def retrocorrect_emptygrid():
     pos = len(v.processed_gcode) - 1
     while pos > 0:
         if "M900" in v.processed_gcode[pos] or v.processed_gcode[pos].startswith(
-                "; CP WIPE TOWER FIRST LAYER BRIM END") or v.processed_gcode[pos].startswith(";P2PPP ENDPURGETOWER")
+                "; CP WIPE TOWER FIRST LAYER BRIM END") or v.processed_gcode[pos].startswith(";P2PPP ENDPURGETOWER"):
             return
         if v.processed_gcode[pos].startswith("G1 X"):
             v.processed_gcode[pos] = ";--- P2PP removed [Tower Delta] - {}".format(v.processed_gcode[pos])
