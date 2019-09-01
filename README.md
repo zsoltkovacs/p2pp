@@ -1,7 +1,7 @@
 # p2pp - **Palette2 Post Processing tool for PrusaSlicer/Slic3r PE**
 
 ```diff
-- IMPORTANT WARNING - This version is NOT compatible with the latest PrusaSlicer 2.1.0
+- IMPORTANT WARNING - This version is NOT compatible with the latest PrusaSlicer 2.1.0.  The development version has been updated to cover the new PrusaSlicar 2.1.0 requirements. 
 ```
 
 **Tested with version PrusaSlicer 2.0.0, Slic3r PE 1.41.2 and 1.42.0 Beta 1**
