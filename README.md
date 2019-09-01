@@ -1,7 +1,8 @@
 # p2pp - **Palette2 Post Processing tool for PrusaSlicer/Slic3r PE**
 
 
-**Tested with version PrusaSlicer 2.0.0, Slic3r PE 1.41.2 and 1.42.0 Beta 1**
+
+**Tested with version PrusaSlicer 2.1.0, PrusaSlicer 2.0.0, Slic3r PE 1.41.2 and 1.42.0 Beta 1**
 earlier versions may generate different code patterns and may not work correctly
 
 ## Changelog
@@ -21,6 +22,8 @@ earlier versions may generate different code patterns and may not work correctly
 -  29/07/2019 - Added support for Palette+ MSF 1.4 files [ALPHA]
 -  31/07/2019 - Added support for absolute extruder conversion [BETA]
 -  15/08/2019 - Updated GUI to be more interactive and give progress information [BETA]
+-  01/09/2019 - Updated GUI on startup without parameters
+-  01/09/2019 - improved compatibility with PrusaSlicer 2.1.0 Beta
 
 
 ## Purpose
@@ -283,12 +286,6 @@ The *WIPEFEEDRATE* parameter described above can be used to change the speed at 
   If you want to perform a side wipe on the MK3 use the following line.  
   ```
   ;P2PP SIDEWIPELOC=X254
-  ```
-
- > **WIPEFEEDRATE=nnnn** *[OPTIONAL]*
-  This parameter is used to define the feedrate at which purging moved happens.  The default value is 2000mm/min but an override can be set through this parameter.  The value entered is in mm/min.
-  ```
-  ;P2PP SIDEWIPELOC=2000
   ```
 
 > **SIDEWIPEMINY=nnnn** and **SIDEWIPEMAXY=nnnn**
