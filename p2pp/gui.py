@@ -50,10 +50,13 @@ def progress_string(pct):
 
 
 def create_logitem(text, color="black"):
-    loglist.insert(tkinter.END, text)
+    loglist.insert(tkinter.END, "  "+text)
     loglist.itemconfig(tkinter.END, foreground=color)
     mainwindow.update()
 
+
+def create_emptyline():
+    create_logitem('')
 
 def close_window():
     mainwindow.destroy()
@@ -97,6 +100,15 @@ def ask_yes_no(title, message):
     return (tkMessageBox.askquestion(title, message).upper()=="YES")
 
 
+def configinfo():
+    global infosubframe
+    infosubframe.destroy()
+    infosubframe = tkinter.Frame(infoframe, border=3, relief='sunken', background="#909090")
+    infosubframe.pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
+    tkinter.Label(infosubframe, text='CONFIGURATION  INFO', font=boldfontlarge, background="#909090").pack(side=tkinter.TOP, expand=1)
+
+    tkinter.Label(infosubframe, text="P2PP Version "+version.Version+"\n", font=boldfont, background="#909090").pack( side=tkinter.BOTTOM)
+
 
 mainwindow = tkinter.Tk()
 mainwindow.title("Palette2 Post Processing for PrusaSliceer")
@@ -109,7 +121,7 @@ if platformD == 'Windows':
 
 mainwindow['padx'] = 10
 mainwindow['pady'] = 10
-
+boldfontlarge = 'Helvetica 30 bold'
 normalfont = 'Helvetica 16'
 boldfont = 'Helvetica 16 bold'
 fixedfont = 'Courier 14'

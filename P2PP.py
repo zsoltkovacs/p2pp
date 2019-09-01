@@ -14,9 +14,9 @@ import p2pp.mcf as mcf
 import argparse
 import p2pp.variables as v
 import version as ver
-import p2pp.gui as gui
 import sys
 import os
+import p2pp.gui as gui
 from platform import system
 
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
@@ -97,12 +97,23 @@ if __name__ == "__main__":
 
     if len(sys.argv) == 1:
         platformD = system()
-        if platformD == 'Darwin':
-            gui.user_error("Script name to be entered in Slic3r/PrusaSlicer",
-                           "{}/p2pp.command".format(os.path.dirname(sys.argv[0])))
-        elif platformD == 'Windows':
-            gui.user_error("Script name to be entered in Slic3r/PrusaSlicer",
-                           "{}/\\2pp.bat".format(os.path.dirname(sys.argv[0])))
 
+        gui.configinfo()
+        gui.create_emptyline()
+        gui.create_logitem("Script name to be entered in Slic3r/PrusaSlicer [Print Settings][Output Options][Post Processing Script]", "blue")
+        gui.create_emptyline()
+
+        if platformD == 'Darwin':
+            gui.create_logitem("{}/p2pp.command".format(os.path.dirname(sys.argv[0])), "red")
+        elif platformD == 'Windows':
+            gui.create_logitem("{}/\\2pp.bat".format(os.path.dirname(sys.argv[0])), "red")
+
+        gui.create_emptyline()
+        gui.create_logitem("This requires ADVANCED/EXPERT settings to be enabled", "blue")
+        gui.create_emptyline()
+        gui.create_emptyline()
+        gui.create_logitem("Don't forget to complete the remaining Prusaslicer Configuration", "blue")
+        gui.create_logitem("More info on: https://github.com/tomvandeneede/p2pp", "blue")
+        gui.close_button_enable()
     else:
         main(vars(arguments.parse_args()))

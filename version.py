@@ -17,7 +17,7 @@ import p2pp.variables as v
 # general version info
 MajorVersion = 3
 MinorVersion = 3
-Build = 3
+Build = 4
 
 latest_stable_version = ""
 
