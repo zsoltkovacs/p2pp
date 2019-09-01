@@ -60,7 +60,7 @@ arguments.add_argument('-v',
                        '--versioncheck',
                        default=False,
                        help='Check and reports new online versions of P2PP [-v 0|1]'
-                    )
+                       )
 
 arguments.add_argument('-w',
                        '--wait',
@@ -80,16 +80,15 @@ def main(args):
     if args["versioncheck"] == "1":
         v.versioncheck = True
 
+    if args['wait'] == "1":
+        v.consolewait = True
+
     mcf.generate(v.filename,
                  args['output_file'],
                  args['printer_profile'],
                  args['splice_offset'],
                  args['silent']
                  )
-
-    if args['wait'] == "1":
-        v.consolewait = True
-
 
 
 if __name__ == "__main__":
@@ -100,7 +99,8 @@ if __name__ == "__main__":
 
         gui.configinfo()
         gui.create_emptyline()
-        gui.create_logitem("Script name to be entered in Slic3r/PrusaSlicer [Print Settings][Output Options][Post Processing Script]", "blue")
+        gui.create_logitem("Line to be used in PrusaSlicer [Print Settings][Output Options][Post Processing Script]",
+                           "blue")
         gui.create_emptyline()
 
         if platformD == 'Darwin':

@@ -65,6 +65,7 @@ def check_config_parameters(line):
 
     if "SPLICEOFFSET" in line:
         v.splice_offset = floatparameter(line)
+        v.total_material_extruded += v.splice_offset
         gui.create_logitem("Splice Offset set to {:-5.2f}mm".format(v.splice_offset))
         return
 

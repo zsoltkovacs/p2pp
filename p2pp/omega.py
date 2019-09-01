@@ -236,33 +236,41 @@ def header_generate_omega_palette2(job_name):
 
 
 def generatesummary():
-    summary = [";---------------------:\n",
-               "; - SPLICE INFORMATION:\n",
-               ";---------------------:\n",
+    summary = [";---------------------\n",
+               "; - SPLICE INFORMATION-\n",
+               ";---------------------\n",
                ";       Splice Offset = {:-8.2f}mm\n\n".format(v.splice_offset)]
 
     for i in range(len(v.splice_extruder_position)):
-        summary.append(";{:04}   Tool: {}  Location: {:-8.2f}mm   length {:-8.2f}mm \n"
+        if i==0:
+            pos = 0
+        else:
+            pos = v.splice_extruder_position[i-1]
+
+        summary.append(";{:04}   Tool: {}  Location: {:-8.2f}mm   length {:-8.2f}mm  ({})\n"
                        .format(i + 1,
                                v.splice_used_tool[i],
-                               v.splice_extruder_position[i],
+                               pos,
                                v.splice_length[i],
+                               hexify_float(pos)
                                )
                        )
 
     summary.append("\n")
-    summary.append(";-------------------:\n")
-    summary.append("; - PING INFORMATION:\n")
-    summary.append(";-------------------:\n")
+    summary.append(";-------------------\n")
+    summary.append("; - PING INFORMATION-\n")
+    summary.append(";-------------------\n")
 
     for i in range(len(v.ping_extruder_position)):
-        summary.append(";Ping {:04} at {:-8.2f}mm\n".format(i + 1,
-                                                            v.ping_extruder_position[i]
+        pingtext = ";Ping {:04} at {:-8.2f}mm ({})\n".format(i + 1,
+                                                            v.ping_extruder_position[i],
+                                                            hexify_float(v.ping_extruder_position[i])
                                                             )
-                       )
+        summary.append( pingtext )
 
     if v.side_wipe and v.side_wipe_loc == "":
         log_warning("Using sidewipe with undefined SIDEWIPELOC!!!")
+
 
     return summary
 

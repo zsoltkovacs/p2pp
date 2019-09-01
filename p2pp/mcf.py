@@ -17,24 +17,24 @@ from p2pp.gcodeparser import gcode_remove_params, get_gcode_parameter, parse_sli
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
 from p2pp.logfile import log_warning
 import time
-import colornames
 
-def centertext(text,wi,ch):
-    prefixlen = (wi - len(text)) //2 - 1
+
+def centertext(text, wi, ch):
+    prefixlen = (wi - len(text)) // 2 - 1
     postfixlen = wi - 2 - prefixlen - len(text)
-    return "{} {} {}".format(ch*prefixlen, text, ch*postfixlen)
+    return "{} {} {}".format(ch * prefixlen, text, ch * postfixlen)
 
 
-
-def adjust_material_extruded( amount ):
+def adjust_material_extruded(amount):
     v.total_material_extruded += amount
     v.material_extruded_per_color[v.current_tool] += amount
 
-def print_summary():
+
+def print_summary(summary):
     gui.create_logitem("")
-    gui.create_logitem("-"*80, "blue")
-    gui.create_logitem(centertext("Print Summary",80,'-'), "blue")
-    gui.create_logitem("-"*80, "blue")
+    gui.create_logitem("-" * 80, "blue")
+    gui.create_logitem(centertext("Print Summary", 80, '-'), "blue")
+    gui.create_logitem("-" * 80, "blue")
     gui.create_emptyline()
     gui.create_logitem("Number of splices:    {0:5}".format(len(v.splice_extruder_position)))
     gui.create_logitem("Number of pings:      {0:5}".format(len(v.ping_extruder_position)))
@@ -44,7 +44,12 @@ def print_summary():
 
     for i in range(len(v.palette_inputs_used)):
         if v.palette_inputs_used[i]:
-            gui.create_colordefinition(i,v.filament_type[i],v.filament_color_code[i], v.material_extruded_per_color[i])
+            gui.create_colordefinition(i, v.filament_type[i], v.filament_color_code[i],
+                                       v.material_extruded_per_color[i])
+
+    gui.create_emptyline()
+    for line in summary:
+        gui.create_logitem(line[1:].strip())
 
 
 def pre_processfile():
@@ -95,8 +100,6 @@ def pre_processfile():
 
 
 def optimize_tower_skip(skipmax, layersize):
-    if skipmax==0:
-        return
     v.skippable_layer.reverse()
     skipped = 0.0
     skipped_num = 0
@@ -112,6 +115,7 @@ def optimize_tower_skip(skipmax, layersize):
     if v.skippable_layer[0]:
         v.skippable_layer[0] = False
         skipped_num -= 1
+
     if skipped > 0:
         log_warning("Warnnig: Purge Tower delta in effect: {} Layers or {:-6.2f}mm".format(skipped_num, skipped))
     else:
@@ -150,10 +154,10 @@ def gcode_process_toolchange(new_tool, location):
     if new_tool == v.current_tool:
         return
 
-    location += v.splice_offset
-
     if new_tool == -1:
         location += v.extra_runout_filament
+        v.material_extruded_per_color[v.current_tool] += v.extra_runout_filament
+        v.total_material_extruded += v.extra_runout_filament
     else:
         v.palette_inputs_used[new_tool] = True
 
@@ -178,7 +182,8 @@ def gcode_process_toolchange(new_tool, location):
                 filamentshortage = v.min_splice_length - v.splice_length[-1]
                 v.filament_short[new_tool] = max(v.filament_short[new_tool], filamentshortage)
 
-    v.previous_toolchange_location = location
+        v.previous_toolchange_location = location
+
     v.current_tool = new_tool
 
 
@@ -252,8 +257,6 @@ def moved_in_tower():
 
 
 def retrocorrect_emptygrid():
-    # purpose of this function is to remove all moves into the tower prior to the empty grid, this is to avoid the delay caused by this extra move
-
     pos = len(v.processed_gcode) - 1
     while pos > 0:
         if v.processed_gcode[pos].startswith("G1 X"):
@@ -348,9 +351,7 @@ def gcode_parseline(gcode_full_line):
             if v.define_tower:
                 v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], v.current_position_x)
                 v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], v.current_position_x)
-                _sideskip = not coordinate_on_bed(v.current_position_x,v.current_position_y)
-
-
+                _sideskip = not coordinate_on_bed(v.current_position_x, v.current_position_y)
 
         if to_y != "":
             v.previous_position_y = v.current_position_y
@@ -373,7 +374,6 @@ def gcode_parseline(gcode_full_line):
         else:
             v.emtygridfinished = False
 
-
         if not coordinate_on_bed(v.current_position_x, v.current_position_y) and coordinate_on_bed(prev_x, prev_y):
             gcode_full_line = ";" + gcode_full_line
 
@@ -392,9 +392,9 @@ def gcode_parseline(gcode_full_line):
                     else:
                         procent = v.acc_ping_left / extruder_movement
                         intermediate_x = v.previous_position_x + (
-                                    v.current_position_x - v.previous_position_x) * procent
+                                v.current_position_x - v.previous_position_x) * procent
                         intermediate_y = v.previous_position_y + (
-                                    v.current_position_y - v.previous_position_y) * procent
+                                v.current_position_y - v.previous_position_y) * procent
                         if to_z != "":
                             zmove = "Z{}".format(to_z)
                         else:
@@ -479,7 +479,7 @@ def gcode_parseline(gcode_full_line):
         v.wipe_tower_info['maxx'] += 2
         v.wipe_tower_info['maxy'] += 2
         v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
-        if v.side_wipe and v.max_tower_z_delta >0:
+        if v.side_wipe and v.max_tower_z_delta > 0:
             log_warning("SIDEWIPE and ASSYNCHONOUS TOWERS CANNOT BE USED TOGETHER - THE GENERQTED FILE WILL NOT PRINT")
         v.processed_gcode.append("; TOWER COORDINATES ({:-8.2f},{:-8.2f}) to ({:-8.2f},{:-8.2f})\n".format(
             v.wipe_tower_info['minx'], v.wipe_tower_info['miny'], v.wipe_tower_info['maxx'], v.wipe_tower_info['maxy'],
@@ -501,15 +501,17 @@ def gcode_parseline(gcode_full_line):
 
             if v.side_wipe_loc == "":
                 log_warning(
-                    "Sidewipe configuration incomplete (SIDEWIPELOC paramter not set.. THIS FILE WILL NOT PRINF CORRECTLY!!")
+                    "Sidewipe config incomplete. THIS FILE WILL NOT PRINT CORRECTLY!!")
             else:
                 log_warning(
-                    "Side wipe enabled on position X{} Y{}<->{}".format(v.side_wipe_loc, v.sidewipe_miny, v.sidewipe_maxy))
+                    "Side wipe enabled on position X{} Y{}<->{}".format(v.side_wipe_loc, v.sidewipe_miny,
+                                                                        v.sidewipe_maxy))
 
     if "CP EMPTY GRID START" in gcode_full_line:
         v.empty_grid = True
 
         if v.skippable_layer[v.layer_count] and v.layer_count > 1:
+            log_warning("{}".format(v.layer_count))
             v.cur_tower_z_delta += v.layer_height
             retrocorrect_emptygrid()
             v.towerskipped = True
@@ -598,7 +600,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     gui.setfilename(input_file)
     gui.set_printer_id(v.printer_profile_string)
-    gui.create_logitem("Reading File "+input_file)
+    gui.create_logitem("Reading File " + input_file)
     gui.progress_string(1)
     print("Reading File")
     v.input_gcode = opf.readlines()
@@ -621,11 +623,11 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     # Process the file
     # #################
     gui.create_logitem("Processing File")
-    count=0
+    count = 0
     print("Processing File")
     for line in v.input_gcode:
         gcode_parseline(line)
-        gui.progress_string(4+96*count//len(v.input_gcode))
+        gui.progress_string(4 + 96 * count // len(v.input_gcode))
         count = count + 1
 
     if v.palette_plus:
@@ -646,14 +648,13 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         print("Converting to absolute extrusion")
         convert_to_absolute()
 
-
     # write the output file
     ######################
 
     print("Generating output file")
     if not output_file:
         output_file = input_file
-    gui.create_logitem("Generating GCODE file: "+output_file)
+    gui.create_logitem("Generating GCODE file: " + output_file)
     opf = open(output_file, "w")
     if not v.accessory_mode:
         opf.writelines(header)
@@ -662,6 +663,8 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         opf.write("M0\n")
         opf.write("T0\n")
 
+    if v.splice_offset == 0:
+        log_warning("SPLICE_OFFSET not defined")
     opf.writelines(v.processed_gcode)
     opf.close()
 
@@ -678,7 +681,8 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
             if not header[i].startswith(";"):
                 opf.write(header[i])
 
-    print_summary()
+    print_summary(omega_result['summary'])
+
     gui.progress_string(100)
-    if (len(v.process_warnings)>0 and  not silent) or v.consolewait:
+    if (len(v.process_warnings) > 0 and not silent) or v.consolewait:
         gui.close_button_enable()
