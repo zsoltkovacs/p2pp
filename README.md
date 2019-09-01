@@ -285,12 +285,6 @@ The *WIPEFEEDRATE* parameter described above can be used to change the speed at 
   ;P2PP SIDEWIPELOC=X254
   ```
 
- > **WIPEFEEDRATE=nnnn** *[OPTIONAL]*
-  This parameter is used to define the feedrate at which purging moved happens.  The default value is 2000mm/min but an override can be set through this parameter.  The value entered is in mm/min.
-  ```
-  ;P2PP SIDEWIPELOC=2000
-  ```
-
 > **SIDEWIPEMINY=nnnn** and **SIDEWIPEMAXY=nnnn**
   These values allow control over the Y movement during the wipe.  Default values are 45 for the minimal value, 195 for the maximal value.  The user can extend/restrict these values if needed.  Setting these parameters does not affect the speed at which the extrusion takes place. 
   ```
