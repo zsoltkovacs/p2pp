@@ -12,10 +12,12 @@ __email__ = 'P2PP@pandora.be'
 try:
     # p ython version 2.x
     import Tkinter as tkinter
+    import ttk
     import tkMessageBox
 except ImportError:
     # python version 3.x
     import tkinter
+    from tkinter import ttk
     from tkinter import messagebox as tkMessageBox
 
 import os
@@ -23,6 +25,7 @@ import sys
 from platform import system
 import version
 import variables as v
+import colornames
 
 
 platformD = system()
@@ -36,23 +39,40 @@ def progress_string(pct):
         return
     if pct == 100:
         if len(v.process_warnings) == 0:
-            progress.set("COMPLETED OK")
-            progress_field.config(font=boldfont)
-            progress_field.config(fg='#008000')
+            completed("  COMPLETED OK", '#008000')
         else:
-            progress.set("COMPLETED WITH WARNINGS")
-            progress_field.config(font=boldfont)
-            progress_field.config(fg='#800000')
+            completed("  COMPLETED WITH WARNINGS",'#800000')
     else:
-        progress.set("{0:3}% [".format(pct) + "#" * (pct // 2) + "-" * (50-pct // 2) + "]")
+       progress.set(pct)
     mainwindow.update()
     last_pct = pct
 
+def completed(text, color):
+    progressbar.destroy()
+    progress_field = tkinter.Label(infosubframe , text=text, font=boldfont, foreground=color,  background="#808080")
+    progress_field.grid(row=3, column=2, sticky="ew")
+
+color_count = 0
 
 def create_logitem(text, color="black"):
-    loglist.insert(tkinter.END, "  "+text)
-    loglist.itemconfig(tkinter.END, foreground=color)
+    global color_count
+    color_count += 1
+    tagname = "color"+str(color_count)
+    loglist.tag_configure(tagname, foreground=color)
+    loglist.insert(tkinter.END, "  "+text+"\n", tagname)
     mainwindow.update()
+
+def create_colordefinition(input, filament_type, color_code, filamentused):
+    global color_count
+    color_count += 1
+    tagname = "color" + str(color_count)
+    color_count += 1
+    tagname2 = "color" + str(color_count)
+    loglist.tag_configure(tagname, foreground='black')
+    loglist.tag_configure(tagname2, foreground="#"+color_code)
+    loglist.insert(tkinter.END, "  \tInput  {} {:-8.2f}mm - {} ".format(input, filamentused, filament_type), tagname)
+    loglist.insert(tkinter.END, "  \t[####]\t", tagname2)
+    loglist.insert(tkinter.END, "  \t{}\n".format(colornames.find_nearest_colour(color_code)), tagname)
 
 
 def create_emptyline():
@@ -162,11 +182,12 @@ tkinter.Label(infosubframe, text=version.Version, font=normalfont, background="#
                                                                                               sticky="w")
 
 # progress bar
-progress = tkinter.StringVar()
-progress.set(progress_string(0))
+progress = tkinter.IntVar()
+progress.set(0)
 tkinter.Label(infosubframe, text='Progress:', font=boldfont, background="#808080").grid(row=3, column=1, sticky="w")
-progress_field = tkinter.Label(infosubframe, textvariable=progress, font=fixedfont, background="#808080")
-progress_field.grid(row=3, column=2, sticky="w")
+progressbar = ttk.Progressbar(infosubframe ,orient='horizontal', mode='determinate', length=500, maximum=100, variable=progress)
+progressbar.grid(row=3, column=2,  sticky='ew')
+
 
 # Log frame
 logframe = tkinter.Frame(mainwindow, border=3, relief="sunken")
@@ -175,7 +196,7 @@ logframe.pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
 loglistscroll = tkinter.Scrollbar(logframe, orient=tkinter.VERTICAL)
 loglistscroll.pack(side='right', fill=tkinter.Y)
 
-loglist = tkinter.Listbox(logframe, yscrollcommand=loglistscroll.set, font=fixedsmallfont)
+loglist = tkinter.Text(logframe, yscrollcommand=loglistscroll.set, font=fixedsmallfont)
 loglist.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=1)
 
 loglistscroll.config(command=loglist.yview)

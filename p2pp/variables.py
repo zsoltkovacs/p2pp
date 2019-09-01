@@ -134,6 +134,7 @@ hotswap_count = 0  # type: int
 # TotalExtrusion keeps track of the total extrusion in mm for the print taking into account the Extruder Multiplier set
 # in the GCode settings...
 total_material_extruded = 0  # type: float
+material_extruded_per_color = [0,0,0,0]
 last_ping_extruder_position = 0
 ping_interval = 350  # type: float
 max_ping_interval = 3000  # type: float

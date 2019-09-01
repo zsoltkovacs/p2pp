@@ -26,18 +26,26 @@ def centertext(text,wi,ch):
 
 
 
+def adjust_material_extruded( amount ):
+    v.total_material_extruded += amount
+    v.material_extruded_per_color[v.current_tool] += amount
+
 def print_summary():
     gui.create_logitem("")
     gui.create_logitem("-"*80, "blue")
     gui.create_logitem(centertext("Print Summary",80,'-'), "blue")
     gui.create_logitem("-"*80, "blue")
-    gui.create_logitem("\tNumber of splices: {0:5}".format(len(v.splice_extruder_position)))
-    gui.create_logitem("\tTotal print length {:-8.2f}mm".format(v.total_material_extruded))
-    gui.create_logitem("\tInputs/Materials used:")
+    gui.create_emptyline()
+    gui.create_logitem("Number of splices:    {0:5}".format(len(v.splice_extruder_position)))
+    gui.create_logitem("Number of pings:      {0:5}".format(len(v.ping_extruder_position)))
+    gui.create_logitem("Total print length {:-8.2f}mm".format(v.total_material_extruded))
+    gui.create_emptyline()
+    gui.create_logitem("Inputs/Materials used:")
 
     for i in range(len(v.palette_inputs_used)):
         if v.palette_inputs_used[i]:
-            gui.create_logitem("\t\tInput {}\t{}\t{}".format(i,v.filament_type[i],colornames.find_nearest_colour(v.filament_color_code[i])))
+            gui.create_colordefinition(i,v.filament_type[i],v.filament_color_code[i], v.material_extruded_per_color[i])
+
 
 def pre_processfile():
     emptygrid = 0
@@ -410,7 +418,7 @@ def gcode_parseline(gcode_full_line):
                 if v.within_tool_change_block and v.side_wipe:
                     v.side_wipe_length += extruder_movement
 
-                v.total_material_extruded += extruder_movement
+                adjust_material_extruded(extruder_movement)
 
                 if (v.total_material_extruded - v.last_ping_extruder_position) > v.ping_interval and \
                         v.side_wipe_length == 0 and not v.accessory_mode:

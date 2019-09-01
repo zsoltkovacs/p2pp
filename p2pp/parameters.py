@@ -50,12 +50,12 @@ def check_config_parameters(line):
 
     if "ACCESSORYMODE_MAF" in line:
         v.accessory_mode = True
-        gui.create_logitem("Config: Palette2 Accessory Mode Selected", "blue")
+        gui.create_logitem("Config: Palette2 Accessory Mode Selected")
 
     if "ACCESSORYMODE_MSF" in line:
         v.accessory_mode = True
         v.palette_plus = True
-        gui.create_logitem("Config: Palette+ Accessory Mode Selected", "blue")
+        gui.create_logitem("Config: Palette+ Accessory Mode Selected")
 
     if "P+LOADINGOFFSET" in line:
         v.palette_plus_loading_offset = int(floatparameter(line))
@@ -65,7 +65,7 @@ def check_config_parameters(line):
 
     if "SPLICEOFFSET" in line:
         v.splice_offset = floatparameter(line)
-        gui.create_logitem("Splice Offset set to {:-5.2f}mm".format(v.splice_offset), "blue")
+        gui.create_logitem("Splice Offset set to {:-5.2f}mm".format(v.splice_offset))
         return
 
     if "PROFILETYPEOVERRIDE" in line:
@@ -80,7 +80,7 @@ def check_config_parameters(line):
 
     if "EXTRAENDFILAMENT" in line:
         v.extra_runout_filament = floatparameter(line)
-        gui.create_logitem("Extra filamen at end of print {:-8.2f}mm".format(v.extra_runout_filament), "blue")
+        gui.create_logitem("Extra filamen at end of print {:-8.2f}mm".format(v.extra_runout_filament))
         return
 
     if "BEFORESIDEWIPEGCODE" in line:
@@ -126,12 +126,12 @@ def check_config_parameters(line):
         if v.ping_interval < 300:
             v.ping_interval = 300
             log_warning("Minimal Linear Ping distance is 300mm!  Your config stated: {}".format(line))
-        gui.create_logitem("Linear Ping interval of  {:-6.2f}mm".format(v.ping_interval), "blue")
+        gui.create_logitem("Linear Ping interval of  {:-6.2f}mm".format(v.ping_interval))
         return
 
     if "LINEARPING" in line:
         v.ping_length_multiplier = 1.0
-        gui.create_logitem("Linear Ping interval of  {:-6.2f}mm".format(v.ping_interval), "blue")
+        gui.create_logitem("Linear Ping interval of  {:-6.2f}mm".format(v.ping_interval))
         return
 
     # SIDE TRANSITIONING
@@ -160,7 +160,7 @@ def check_config_parameters(line):
     if "PURGETOWERDELTA" in line:
         if abs(floatparameter(line)) != abs(float(0)):
             v.max_tower_z_delta = abs(floatparameter(line))
-            gui.create_logitem("Max Purge Tower Delta set to {:-2.2f}mm".format(v.max_tower_z_delta), "blue")
+            gui.create_logitem("Max Purge Tower Delta set to {:-2.2f}mm".format(v.max_tower_z_delta))
         return
 
     # REPRAP COMPATIBILITY
@@ -178,4 +178,4 @@ def check_config_parameters(line):
 
     if "ABSOLUTEEXTRUDER" in line:
         v.absolute_extruder = True
-        gui.create_logitem("Convert to absolute extrusion parameters", "blue")
+        gui.create_logitem("Convert to absolute extrusion parameters")
