@@ -22,6 +22,8 @@ earlier versions may generate different code patterns and may not work correctly
 -  29/07/2019 - Added support for Palette+ MSF 1.4 files [ALPHA]
 -  31/07/2019 - Added support for absolute extruder conversion [BETA]
 -  15/08/2019 - Updated GUI to be more interactive and give progress information [BETA]
+-  01/09/2019 - Updated GUI on startup without parameters
+-  01/09/2019 - improved compatibility with PrusaSlicer 2.1.0 Beta
 
 
 ## Purpose
