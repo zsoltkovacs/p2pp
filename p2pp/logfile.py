@@ -8,7 +8,7 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 import p2pp.variables as v
-import gui
+import p2pp.gui as gui
 
 
 # ################################################################
@@ -16,4 +16,4 @@ import gui
 # ################################################################
 def log_warning(text):
     v.process_warnings.append(";" + text)
-    gui.create_logitem(text,"red")
+    gui.create_logitem(text, "red")

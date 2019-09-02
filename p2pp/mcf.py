@@ -381,8 +381,7 @@ def gcode_parseline(gcode_full_line):
 
             if to_e != "":
 
-                extruder_movement = float(to_e)
-                extruder_movement = extruder_movement * v.extrusion_multiplier * v.extrusion_multiplier_correction
+                extruder_movement = float(to_e) * v.extrusion_multiplier * v.extrusion_multiplier_correction
 
                 if v.acc_ping_left > 0:
 
@@ -511,7 +510,6 @@ def gcode_parseline(gcode_full_line):
         v.empty_grid = True
 
         if v.skippable_layer[v.layer_count] and v.layer_count > 1:
-            log_warning("{}".format(v.layer_count))
             v.cur_tower_z_delta += v.layer_height
             retrocorrect_emptygrid()
             v.towerskipped = True

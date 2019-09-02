@@ -9,7 +9,7 @@ __email__ = 'P2PP@pandora.be'
 
 import p2pp.variables as v
 from p2pp.logfile import log_warning
-import gui
+import p2pp.gui as gui
 
 
 def floatparameter(s):

@@ -23,9 +23,10 @@ except ImportError:
 import os
 import sys
 from platform import system
+import p2pp.variables as v
 import version
-import variables as v
-import colornames
+import p2pp.colornames as colornames
+
 
 
 platformD = system()
