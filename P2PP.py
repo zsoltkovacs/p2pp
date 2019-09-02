@@ -91,6 +91,7 @@ def main(args):
                  )
 
 
+
 if __name__ == "__main__":
     v.version = ver.Version
 
@@ -116,4 +117,6 @@ if __name__ == "__main__":
         gui.create_logitem("More info on: https://github.com/tomvandeneede/p2pp", "blue")
         gui.close_button_enable()
     else:
+        gui.create_logitem("Python Version Information: "+sys.version ,
+                           "blue")
         main(vars(arguments.parse_args()))

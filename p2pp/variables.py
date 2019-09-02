@@ -95,6 +95,8 @@ sidewipe_maxy = 175  # type: float
 max_wipe = -1
 wipe_feedrate = 2000  # type: int
 empty_grid = False  # type: bool
+in_tower = False
+toolchange_start = False
 
 before_sidewipe_gcode = []
 after_sidewipe_gcode = []

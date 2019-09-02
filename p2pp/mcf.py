@@ -135,7 +135,7 @@ def convert_to_absolute():
                     if fields[j][0] == "E":
                         to_e = float(fields[j][1:])
                         absolute += to_e
-                        fields[j] = "E{}".format(absolute)
+                        fields[j] = "E{:.4f}".format(absolute)
                 line = " ".join(fields) + "\n"
                 v.processed_gcode[i] = line
             continue
@@ -240,16 +240,19 @@ def coordinate_in_tower(x, y):
 
 
 def entertower():
-    if v.cur_tower_z_delta > 0:
-        v.processed_gcode.append("G1 Z{} F10800\n".format(v.current_position_z - v.cur_tower_z_delta))
+    v.processed_gcode.append("G1 Z{} F10800\n".format(v.current_position_z - v.cur_tower_z_delta))
     if v.accessory_mode and (v.total_material_extruded - v.last_ping_extruder_position) > v.ping_interval:
         v.acc_ping_left = 20
         v.processed_gcode.append(v.acc_first_pause)
+    v.in_tower = True
 
 
 def leavetower():
+    if not coordinate_in_tower(v.current_position_x, v.current_position_y):
+        log_warning("Leave purge outside tower {},{},{}".format(v.current_position_x, v.current_position_y, v.current_position_z))
     if v.cur_tower_z_delta > 0:
         v.processed_gcode.append("G1 Z{} F10800\n".format(v.current_position_z))
+    v.in_tower = False
 
 
 def moved_in_tower():
@@ -274,11 +277,21 @@ def gcode_parseline(gcode_full_line):
     if not gcode_full_line[0] == ";":
         gcode_full_line = gcode_full_line.split(';')[0]
 
+
     gcode_full_line = gcode_full_line.rstrip('\n')
 
     if gcode_full_line == "":
         v.processed_gcode.append("\n")
         return
+
+    if v.toolchange_start and not gcode_full_line.startswith("T"):
+        if not gcode_full_line.startswith(";"):
+            v.processed_gcode.append(";--- P2PP removed [Tool Unload]" + gcode_full_line + "\n")
+        else:
+            v.processed_gcode.append(gcode_full_line+'\n')
+        return
+
+    v.toolchange_start = False
 
     if gcode_full_line.startswith('T'):
         new_tool = int(gcode_full_line[1])
@@ -342,6 +355,17 @@ def gcode_parseline(gcode_full_line):
         to_e = get_gcode_parameter(gcode_full_line, "E")
         prev_x = v.current_position_x
         prev_y = v.current_position_y
+
+        if v.within_tool_change_block:
+            _x = to_x
+            if to_x == "":
+                _x = prev_x
+            _y = to_y
+            if to_y  == "":
+                _y = prev_y
+            if not coordinate_in_tower(_x, _y):
+                v.processed_gcode.append(";--- P2PP removed [Move Error] - {} {} ".format(_x,_y) + gcode_full_line + "\n")
+                return
 
         _sideskip = False
 
@@ -522,18 +546,13 @@ def gcode_parseline(gcode_full_line):
     if "TOOLCHANGE START" in gcode_full_line:
         v.allow_filament_information_update = False
         v.within_tool_change_block = True
+        v.toolchange_start = True
         sidewipe.sidewipe_toolchange_start()
+
+    if "TOOLCHANGE WIPE" in gcode_full_line:
+
         entertower()
 
-    if "TOOLCHANGE END" in gcode_full_line:
-        leavetower()
-        if not v.side_wipe:
-            v.within_tool_change_block = False
-            v.mmu_unload_remove = False
-
-    if "TOOLCHANGE UNLOAD" in gcode_full_line and not v.side_wipe:
-        v.current_print_feed = v.wipe_feedrate / 60
-        v.mmu_unload_remove = True
         if v.current_layer != "0":
             v.processed_gcode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.current_print_feed))
             v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
@@ -541,10 +560,13 @@ def gcode_parseline(gcode_full_line):
             v.processed_gcode.append(";P2PP Set wipe speed to 33.3mm/s\n")
             v.processed_gcode.append("G1 F2000\n")
 
-    if "TOOLCHANGE WIPE" in gcode_full_line:
-        v.mmu_unload_remove = False
         if coordinate_on_bed(v.current_position_x, v.current_position_y):
             v.processed_gcode.append("G0 X{} Y{}\n".format(v.current_position_x, v.current_position_y))
+
+    if "TOOLCHANGE END" in gcode_full_line:
+        leavetower()
+        if not v.side_wipe:
+            v.within_tool_change_block = False
 
         # Layer Information
     if gcode_full_line.startswith(";LAYER "):

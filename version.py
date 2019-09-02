@@ -9,15 +9,14 @@ __email__ = 'P2PP@pandora.be'
 __status__ = 'BETA'
 
 
-import urllib
-# import p2pp.logfile
+
 import p2pp.variables as v
 
 
 # general version info
 MajorVersion = 3
 MinorVersion = 3
-Build = 4
+Build = 5
 
 latest_stable_version = ""
 
@@ -37,13 +36,14 @@ latest_stable_version = ""
 #         p2pp.logfile.log_warning("Upgraded to version {}".format(version))
 #     except:
 #         p2pp.logfile.log_warning("Upgrade to version {} Failed".format(version))
+#
 
-
-
+#
 # def perform_version_check():
 #     global Version
 #     try:
-#         latestversionpy = urllib.urlopen("https://github.com/tomvandeneede/p2pp/raw/master/version.py")
+#         request= urllib.request.urlopen("https://github.com/tomvandeneede/p2pp/raw/master/version.py")
+#         latestversionpy = request.read().decode("utf8")
 #         versioncontents = "".join(latestversionpy.read()).split('\n')
 #         latestversionpy.close()
 #         _maj = 0
@@ -61,7 +61,6 @@ latest_stable_version = ""
 #                 v.update_file_list.append (line[line.find("=")+1:])
 #
 #         latest_stable_version = "{}.{}.{}".format(_maj, _min, _bld)
-#         v.upgradeprocess = UpdateP2PP
 #
 #         if not (latest_stable_version == "0.0.0"):
 #             if Version > latest_stable_version:
@@ -72,14 +71,14 @@ latest_stable_version = ""
 #                 Version = Version + "  (Newer version available: " + latest_stable_version + ")"
 #
 #     except IOError:
-#         print("failed to load...")
+#         print("DAMN")
 #         pass
-
+#
 
 Version = "{}.{}.{}".format(MajorVersion, MinorVersion, Build)
 
-if v.versioncheck:
-    perform_version_check()
+# if v.versioncheck:
+# perform_version_check()
 
 ##################################
 # UPDATE FILES FOR CURRENT VERSION
