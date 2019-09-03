@@ -241,7 +241,7 @@ def coordinate_in_tower(x, y):
 
 
 def entertower():
-    v.processed_gcode.append("G1 Z{} F10800\n".format(v.current_position_z - v.cur_tower_z_delta))
+    v.processed_gcode.append("G1 Z{:.2f} F10800\n".format(v.current_position_z - v.cur_tower_z_delta))
     if v.accessory_mode and (v.total_material_extruded - v.last_ping_extruder_position) > v.ping_interval:
         v.acc_ping_left = 20
         v.processed_gcode.append(v.acc_first_pause)
@@ -252,7 +252,7 @@ def leavetower():
     if not coordinate_in_tower(v.current_position_x, v.current_position_y):
         log_warning("Leave purge outside tower {},{},{}".format(v.current_position_x, v.current_position_y, v.current_position_z))
     if v.cur_tower_z_delta > 0:
-        v.processed_gcode.append("G1 Z{} F10800\n".format(v.current_position_z))
+        v.processed_gcode.append("G1 Z{:.2f} F10800\n".format(v.current_position_z))
     v.in_tower = False
 
 
@@ -550,7 +550,7 @@ def gcode_parseline(gcode_full_line):
             v.towerskipped = True
         else:
             v.current_print_feed = v.wipe_feedrate / 60
-            v.processed_gcode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.current_print_feed))
+            v.processed_gcode.append("; --- P2PP Set wipe speed to {:.1f}mm/s\n".format(v.current_print_feed))
             v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
             entertower()
 
@@ -565,10 +565,10 @@ def gcode_parseline(gcode_full_line):
         entertower()
 
         if v.current_layer != "0":
-            v.processed_gcode.append(";P2PP Set wipe speed to {}mm/s\n".format(v.current_print_feed))
+            v.processed_gcode.append("; --- P2PP Set wipe speed to {:.1f}mm/s\n".format(v.current_print_feed))
             v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
         else:
-            v.processed_gcode.append(";P2PP Set wipe speed to 33.3mm/s\n")
+            v.processed_gcode.append("; --- P2PP Set wipe speed to 33.3mm/s\n")
             v.processed_gcode.append("G1 F2000\n")
 
         if coordinate_on_bed(v.current_position_x, v.current_position_y):
