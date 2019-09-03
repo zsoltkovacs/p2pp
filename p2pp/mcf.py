@@ -49,8 +49,8 @@ def print_summary(summary):
 
     gui.create_emptyline()
     for line in summary:
-        gui.create_logitem(line[1:].strip())
-
+        gui.create_logitem(line[1:].strip(), "black", False)
+    gui.create_emptyline()
 
 def pre_processfile():
     emptygrid = 0

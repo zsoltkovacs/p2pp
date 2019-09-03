@@ -55,13 +55,14 @@ def completed(text, color):
 
 color_count = 0
 
-def create_logitem(text, color="black"):
+def create_logitem(text, color="black", force_update = True):
     global color_count
     color_count += 1
     tagname = "color"+str(color_count)
     loglist.tag_configure(tagname, foreground=color)
     loglist.insert(tkinter.END, "  "+text+"\n", tagname)
-    mainwindow.update()
+    if force_update:
+        mainwindow.update()
 
 def create_colordefinition(input, filament_type, color_code, filamentused):
     global color_count
