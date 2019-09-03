@@ -137,7 +137,7 @@ def header_generate_omega_paletteplus():
 
     for i in range(len(v.splice_extruder_position)):
         header.append("({},{})\n".format(hexify_byte(v.splice_used_tool[i])[1:],
-                                         (hexify_float(v.splice_extruder_position[i])[1:])))
+                                         (hexify_float(v.splice_offset+v.splice_extruder_position[i])[1:])))
 
     # make ping list
 
@@ -206,7 +206,7 @@ def header_generate_omega_palette2(job_name):
 
     for i in range(len(v.splice_extruder_position)):
         header.append("O30 D{:0>1d} {}\n".format(v.splice_used_tool[i],
-                                                 hexify_float(v.splice_extruder_position[i])
+                                                 hexify_float(v.splice_offset+ v.splice_extruder_position[i])
                                                  )
                       )
 
@@ -245,7 +245,7 @@ def generatesummary():
         if i==0:
             pos = 0
         else:
-            pos = v.splice_extruder_position[i-1]
+            pos = v.splice_extruder_position[i-1]+v.splice_offset
 
         summary.append(";{:04}   Tool: {}  Location: {:-8.2f}mm   length {:-8.2f}mm  ({})\n"
                        .format(i + 1,
@@ -264,7 +264,7 @@ def generatesummary():
     for i in range(len(v.ping_extruder_position)):
         pingtext = ";Ping {:04} at {:-8.2f}mm ({})\n".format(i + 1,
                                                             v.ping_extruder_position[i],
-                                                            hexify_float(v.ping_extruder_position[i])
+                                                            hexify_float(v.splice_offset+v.ping_extruder_position[i])
                                                             )
         summary.append( pingtext )
 
