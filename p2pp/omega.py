@@ -212,7 +212,7 @@ def header_generate_omega_palette2(job_name):
 
     if v.accessory_mode:
         for i in range(len(v.ping_extruder_position)):
-            header.append("O31 {} {}\n".format(hexify_float(v.ping_extruder_position[i]),
+            header.append("O31 {} {}\n".format(hexify_float(v.ping_extruder_position[i]-v.splice_offset),
                                                hexify_float(v.ping_extrusion_between_pause[i])))
 
     for i in range(len(v.splice_algorithm_table)):

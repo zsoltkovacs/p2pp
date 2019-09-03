@@ -434,7 +434,7 @@ def gcode_parseline(gcode_full_line):
                         v.ping_interval = v.ping_interval * v.ping_length_multiplier
                         v.ping_interval = min(v.max_ping_interval, v.ping_interval)
                         v.last_ping_extruder_position = v.total_material_extruded
-                        v.ping_extruder_position.append(v.total_material_extruded - 20 + v.acc_ping_left)
+                        v.ping_extruder_position.append(v.total_material_extruded - 20 + v.acc_ping_left - v.splice_offset)
                         v.ping_extrusion_between_pause.append(20 - v.acc_ping_left)
                         v.acc_ping_left = 0
 
@@ -450,11 +450,11 @@ def gcode_parseline(gcode_full_line):
                     v.ping_interval = v.ping_interval * v.ping_length_multiplier
                     v.ping_interval = min(v.max_ping_interval, v.ping_interval)
                     v.last_ping_extruder_position = v.total_material_extruded
-                    v.ping_extruder_position.append(v.last_ping_extruder_position)
-                    v.processed_gcode.append(";Palette 2 - PING\n")
+                    v.ping_extruder_position.append(v.last_ping_extruder_position-v.splice_offset)
+                    v.processed_gcode.append("P2PP - Added Sequence - INITIATE PING -  START\n")
                     v.processed_gcode.append("G4 S0\n")
                     v.processed_gcode.append("O31 {}\n".format(hexify_float(v.last_ping_extruder_position)))
-
+                    v.processed_gcode.append("P2PP - Added Sequence - INITIATE PING  -  END\n")
             if v.within_tool_change_block and v.side_wipe:
                 if not __tower_remove:
                     v.processed_gcode.append(";--- P2PP removed [Side Wipe] - " + gcode_full_line + "\n")
