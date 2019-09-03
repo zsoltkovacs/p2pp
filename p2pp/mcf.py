@@ -322,14 +322,14 @@ def gcode_parseline(gcode_full_line):
     # ############################################
     if gcode_full_line.startswith("M220"):
         new_feedrate = get_gcode_parameter(gcode_full_line, "S")
-        if new_feedrate != "":
+        if new_feedrate:
             v.current_print_feedrate = new_feedrate / 100
 
     # Processing of extrusion multiplier commands
     # ############################################
     if gcode_full_line.startswith("M221"):
         new_multiplier = get_gcode_parameter(gcode_full_line, "S")
-        if new_multiplier != "":
+        if new_multiplier:
             v.extrusion_multiplier = new_multiplier / 100
 
     # processing tower Z delta
@@ -349,7 +349,8 @@ def gcode_parseline(gcode_full_line):
     if v.empty_grid and (v.wipe_feedrate != 2000):
         gcode_full_line = gcode_remove_params(gcode_full_line, ["F"])
 
-    if gcode_full_line.startswith("G") and not gcode_full_line.startswith("G28"):
+    if gcode_full_line.startswith("G") and not gcode_full_line.startswith("G28")  and not gcode_full_line.startswith("G92"):
+        gcode_full_line.replace("  "," ")
         to_x = get_gcode_parameter(gcode_full_line, "X")
         to_y = get_gcode_parameter(gcode_full_line, "Y")
         to_z = get_gcode_parameter(gcode_full_line, "Z")
@@ -359,10 +360,10 @@ def gcode_parseline(gcode_full_line):
 
         if v.within_tool_change_block:
             _x = to_x
-            if to_x == "":
+            if not to_x :
                 _x = prev_x
             _y = to_y
-            if to_y  == "":
+            if not to_y:
                 _y = prev_y
             if not coordinate_in_tower(_x, _y):
                 v.processed_gcode.append(";--- P2PP removed [Move Error] - {} {} ".format(_x,_y) + gcode_full_line + "\n")
@@ -370,7 +371,7 @@ def gcode_parseline(gcode_full_line):
 
         _sideskip = False
 
-        if to_x != "":
+        if to_x:
             v.previous_position_x = v.current_position_x
             v.current_position_x = float(to_x)
             if v.define_tower:
@@ -378,7 +379,7 @@ def gcode_parseline(gcode_full_line):
                 v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], v.current_position_x)
                 _sideskip = not coordinate_on_bed(v.current_position_x, v.current_position_y)
 
-        if to_y != "":
+        if to_y:
             v.previous_position_y = v.current_position_y
             v.current_position_y = float(to_y)
             if v.define_tower:
@@ -390,7 +391,7 @@ def gcode_parseline(gcode_full_line):
             v.processed_gcode.append(";--- P2PP removed [Side Wipe] - " + gcode_full_line + "\n")
             return
 
-        if to_z != "":
+        if to_z:
             v.previous_position_z = v.current_position_z
             v.current_position_z = float(to_z)
 
@@ -402,10 +403,9 @@ def gcode_parseline(gcode_full_line):
         if not coordinate_on_bed(v.current_position_x, v.current_position_y) and coordinate_on_bed(prev_x, prev_y):
             gcode_full_line = ";" + gcode_full_line
 
-        if gcode_full_line.startswith("G1"):
+        if gcode_full_line.startswith("G1") or gcode_full_line.startswith("G0"):
 
-            if to_e != "":
-
+            if to_e:
                 extruder_movement = float(to_e) * v.extrusion_multiplier * v.extrusion_multiplier_correction
 
                 if v.acc_ping_left > 0:
@@ -452,10 +452,10 @@ def gcode_parseline(gcode_full_line):
                     v.ping_interval = min(v.max_ping_interval, v.ping_interval)
                     v.last_ping_extruder_position = v.total_material_extruded
                     v.ping_extruder_position.append(v.last_ping_extruder_position)
-                    v.processed_gcode.append("P2PP - Added Sequence - INITIATE PING -  START\n")
+                    v.processed_gcode.append(";P2PP - Added Sequence - INITIATE PING -  START\n")
                     v.processed_gcode.append("G4 S0\n")
                     v.processed_gcode.append("O31 {}\n".format(hexify_float(v.last_ping_extruder_position)))
-                    v.processed_gcode.append("P2PP - Added Sequence - INITIATE PING  -  END\n")
+                    v.processed_gcode.append(";P2PP - Added Sequence - INITIATE PING  -  END\n")
             if v.within_tool_change_block and v.side_wipe:
                 if not __tower_remove:
                     v.processed_gcode.append(";--- P2PP removed [Side Wipe] - " + gcode_full_line + "\n")
@@ -623,21 +623,21 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     gui.set_printer_id(v.printer_profile_string)
     gui.create_logitem("Reading File " + input_file)
     gui.progress_string(1)
-    print("Reading File")
+
     v.input_gcode = opf.readlines()
 
     opf.close()
     gui.create_logitem("Analyzing slicer parameters")
     gui.progress_string(2)
-    print("Analyzing slicer parameters")
+
     parse_slic3r_config()
 
     gui.create_logitem("Analyzing layers")
     gui.progress_string(4)
-    print("Analyzing layers")
+
     pre_processfile()
     gui.create_logitem("Found {} layers in print".format(len(v.skippable_layer)))
-    print("Found {} layers in print".format(len(v.skippable_layer)))
+
 
     # v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
 
@@ -645,7 +645,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     # #################
     gui.create_logitem("Processing File")
     count = 0
-    print("Processing File")
     for line in v.input_gcode:
         gcode_parseline(line)
         gui.progress_string(4 + 96 * count // len(v.input_gcode))
@@ -666,13 +665,11 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     if v.absolute_extruder and v.gcode_has_relative_e:
         gui.create_logitem("Converting to absolute extrusion")
-        print("Converting to absolute extrusion")
         convert_to_absolute()
 
     # write the output file
     ######################
 
-    print("Generating output file")
     if not output_file:
         output_file = input_file
     gui.create_logitem("Generating GCODE file: " + output_file)

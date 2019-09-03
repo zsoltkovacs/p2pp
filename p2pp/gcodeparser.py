@@ -41,7 +41,7 @@ def get_gcode_parameter(gcode, parameter):
     for parm in fields:
         if parm[0] == parameter:
             return float(parm[1:])
-    return ""
+    return None
 
 
 def parse_slic3r_config():
