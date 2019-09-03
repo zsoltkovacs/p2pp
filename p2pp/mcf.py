@@ -263,12 +263,14 @@ def moved_in_tower():
 def retrocorrect_emptygrid():
     pos = len(v.processed_gcode) - 1
     while pos > 0:
-        if v.processed_gcode[pos].startswith("G1 X"):
-            _e = get_gcode_parameter(v.processed_gcode[pos], "E")
-            if _e == "":
-                v.processed_gcode[pos] = ";--- P2PP removed [Tower Delta] - {}".format(v.processed_gcode[pos])
-            else:
-                break
+        if v.processed_gcode[pos].startswith("G1"):
+            _x = get_gcode_parameter(v.processed_gcode[pos], "X")
+            _y = get_gcode_parameter(v.processed_gcode[pos], "Y")
+
+            if _x and _y:
+                if coordinate_in_tower(_x,_y):
+                    v.processed_gcode[pos] = ";--- P2PP removed [Tower Delta] - {}".format(v.processed_gcode[pos])
+                    break
         pos = pos - 1
 
 
