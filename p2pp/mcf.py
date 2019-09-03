@@ -324,6 +324,9 @@ def gcode_parseline(gcode_full_line):
         new_feedrate = get_gcode_parameter(gcode_full_line, "S")
         if new_feedrate:
             v.current_print_feedrate = new_feedrate / 100
+        if "R" in gcode_full_line or "B" in gcode_full_line:
+            v.processed_gcode.append(";--- P2PP  removed [Feedrate backup/restore] -  " + gcode_full_line + "\n")
+            return
 
     # Processing of extrusion multiplier commands
     # ############################################
@@ -405,6 +408,11 @@ def gcode_parseline(gcode_full_line):
 
         if gcode_full_line.startswith("G1") or gcode_full_line.startswith("G0"):
 
+            if v.within_tool_change_block and v.side_wipe:
+                if not __tower_remove:
+                    v.processed_gcode.append(";--- P2PP removed [Side Wipe] - " + gcode_full_line + "\n")
+                return
+
             if to_e:
                 extruder_movement = float(to_e) * v.extrusion_multiplier * v.extrusion_multiplier_correction
 
@@ -444,6 +452,9 @@ def gcode_parseline(gcode_full_line):
 
                 adjust_material_extruded(extruder_movement)
 
+                if not v.within_tool_change_block and v.wipe_retracted:
+                    sidewipe.unretract()
+
                 if (v.total_material_extruded - v.last_ping_extruder_position) > v.ping_interval and \
                         v.side_wipe_length == 0 and not v.accessory_mode:
                     # this code is only handled for connected mode
@@ -452,17 +463,16 @@ def gcode_parseline(gcode_full_line):
                     v.ping_interval = min(v.max_ping_interval, v.ping_interval)
                     v.last_ping_extruder_position = v.total_material_extruded
                     v.ping_extruder_position.append(v.last_ping_extruder_position)
-                    v.processed_gcode.append(";P2PP - Added Sequence - INITIATE PING -  START\n")
-                    v.processed_gcode.append("G4 S0\n")
+                    v.processed_gcode.append(gcode_full_line + "\n")
+                    v.processed_gcode.append(";P2PP - Added Sequence - INITIATE PING -  START COMMAND after {:-10.4f}mm of extrusion \n".format(v.last_ping_extruder_position))
+                    v.processed_gcode.append("G4 S0 \n")
                     v.processed_gcode.append("O31 {}\n".format(hexify_float(v.last_ping_extruder_position)))
                     v.processed_gcode.append(";P2PP - Added Sequence - INITIATE PING  -  END\n")
-            if v.within_tool_change_block and v.side_wipe:
-                if not __tower_remove:
-                    v.processed_gcode.append(";--- P2PP removed [Side Wipe] - " + gcode_full_line + "\n")
-                return
+                    return
 
-            if not v.within_tool_change_block and v.wipe_retracted:
-                sidewipe.unretract()
+
+
+
 
     # Other configuration information
     # this information should be defined in your Slic3r printer settings, startup GCode

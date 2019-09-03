@@ -28,6 +28,7 @@ def create_side_wipe():
             v.processed_gcode.append(line + "\n")
 
         v.processed_gcode.append("G1 E{}\n".format(-v.sidewipe_retract))
+        v.total_material_extruded -= v.sidewipe_retract * v.extrusion_multiplier*v.extrusion_multiplier_correction
         v.wipe_retracted = True
         v.processed_gcode.append("G1 F8640\n")
         v.processed_gcode.append("G0 {} Y{}\n".format(v.side_wipe_loc, v.sidewipe_miny))
@@ -62,6 +63,7 @@ def create_side_wipe():
 
 def unretract():
     v.processed_gcode.append("G1 E{}\n".format(v.sidewipe_retract))
+    v.total_material_extruded += v.sidewipe_retract * v.extrusion_multiplier * v.extrusion_multiplier_correction
     v.wipe_retracted = False
 
 
