@@ -241,7 +241,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
    
    ```
   ;P2PP BEDORIGINX=0.0
-  ;P2PP BEDORIGINY=-1.0
+  ;P2PP BEDORIGINY=-10
   ```
   
   > **BEDSIZEX=nnn  and BEDSIZEY=nnn#** 
