@@ -137,7 +137,7 @@ def header_generate_omega_paletteplus():
 
     for i in range(len(v.splice_extruder_position)):
         header.append("({},{})\n".format(hexify_byte(v.splice_used_tool[i])[1:],
-                                         (hexify_float(v.splice_offset+v.splice_extruder_position[i])[1:])))
+                                         (hexify_float(v.splice_extruder_position[i])[1:])))
 
     # make ping list
 
@@ -206,13 +206,13 @@ def header_generate_omega_palette2(job_name):
 
     for i in range(len(v.splice_extruder_position)):
         header.append("O30 D{:0>1d} {}\n".format(v.splice_used_tool[i],
-                                                 hexify_float(v.splice_offset+ v.splice_extruder_position[i])
+                                                 hexify_float(v.splice_extruder_position[i])
                                                  )
                       )
 
     if v.accessory_mode:
         for i in range(len(v.ping_extruder_position)):
-            header.append("O31 {} {}\n".format(hexify_float(v.ping_extruder_position[i]-v.splice_offset),
+            header.append("O31 {} {}\n".format(hexify_float(v.ping_extruder_position[i]),
                                                hexify_float(v.ping_extrusion_between_pause[i])))
 
     for i in range(len(v.splice_algorithm_table)):
@@ -225,7 +225,7 @@ def header_generate_omega_palette2(job_name):
                           .format(job_name, hexify_long(int(v.splice_extruder_position[-1] + 0.5))))
         else:
             header.append("O1 D{} {}\n"
-                          .format(job_name, hexify_long(int(v.total_material_extruded + v.splice_offset + 0.5))))
+                          .format(job_name, hexify_long(int(v.total_material_extruded  + 0.5))))
 
         header.append("M0\n")
         header.append("T0\n")
@@ -245,7 +245,7 @@ def generatesummary():
         if i==0:
             pos = 0
         else:
-            pos = v.splice_extruder_position[i-1]+v.splice_offset
+            pos = v.splice_extruder_position[i-1]
 
         summary.append(";{:04}   Tool: {}  Location: {:-8.2f}mm   length {:-8.2f}mm  ({})\n"
                        .format(i + 1,
@@ -264,7 +264,7 @@ def generatesummary():
     for i in range(len(v.ping_extruder_position)):
         pingtext = ";Ping {:04} at {:-8.2f}mm ({})\n".format(i + 1,
                                                             v.ping_extruder_position[i],
-                                                            hexify_float(v.splice_offset+v.ping_extruder_position[i])
+                                                            hexify_float(v.ping_extruder_position[i])
                                                             )
         summary.append( pingtext )
 

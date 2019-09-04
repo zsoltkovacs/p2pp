@@ -19,7 +19,6 @@ from p2pp.logfile import log_warning
 import time
 
 
-
 def centertext(text, wi, ch):
     prefixlen = (wi - len(text)) // 2 - 1
     postfixlen = wi - 2 - prefixlen - len(text)
@@ -129,7 +128,7 @@ def convert_to_absolute():
     for i in range(len(v.processed_gcode)):
         line = v.processed_gcode[i]
 
-        if line.startswith("G1"):
+        if line.startswith("G1") or line.startswith("G0"):
             if "E" in line:
                 fields = line.split()
                 for j in range(1, len(fields)):
@@ -154,6 +153,8 @@ def gcode_process_toolchange(new_tool, location):
     # they appear as a reload of current filament - messing up things
     if new_tool == v.current_tool:
         return
+
+    location += v.splice_offset
 
     if new_tool == -1:
         location += v.extra_runout_filament
@@ -252,8 +253,19 @@ def leavetower():
     if not coordinate_in_tower(v.current_position_x, v.current_position_y):
         log_warning("Leave purge outside tower {},{},{}".format(v.current_position_x, v.current_position_y, v.current_position_z))
     if v.cur_tower_z_delta > 0:
-        v.processed_gcode.append("G1 Z{:.2f} F10800\n".format(v.current_position_z))
+        v.last_leave_purge_tower = len(v.processed_gcode)
+        v.last_leavetower_command = "G1 Z{:.2f} F10800\n".format(v.current_position_z)
+        v.processed_gcode.append(v.last_leavetower_command )
     v.in_tower = False
+
+def remove_last_leave_tower():
+    if v.last_leavetower_command:
+        pos = len(v.processed_gcode) - 1
+        while pos > 0:
+            if v.processed_gcode[pos] == v.last_leavetower_command:
+                v.processed_gcode[pos] = ";--- P2PP removed [Purge Tower - Z-move optimization] - {}".format(v.processed_gcode[pos])
+                break
+            pos = pos - 1
 
 
 def moved_in_tower():
@@ -396,13 +408,16 @@ def gcode_parseline(gcode_full_line):
             v.processed_gcode.append(";--- P2PP removed [Side Wipe] - " + gcode_full_line + "\n")
             return
 
+
         if to_z:
             v.previous_position_z = v.current_position_z
             v.current_position_z = float(to_z)
 
-        if coordinate_in_tower(v.current_position_x, v.current_position_y) and (v.towerskipped or v.emtygridfinished):
-            gcode_full_line = gcode_remove_params(gcode_full_line, ["X", "Y"])
+        if coordinate_in_tower(v.current_position_x, v.current_position_y):
+            if (v.towerskipped or v.emtygridfinished):
+                gcode_full_line = gcode_remove_params(gcode_full_line, ["X", "Y"])
         else:
+            v.last_leavetower_command = None
             v.emtygridfinished = False
 
         if not coordinate_on_bed(v.current_position_x, v.current_position_y) and coordinate_on_bed(prev_x, prev_y):
@@ -417,6 +432,7 @@ def gcode_parseline(gcode_full_line):
 
             if to_e:
                 extruder_movement = float(to_e) * v.extrusion_multiplier * v.extrusion_multiplier_correction
+                adjust_material_extruded(extruder_movement)
 
                 if v.acc_ping_left > 0:
 
@@ -429,15 +445,15 @@ def gcode_parseline(gcode_full_line):
                                 v.current_position_x - v.previous_position_x) * procent
                         intermediate_y = v.previous_position_y + (
                                 v.current_position_y - v.previous_position_y) * procent
-                        if to_z != "":
-                            zmove = "Z{}".format(to_z)
+                        if to_z:
+                            zmove = "Z{:.4f} ".format(to_z)
                         else:
                             zmove = ""
                         v.processed_gcode.append(
-                            "G1 X{} Y{} {} E{}\n".format(intermediate_x, intermediate_y, zmove, v.acc_ping_left))
+                            "G1 X{:.4f} Y{:.4f} {}E{:.4f}\n".format(intermediate_x, intermediate_y, zmove, v.acc_ping_left))
                         extruder_movement -= v.acc_ping_left
                         v.acc_ping_left = 0
-                        gcode_full_line = "G1 X{} Y{} E{}\n".format(v.current_position_x, v.current_position_y,
+                        gcode_full_line = "G1 X{:.4f} Y{:.4f} E{:.4f}\n".format(v.current_position_x, v.current_position_y,
                                                                     extruder_movement)
 
                     if v.acc_ping_left <= 0.1:
@@ -452,7 +468,6 @@ def gcode_parseline(gcode_full_line):
                 if v.within_tool_change_block and v.side_wipe:
                     v.side_wipe_length += extruder_movement
 
-                adjust_material_extruded(extruder_movement)
 
                 if not v.within_tool_change_block and v.wipe_retracted:
                     sidewipe.unretract()
@@ -554,7 +569,10 @@ def gcode_parseline(gcode_full_line):
             v.current_print_feed = v.wipe_feedrate / 60
             v.processed_gcode.append("; --- P2PP Set wipe speed to {:.1f}mm/s\n".format(v.current_print_feed))
             v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
-            entertower()
+            if (v.last_leavetower_command):
+                remove_last_leave_tower()
+            else:
+                entertower()
 
     if "TOOLCHANGE START" in gcode_full_line:
         v.allow_filament_information_update = False
@@ -577,6 +595,7 @@ def gcode_parseline(gcode_full_line):
             v.processed_gcode.append("G0 X{} Y{}\n".format(v.current_position_x, v.current_position_y))
 
     if "TOOLCHANGE END" in gcode_full_line:
+
         leavetower()
         if not v.side_wipe:
             v.within_tool_change_block = False
@@ -644,6 +663,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     parse_slic3r_config()
 
+
     gui.create_logitem("Analyzing layers")
     gui.progress_string(4)
 
@@ -656,11 +676,11 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     # Process the file
     # #################
     gui.create_logitem("Processing File")
-    count = 0
-    for line in v.input_gcode:
-        gcode_parseline(line)
-        gui.progress_string(4 + 96 * count // len(v.input_gcode))
-        count = count + 1
+
+    total_line_count = len(v.input_gcode)
+    for v.process_line_count in range(total_line_count):
+        gcode_parseline(v.input_gcode[v.process_line_count])
+        gui.progress_string(4 + 96 * v.process_line_count // total_line_count)
 
     if v.palette_plus:
         if v.palette_plus_ppm == -9:
