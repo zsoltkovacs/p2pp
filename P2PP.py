@@ -20,6 +20,7 @@ import platform
 import p2pp.checkversion as checkversion
 import p2pp.gui as gui
 
+
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
                                                 ' GCODE derived from Slic3r.')
 

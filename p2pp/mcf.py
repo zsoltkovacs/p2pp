@@ -17,6 +17,7 @@ from p2pp.gcodeparser import gcode_remove_params, get_gcode_parameter, parse_sli
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
 from p2pp.logfile import log_warning
 import time
+import p2pp.purgetower as purgetower
 
 
 def centertext(text, wi, ch):
@@ -299,7 +300,7 @@ def gcode_parseline(gcode_full_line):
         v.processed_gcode.append("\n")
         return
 
-    if v.toolchange_start and not gcode_full_line.startswith("T"):
+    if v.toolchange_start and not gcode_full_line.startswith("T") and not "TOOLCHANGE END" in gcode_full_line:
         if not gcode_full_line.startswith(";"):
             v.processed_gcode.append(";--- P2PP removed [Tool Unload]" + gcode_full_line + "\n")
         else:
@@ -597,6 +598,7 @@ def gcode_parseline(gcode_full_line):
     if "TOOLCHANGE END" in gcode_full_line:
 
         leavetower()
+        v.toolchange_start = False
         if not v.side_wipe:
             v.within_tool_change_block = False
 
@@ -666,6 +668,10 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     gui.create_logitem("Analyzing layers")
     gui.progress_string(4)
+
+    gui.create_logitem("Analyzing purge tower")
+    # purgetower.analyze_purge_info()
+
 
     pre_processfile()
     gui.create_logitem("Found {} layers in print".format(len(v.skippable_layer)))
