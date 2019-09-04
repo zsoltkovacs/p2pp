@@ -16,8 +16,9 @@ import p2pp.variables as v
 import version as ver
 import sys
 import os
+import platform
+import p2pp.checkversion as checkversion
 import p2pp.gui as gui
-from platform import system
 
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
                                                 ' GCODE derived from Slic3r.')
@@ -96,7 +97,29 @@ if __name__ == "__main__":
     v.version = ver.Version
 
     if len(sys.argv) == 1:
-        platformD = system()
+        platformD = platform.system()
+
+
+        MASTER_VERSION = checkversion.get_version(checkversion.MASTER)
+        DEV_VERSION = checkversion.get_version(checkversion.DEV)
+
+        if MASTER_VERSION and DEV_VERSION:
+
+            if v.version > MASTER_VERSION:
+                if v.version <DEV_VERSION:
+                    v.version += " (New dev version {} available)".format(DEV_VERSION)
+                    color = "red"
+                else:
+                    v.version += " (Dev version up to date)"
+                    color = "green"
+            else:
+                if v.version < MASTER_VERSION:
+                    v.version += " (New stable version {} available)".format(MASTER_VERSION)
+                    color = "red"
+                else:
+                    v.version += " (Version up to date)"
+                    color = "green"
+            gui.create_logitem(v.version, color , True)
 
         gui.configinfo()
         gui.create_emptyline()
@@ -117,6 +140,6 @@ if __name__ == "__main__":
         gui.create_logitem("More info on: https://github.com/tomvandeneede/p2pp", "blue")
         gui.close_button_enable()
     else:
-        gui.create_logitem("Python Version Information: "+sys.version ,
+        gui.create_logitem("Python Version Information: "+platform.python_version() ,
                            "blue")
         main(vars(arguments.parse_args()))

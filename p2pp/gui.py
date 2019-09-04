@@ -86,7 +86,6 @@ def close_window():
 def update_button_pressed():
     v.upgradeprocess(version.latest_stable_version , v.update_file_list)
 
-
 def close_button_enable():
     closebutton.config(state=tkinter.NORMAL)
     # WIP disable upgrade for now
