@@ -27,9 +27,7 @@ def create_side_wipe():
         for line in v.before_sidewipe_gcode:
             v.processed_gcode.append(line + "\n")
 
-        v.processed_gcode.append("G1 E{}\n".format(-v.sidewipe_retract))
-        v.total_material_extruded -= v.sidewipe_retract * v.extrusion_multiplier*v.extrusion_multiplier_correction
-        v.wipe_retracted = True
+        retract()
         v.processed_gcode.append("G1 F8640\n")
         v.processed_gcode.append("G0 {} Y{}\n".format(v.side_wipe_loc, v.sidewipe_miny))
         sweep_base_speed = v.wipe_feedrate * 20 * abs(v.sidewipe_maxy - v.sidewipe_miny) / 150
@@ -65,6 +63,11 @@ def unretract():
     v.processed_gcode.append("G1 E{}\n".format(v.sidewipe_retract))
     v.total_material_extruded += v.sidewipe_retract * v.extrusion_multiplier * v.extrusion_multiplier_correction
     v.wipe_retracted = False
+
+def retract():
+    v.processed_gcode.append("G1 E{}\n".format(-v.sidewipe_retract))
+    v.total_material_extruded -= v.sidewipe_retract * v.extrusion_multiplier * v.extrusion_multiplier_correction
+    v.wipe_retracted = True
 
 
 def retro_cleanup():
