@@ -573,13 +573,13 @@ def gcode_parseline(gcode_full_line):
             retrocorrect_emptygrid()
             v.towerskipped = True
         else:
-            v.current_print_feed = v.wipe_feedrate / 60
-            v.processed_gcode.append("; --- P2PP Set wipe speed to {:.1f}mm/s\n".format(v.current_print_feed))
-            v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
             if (v.last_leavetower_command):
                 remove_last_leave_tower()
             else:
                 entertower()
+            v.current_print_feed = v.wipe_feedrate / 60
+            v.processed_gcode.append("; --- P2PP Set wipe speed to {:.1f}mm/s\n".format(v.current_print_feed))
+            v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
 
     if "TOOLCHANGE START" in gcode_full_line:
         v.allow_filament_information_update = False
