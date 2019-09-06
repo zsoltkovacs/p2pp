@@ -134,14 +134,14 @@ def collect_wipetower_info(line):
         parm_x = get_gcode_parameter(line, "X")
         parm_y = get_gcode_parameter(line, "Y")
 
-        if parm_x != "":
+        if parm_x:
             if v.define_tower:
                 v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], parm_x)
                 v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], parm_x)
             if not v.side_wipe_skip:
                 v.current_position_x = parm_x
 
-        if parm_y != "":
+        if parm_y:
             if v.define_tower:
                 v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], parm_y)
                 v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], parm_y)
