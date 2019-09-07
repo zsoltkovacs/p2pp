@@ -230,16 +230,6 @@ def coordinate_on_bed(x, y):
     return True
 
 
-def coordinate_in_tower(x, y):
-    if x < v.wipe_tower_info['minx']:
-        return False
-    if x > v.wipe_tower_info['maxx']:
-        return False
-    if y < v.wipe_tower_info['miny']:
-        return False
-    if y > v.wipe_tower_info['maxy']:
-        return False
-    return True
 
 
 def entertower():
@@ -253,7 +243,7 @@ def entertower():
 
 
 def leavetower():
-    if not coordinate_in_tower(v.current_position_x, v.current_position_y):
+    if not sidewipe.coordinate_in_tower(v.current_position_x, v.current_position_y):
         log_warning("Leave purge outside tower {},{},{}".format(v.current_position_x, v.current_position_y, v.current_position_z))
     if v.cur_tower_z_delta > 0:
         v.last_leave_purge_tower = len(v.processed_gcode)
@@ -284,7 +274,7 @@ def retrocorrect_emptygrid():
             _x = get_gcode_parameter(v.processed_gcode[pos], "X")
             _y = get_gcode_parameter(v.processed_gcode[pos], "Y")
             if _x and _y:
-                if coordinate_in_tower(_x,_y):
+                if sidewipe.coordinate_in_tower(_x,_y):
                     v.processed_gcode[pos] = ";--- P2PP removed [Tower Delta] - {}".format(v.processed_gcode[pos])
                     break
         pos = pos - 1
@@ -393,7 +383,7 @@ def gcode_parseline(gcode_full_line):
             _y = to_y
             if not to_y:
                 _y = prev_y
-            if not coordinate_in_tower(_x, _y):
+            if not sidewipe.coordinate_in_tower(_x, _y):
                 v.processed_gcode.append(";--- P2PP removed [Move Error] - {} {} ".format(_x,_y) + gcode_full_line + "\n")
                 return
 
@@ -424,7 +414,7 @@ def gcode_parseline(gcode_full_line):
             v.previous_position_z = v.current_position_z
             v.current_position_z = float(to_z)
 
-        if coordinate_in_tower(v.current_position_x, v.current_position_y):
+        if sidewipe.coordinate_in_tower(v.current_position_x, v.current_position_y):
             if (v.towerskipped or v.emtygridfinished):
                 gcode_full_line = gcode_remove_params(gcode_full_line, ["X", "Y"])
         else:

@@ -11,6 +11,18 @@ import p2pp.variables as v
 from p2pp.gcodeparser import get_gcode_parameter
 
 
+
+def coordinate_in_tower(x, y):
+    if x < v.wipe_tower_info['minx']:
+        return False
+    if x > v.wipe_tower_info['maxx']:
+        return False
+    if y < v.wipe_tower_info['miny']:
+        return False
+    if y > v.wipe_tower_info['maxy']:
+        return False
+    return True
+
 def create_side_wipe():
     if not v.side_wipe:
         return
