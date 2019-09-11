@@ -37,6 +37,7 @@ maxindex = 0
 def analyze_purge_info():
     global tower_start_x, tower_start_y, _last_wipe_x, last_wipe_y, wipe_index, max_index
     global tower_xmin, tower_xmax, tower_ymin, tower_ymax
+    global totalpurge
     # analyze purge information from the raw input file
     l = 0
 

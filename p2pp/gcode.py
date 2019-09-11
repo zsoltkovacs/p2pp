@@ -15,15 +15,21 @@ EXTRUDER = "E"
 RELATIVE = True
 ABSOLUTE = False
 
-
+import p2pp.variables as v
 
 class GCodeCommand:
     Command = None
+    fullcommand = None
     Command_value = None
     Parameters = {}
     Comment = None
 
     def __init__(self, gcode_line):
+        self.Command = None
+        self.fullcommand = None
+        self.Command_value = None
+        self.Parameters = {}
+        self.Comment = None
         gcode_line = gcode_line.strip()
         pos = gcode_line.find(";")
 
@@ -37,6 +43,7 @@ class GCodeCommand:
             command = fields[0]
             self.Command = command[0]
             self.Command_value = command[1:]
+            self.fullcommand = fields[0]
             fields = fields[1:]
 
             while len(fields) > 0:
@@ -45,11 +52,14 @@ class GCodeCommand:
                     p = param[0]
                     v = param[1:]
 
-                    if v.isnumeric():
+                    try:
                         if "." in v:
                             v = float(v)
                         else:
                             v = int(v)
+                    except ValueError:
+                        pass
+
                     self.Parameters[p] = v
 
                 fields = fields[1:]
@@ -58,20 +68,17 @@ class GCodeCommand:
         p = ""
         for key in self.Parameters:
             p = p + "{}{} ".format(key, self.Parameters[key])
-        c = self.Command
+
+        c = self.fullcommand
         if not c:
             c = ""
-
-        cv = self.Command_value
-        if not cv:
-            cv = ""
 
         if not self.Comment:
             co = ""
         else:
             co = ";" + self.Comment
 
-        return ("{}{} {} {}".format(c, cv, p, co)).strip()
+        return ("{} {} {}".format(c, p, co)).strip() + "\n"
 
     def update_parameter(self, parameter, value):
         self.Parameters[parameter] = value
@@ -82,10 +89,11 @@ class GCodeCommand:
 
     def move_to_comment(self, text):
         if self.Command:
-            self.Comment = "-- P2PP -- removed [{}] : {}".format(text, self)
+            self.Comment = "-- P2PP -- removed [{}] - {}".format(text, self)
 
         self.Command = None
         self.Command_value = None
+        self.fullcommand = None
         self.Parameters.clear()
 
     def has_parameter(self, parametername):
@@ -96,33 +104,13 @@ class GCodeCommand:
             return self.Parameters[parm]
         return defaultvalue
 
+    def issue_command(self):
+        v.processed_gcode.append(str(self))
+
+    def is_comment(self):
+        return self.Command == None and not (self.Comment == None)
+
     def is_movement_command(self):
         return self.Command == "G" and self.Command_value in ['0', '1', '2', '3', '5']
 
-    def get_updated_axis(self, axis, oldvalues):
-
-        assert isinstance(axis, list)
-        assert isinstance(oldvalues, list)
-        assert len(axis) == len(oldvalues)
-
-        rval = []
-        for i in range(len(axis)):
-            _axis = axis[i]
-            _oldval = oldvalues[i]
-
-            if self.Command=="G" and self.Command_value == "92":
-                moverelative = [False] * len(axis)
-                multiplier = [1] * len(axis)
-
-
-            if self.is_movement_command() or (self.Command=="G" and self.Command_value == "92"):
-                if _axis in self.Parameters:
-                    if moverelative[i]:
-                        rval.append(_oldval + self.Parameters[_axis] * multiplier[i])
-                    else:
-                        rval.append(self.Parameters[_axis] * multiplier[i])
-                else:
-                    rval.append(_oldval)
-
-        return rval
 

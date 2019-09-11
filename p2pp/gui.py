@@ -1,5 +1,3 @@
-import array
-
 __author__ = 'Tom Van den Eede'
 __copyright__ = 'Copyright 2018-2019, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
@@ -23,15 +21,37 @@ except ImportError:
 import os
 import sys
 from platform import system
+
+import p2pp.colornames as colornames
 import p2pp.variables as v
 import version
-import p2pp.colornames as colornames
-
-
 
 platformD = system()
 
 last_pct = -1
+
+
+def print_summary(summary):
+    create_logitem("")
+    create_logitem("-" * 19, "blue")
+    create_logitem("   Print Summary", "blue")
+    create_logitem("-" * 19, "blue")
+    create_emptyline()
+    create_logitem("Number of splices:    {0:5}".format(len(v.splice_extruder_position)))
+    create_logitem("Number of pings:      {0:5}".format(len(v.ping_extruder_position)))
+    create_logitem("Total print length {:-8.2f}mm".format(v.total_material_extruded))
+    create_emptyline()
+    create_logitem("Inputs/Materials used:")
+
+    for i in range(len(v.palette_inputs_used)):
+        if v.palette_inputs_used[i]:
+            create_colordefinition(i, v.filament_type[i], v.filament_color_code[i],
+                                   v.material_extruded_per_color[i])
+
+    create_emptyline()
+    for line in summary:
+        create_logitem(line[1:].strip(), "black", False)
+    create_emptyline()
 
 
 def progress_string(pct):
@@ -120,6 +140,10 @@ def user_error(header, body_text):
 def ask_yes_no(title, message):
     return (tkMessageBox.askquestion(title, message).upper()=="YES")
 
+
+def log_warning(text):
+    v.process_warnings.append(";" + text)
+    create_logitem(text, "red")
 
 def configinfo():
     global infosubframe

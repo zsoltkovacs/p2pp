@@ -7,11 +7,10 @@ __license__ = 'GPL'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
-from p2pp.formatnumbers import hexify_short, hexify_float, hexify_long, hexify_byte
+import p2pp.gui as gui
 import p2pp.variables as v
 from p2pp.colornames import find_nearest_colour
-from p2pp.logfile import log_warning
-import p2pp.gui as gui
+from p2pp.formatnumbers import hexify_short, hexify_float, hexify_long, hexify_byte
 
 
 # ################################################################
@@ -78,7 +77,7 @@ def algorithm_create_table():
             try:
                 algo = v.splice_algorithm_dictionary["{}{}".format(v.filament_type[i], v.filament_type[j])]
             except (IndexError, KeyError):
-                log_warning("WARNING: No Algorithm defined for transitioning" +
+                gui.log_warning("WARNING: No Algorithm defined for transitioning" +
                             " {} to {}. Using Default".format(v.filament_type[i],
                                                               v.filament_type[j]))
                 algo = v.default_splice_algorithm
@@ -93,12 +92,12 @@ def algorithm_create_table():
 ############################################################################
 def header_generate_omega(job_name):
     if v.printer_profile_string == '':
-        log_warning("The PRINTERPROFILE identifier is missing, Please add:\n" +
+        gui.log_warning("The PRINTERPROFILE identifier is missing, Please add:\n" +
                     ";P2PP PRINTERPROFILE=<your printer profile ID>\n" +
                     "to your Printers Start GCODE.\n")
 
     if len(v.splice_extruder_position) == 0:
-        log_warning("This does not look like a multi-colour file.\n")
+        gui.log_warning("This does not look like a multi-colour file.\n")
         if v.gui:
             if gui.ask_yes_no('Not a Multi-Colour file?',
                               "This doesn't look like a multi-colour file. Skip processing?"):
@@ -155,7 +154,6 @@ def header_generate_omega_paletteplus():
 
     return {'header': header, 'summary': summary, 'warnings': warnings}
 
-
 def header_generate_omega_palette2(job_name):
     header = []
     summary = []
@@ -165,8 +163,8 @@ def header_generate_omega_palette2(job_name):
 
     if v.printer_profile_string == '':
         v.printer_profile_string = v.default_printerprofile
-        log_warning("No or Invalid Printer profile ID specified, using default P2PP printer profile ID {}"
-                    .format(v.default_printerprofile))
+        gui.log_warning("No or Invalid Printer profile ID specified\nusing default P2PP printer profile ID {}"
+                        .format(v.default_printerprofile))
 
     header.append('O22 D' + v.printer_profile_string.strip("\n") + "\n")  # PRINTERPROFILE used in Palette2
     header.append('O23 D0001' + "\n")  # unused
@@ -176,21 +174,14 @@ def header_generate_omega_palette2(job_name):
 
     for i in range(4):
         if v.palette_inputs_used[i]:
-            if v.filament_type[i] == "":
-                log_warning(
-                    "Filament #{} is missing Material Type, make sure to add" +
-                    " ;P2PP FT=[filament_type] to filament GCode".format(i))
             if v.filament_color_code[i] == "-":
-                log_warning(
-                    "Filament #{} is missing Color info, make sure to add" +
-                    ";P2PP FC=[extruder_colour] to filament GCode".format(i))
                 v.filament_color_code[i] = '000000'
 
-            header.append("D{}{}{}_{} ".format(v.used_filament_types.index(v.filament_type[i]) + 1,
-                                               v.filament_color_code[i].strip("\n"),
-                                               find_nearest_colour(v.filament_color_code[i].strip("\n")),
-                                               v.filament_type[i].strip("\n")
-                                               ))
+            header.append("D{}{}{}{} ".format(v.used_filament_types.index(v.filament_type[i]) + 1,
+                                              v.filament_color_code[i].strip("\n"),
+                                              find_nearest_colour(v.filament_color_code[i].strip("\n")),
+                                              v.filament_type[i].strip("\n")
+                                              ))
         else:
             header.append("D0 ")
 
@@ -269,7 +260,7 @@ def generatesummary():
         summary.append( pingtext )
 
     if v.side_wipe and v.side_wipe_loc == "":
-        log_warning("Using sidewipe with undefined SIDEWIPELOC!!!")
+        gui.log_warning("Using sidewipe with undefined SIDEWIPELOC!!!")
 
 
     return summary

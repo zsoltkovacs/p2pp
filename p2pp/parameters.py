@@ -7,9 +7,8 @@ __license__ = 'GPL'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
-import p2pp.variables as v
-from p2pp.logfile import log_warning
 import p2pp.gui as gui
+import p2pp.variables as v
 
 
 def floatparameter(s):
@@ -35,12 +34,12 @@ def check_config_parameters(line):
     if "PRINTERPROFILE" in line:
         tmp_string = stringparameter(line)
         if len(tmp_string) != 16:
-            log_warning("Invalid Printer profile!  - Has invalid length (expect 16) - [{}]"
-                        .format(tmp_string))
+            gui.log_warning("Invalid Printer profile!  - Has invalid length (expect 16) - [{}]"
+                            .format(tmp_string))
             tmp_string = ""
         if not all(char in set("0123456789ABCDEFabcdef") for char in tmp_string):
-            log_warning("Invalid Printer profile!  - Invalid characters  (expect 0123456789abcdef) - [{}]"
-                        .format(tmp_string))
+            gui.log_warning("Invalid Printer profile!  - Invalid characters  (expect 0123456789abcdef) - [{}]"
+                            .format(tmp_string))
             tmp_string = ""
 
         if len(tmp_string) == 16:
@@ -80,7 +79,7 @@ def check_config_parameters(line):
 
     if "EXTRAENDFILAMENT" in line:
         v.extra_runout_filament = floatparameter(line)
-        gui.create_logitem("Extra filamen at end of print {:-8.2f}mm".format(v.extra_runout_filament))
+        gui.create_logitem("Extra filament at end of print {:-8.2f}mm".format(v.extra_runout_filament))
         return
 
     if "BEFORESIDEWIPEGCODE" in line:
@@ -95,7 +94,7 @@ def check_config_parameters(line):
         v.min_start_splice_length = floatparameter(line)
         if v.min_start_splice_length < 100:
             v.min_start_splice_length = 100
-            log_warning("Minimal first slice length adjusted to 100mm")
+            gui.log_warning("Minimal first slice length adjusted to 100mm")
         return
 
     if "BEDSIZEX" in line:
@@ -115,7 +114,7 @@ def check_config_parameters(line):
         v.min_splice_length = floatparameter(line)
         if v.min_splice_length < 70:
             v.min_splice_length = 70
-            log_warning("Minimal slice length adjusted to 70mm")
+            gui.log_warning("Minimal slice length adjusted to 70mm")
         return
 
     # LINEAR PING
@@ -125,13 +124,12 @@ def check_config_parameters(line):
         v.ping_length_multiplier = 1.0
         if v.ping_interval < 300:
             v.ping_interval = 300
-            log_warning("Minimal Linear Ping distance is 300mm!  Your config stated: {}".format(line))
+            gui.log_warning("Minimal Linear Ping distance is 300mm!  Your config stated: {}".format(line))
         gui.create_logitem("Linear Ping interval of  {:-6.2f}mm".format(v.ping_interval))
         return
 
     if "LINEARPING" in line:
-        v.ping_length_multiplier = 1.0
-        gui.create_logitem("Linear Ping interval of  {:-6.2f}mm".format(v.ping_interval))
+        gui.log_warning("LINEARPING deprecated, use LINEARPINGLENGTH  parameter instead")
         return
 
     # SIDE TRANSITIONING

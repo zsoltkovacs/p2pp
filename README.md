@@ -20,13 +20,15 @@ earlier versions may generate different code patterns and may not work correctly
 -  16/07/2019 - Further error checking in ;P2PP parameter lines 
 -  28/07/2019 - Added ACCESSORYMODE parameter to generate MAF/GCODE pairs [ALPHA]
 -  29/07/2019 - Added support for Palette+ MSF 1.4 files [ALPHA]
--  31/07/2019 - Added support for absolute extruder conversion [BETA]
--  15/08/2019 - Updated GUI to be more interactive and give progress information [BETA]
+-  31/07/2019 - Added support for absolute extruder conversion 
+-  15/08/2019 - Updated GUI to be more interactive and give progress information 
 -  01/09/2019 - Updated GUI on startup without parameters
 -  01/09/2019 - improved compatibility with PrusaSlicer 2.1.0 Beta
 -  01/09/2019 - GUI update / Corrected first slice length
 -  01/09/2019 - GUI update / Corrected first slice length
 -  04/09/2019 - Fixes for PrusaSlicer 2.1.0
+-  11/09/2019 - Release of 3.4.0 with the parsingroutined untangled and simplified [BETA]
+   
 
 
 ## Purpose
@@ -163,7 +165,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
         
     ; Following settings are optional (see description below)
     
-    ;P2PP LINEARPING
+    ;P2PP LINEARPINGLENGTH=350
     ;P2PP EXTRAENDFILAMENT=150
     
     ; Following optional settings control the SIDE TRANSITIONING (see description below)
@@ -213,7 +215,7 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
   **P+ NOTE**: when using the P+ accessory mode functionality, the cooling parameter does not exist.  Instead the P+ has a forward/reverse flag.
   Setting any value other than 0 will yield a reverse splice.   Zero will yield a forward splice.
 
-> **LINEARPING**  *[OPTIONAL]*
+> **LINEARPINGLENGTH=nnnn**  *[OPTIONAL]*
     This is used to keep the filament disctance between pings constant to 350mm.  When this parameter is not set, the ping distance is exponentially growing during the print resulting in filament distances up to 3m between pings in very long prints.  ** WARNING ** Smoe users have reported issues when setting LINEARPING to values below 350mm.  It is suggested to keep 350 as a minimum.
    ```
   ;P2PP LINEARPING=350
