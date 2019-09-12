@@ -7,7 +7,9 @@ __license__ = 'GPL'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
+import p2pp.gui as gui
 import p2pp.variables as v
+
 
 def gcode_remove_params(gcode, params):
     removed = False
@@ -91,12 +93,17 @@ def parse_slic3r_config():
             continue
 
         if gcode_line.startswith("; retract_lift = "):
+            lift_error = False
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 retracts = gcode_line[parameter_start + 1:].strip(" ").split(",")
                 if len(retracts) == 4:
                     for i in range(4):
                         v.retract_lift[i] = float(retracts[i])
+                        if v.retract_lift[i] == 0:
+                            lift_error = True
+            if lift_error:
+                gui.log_warning("[Printer Settings]->[Extruders 1/2/3/4]->[Lift Z] should not be set to zero.")
             continue
 
         if gcode_line.startswith("; retract_length = "):

@@ -177,7 +177,7 @@ def update_class(gcode_line):
         if v.block_classification == CLS_TONORMAL and v.previous_block_classification == CLS_TOOL_PURGE:
             v.block_classification = CLS_ENDPURGE
 
-    return v.block_classification
+    return v.block_classification == v.previous_block_classification
 
 
 def flagset(value, mask):
@@ -340,6 +340,8 @@ def gcode_parseline(index):
     ##############################################
     if (block_class == CLS_TOOL_START) or (block_class == CLS_TOOL_UNLOAD):
         g.move_to_comment("mmu unload tool")
+        if g.Comment:
+            g.Comment += "{}".format(block_class)
         g.issue_command()
         return
 
