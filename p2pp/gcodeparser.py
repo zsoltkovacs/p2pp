@@ -107,12 +107,18 @@ def parse_slic3r_config():
             continue
 
         if gcode_line.startswith("; retract_length = "):
+            retract_error = False
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 retracts = gcode_line[parameter_start + 1:].strip(" ").split(",")
                 if len(retracts) == 4:
                     for i in range(4):
                         v.retract_length[i] = float(retracts[i])
+                        if v.retract_length[i] == 0.0:
+                            retract_error = True
+            if retract_error:
+                gui.log_warning(
+                    "[Printer Settings]->[Extruders 1/2/3/4]->[Retraction Length] should not be set to zero.")
             continue
 
         if gcode_line.startswith("; gcode_flavor"):
