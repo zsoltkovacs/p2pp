@@ -14,6 +14,7 @@ def create_side_wipe():
     if not v.side_wipe or v.side_wipe_length == 0:
         return
 
+    v.after_side_wipe = True
     v.processed_gcode.append(";---------------------------\n")
     v.processed_gcode.append(";  P2PP SIDE WIPE: {:7.3f}mm\n".format(v.side_wipe_length))
 

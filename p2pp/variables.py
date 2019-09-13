@@ -144,6 +144,8 @@ min_start_splice_length = 100  # type: int  # Minimum first splice length.
 gui = True  # Enabled/Disabled by --gui switch - enables GUI Mode which requires tkinter.
 consolewait = False
 
+after_side_wipe = False
+
 version = "0.0.0"
 processtime = 0
 

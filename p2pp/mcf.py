@@ -103,6 +103,15 @@ def gcode_process_toolchange(new_tool, location):
     v.current_tool = new_tool
 
 
+def x_on_bed(x):
+    if not x:
+        return True
+    if v.bed_origin_x > x:
+        return False
+    if x >= v.bed_origin_x + v.bed_size_x:
+        return False
+    return True
+
 def coordinate_on_bed(x, y):
     if v.bed_origin_x > x:
         return False
@@ -287,6 +296,7 @@ def parse_gcode():
             if flagset(specifier, CLS_RETRACTS):
                 v.block_classification = CLS_NORMAL
 
+
         ## Put obtained values in global variables
         ##########################################
         v.gcodeclass.append(v.block_classification)
@@ -306,6 +316,8 @@ def gcode_parseline(index):
             v.keep_x = g.X
         if v.wipe_tower_info['miny'] <= g.Y <= v.wipe_tower_info['maxy']:
             v.keep_y = g.Y
+    elif not x_on_bed(g.X):
+        g.remove_parameter("X")
 
     block_class = v.gcodeclass[index]
     if index == 0:
