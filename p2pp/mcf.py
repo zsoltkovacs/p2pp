@@ -301,10 +301,11 @@ def parse_gcode():
 def gcode_parseline(index):
     g = v.parsedgcode[index]
 
-    if v.wipe_tower_info['minx'] <= g.X <= v.wipe_tower_info['maxx']:
-        v.keep_x = g.X
-    if v.wipe_tower_info['miny'] <= g.Y <= v.wipe_tower_info['maxy']:
-        v.keep_y = g.Y
+    if not v.side_wipe:
+        if v.wipe_tower_info['minx'] <= g.X <= v.wipe_tower_info['maxx']:
+            v.keep_x = g.X
+        if v.wipe_tower_info['miny'] <= g.Y <= v.wipe_tower_info['maxy']:
+            v.keep_y = g.Y
 
     block_class = v.gcodeclass[index]
     if index == 0:
@@ -421,7 +422,7 @@ def gcode_parseline(index):
             extruder_movement = g.get_parameter("E") * v.extrusion_multiplier * v.extrusion_multiplier_correction
             v.total_material_extruded += extruder_movement
             v.material_extruded_per_color[v.current_tool] += extruder_movement
-            # DEBUG INFO g.add_comment(" - {}".format(v.total_material_extruded))
+            # g.add_comment(" - {}".format(v.total_material_extruded))
 
     ## After Material update processing of special features
     #######################################################
