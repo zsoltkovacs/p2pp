@@ -301,8 +301,10 @@ def parse_gcode():
 def gcode_parseline(index):
     g = v.parsedgcode[index]
 
-    v.keep_x = g.X if g.X else v.keep_x
-    v.keep_y = g.Y if g.Y else v.keep_y
+    if v.wipe_tower_info['minx'] <= g.X <= v.wipe_tower_info['maxx']:
+        v.keep_x = g.X
+    if v.wipe_tower_info['miny'] <= g.Y <= v.wipe_tower_info['maxy']:
+        v.keep_y = g.Y
 
     block_class = v.gcodeclass[index]
     if index == 0:
@@ -411,8 +413,8 @@ def gcode_parseline(index):
         if block_class == CLS_BRIM:
             v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], v.current_position_x - 1)
             v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], v.current_position_y - 1)
-            v.wipe_tower_info['maxx'] = min(v.wipe_tower_info['maxx'], v.current_position_x + 1)
-            v.wipe_tower_info['maxy'] = min(v.wipe_tower_info['maxy'], v.current_position_y + 1)
+            v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], v.current_position_x + 1)
+            v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], v.current_position_y + 1)
 
         if g.has_parameter("E"):
             e_parameter = g.get_parameter("E")
