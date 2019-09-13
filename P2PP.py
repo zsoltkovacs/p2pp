@@ -4,22 +4,21 @@ __copyright__ = 'Copyright 2018-2019, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
-__license__ = 'GPL'
-__version__ = '3.0.0'
+__license__ = 'GPLv3'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 __status__ = 'Beta'
 
-import p2pp.mcf as mcf
 import argparse
-import p2pp.variables as v
-import version as ver
-import sys
 import os
 import platform
+import sys
+
 import p2pp.checkversion as checkversion
 import p2pp.gui as gui
-
+import p2pp.mcf as mcf
+import p2pp.variables as v
+import version as ver
 
 arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
                                                 ' GCODE derived from Slic3r.')
