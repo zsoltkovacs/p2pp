@@ -160,6 +160,7 @@ classupdates = []
 create_tower_entry = False
 acc_ping_left = 0.0
 infill_speed = 0.0
-
+keep_x = None
+keep_y = None
 block_classification = 0
 previous_block_classification = 0

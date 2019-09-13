@@ -206,9 +206,6 @@ def parse_gcode():
         v.parsedgcode.append(gcode.GCodeCommand(line))
         classupdate = False
 
-        if line.startswith('T'):
-            classupdate = True
-            v.block_classification = CLS_TOOLCHANGE
 
         if line.startswith(';'):
 
@@ -304,6 +301,9 @@ def parse_gcode():
 def gcode_parseline(index):
     g = v.parsedgcode[index]
 
+    v.keep_x = g.X if g.X else v.keep_x
+    v.keep_y = g.Y if g.Y else v.keep_y
+
     block_class = v.gcodeclass[index]
     if index == 0:
         previous_block_class = block_class
@@ -380,10 +380,10 @@ def gcode_parseline(index):
         # entering the purge tower with a delta
         ########################################
         if classupdate and block_class == CLS_TOOL_PURGE:
+            g.issue_command()
+            v.processed_gcode.append("G1 X{} Y{}\n".format(v.keep_x, v.keep_y))
             entertower()
-
-        if block_class == CLS_TOOLCHANGE and g.fullcommand == "G4":
-            g.move_to_comment("mmu unload tool")
+            return
 
 
         if v.towerskipped:

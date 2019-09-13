@@ -23,6 +23,10 @@ class GCodeCommand:
     Command_value = None
     Parameters = {}
     Comment = None
+    X = None
+    Y = None
+    Z = None
+    E = None
 
     def __init__(self, gcode_line):
         self.Command = None
@@ -63,6 +67,11 @@ class GCodeCommand:
                     self.Parameters[p] = v
 
                 fields = fields[1:]
+
+        self.X = self.get_parameter("X", None)
+        self.Y = self.get_parameter("Y", None)
+        self.Z = self.get_parameter("Z", None)
+        self.E = self.get_parameter("E", None)
 
     def __str__(self):
         p = ""
