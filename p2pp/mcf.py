@@ -340,8 +340,6 @@ def gcode_parseline(index):
     ##############################################
     if (block_class == CLS_TOOL_START) or (block_class == CLS_TOOL_UNLOAD):
         g.move_to_comment("mmu unload tool")
-        if g.Comment:
-            g.Comment += "{}".format(block_class)
         g.issue_command()
         return
 
