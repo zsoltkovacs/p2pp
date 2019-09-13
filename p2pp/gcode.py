@@ -107,6 +107,12 @@ class GCodeCommand:
     def issue_command(self):
         v.processed_gcode.append(str(self))
 
+    def add_comment(self, text):
+        if self.Comment:
+            self.Comment += text
+        else:
+            self.Comment = text
+
     def is_comment(self):
         return self.Command == None and not (self.Comment == None)
 

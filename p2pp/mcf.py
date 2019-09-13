@@ -49,7 +49,7 @@ def convert_to_absolute():
                     if fields[j][0] == "E":
                         to_e = float(fields[j][1:])
                         absolute += to_e
-                        fields[j] = "E{:.4f}".format(absolute)
+                        fields[j] = "E{:.5f}".format(absolute)
                 line = " ".join(fields) + "\n"
                 v.processed_gcode[i] = line
             continue
@@ -206,6 +206,10 @@ def parse_gcode():
         v.parsedgcode.append(gcode.GCodeCommand(line))
         classupdate = False
 
+        if line.startswith('T'):
+            classupdate = True
+            v.block_classification = CLS_TOOLCHANGE
+
         if line.startswith(';'):
 
             ## P2PP SPECIFIC SETP COMMANDS
@@ -338,7 +342,7 @@ def gcode_parseline(index):
 
     ### ALL UNLOAD CODE FROM PRUSA CAN BE UNLOADED
     ##############################################
-    if (block_class == CLS_TOOL_START) or (block_class == CLS_TOOL_UNLOAD):
+    if block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
         g.move_to_comment("mmu unload tool")
         g.issue_command()
         return
@@ -362,27 +366,25 @@ def gcode_parseline(index):
         if (previous_block_class == CLS_ENDGRID) and (block_class == CLS_NORMAL):
             v.towerskipped = False
 
+
         # changing from NORMAL to EMPTY
         ###############################
         if classupdate and block_class == CLS_EMPTY:
             if v.skippable_layer[v.layernumber[index]]:
                 v.cur_tower_z_delta += v.layer_height
                 v.towerskipped = True
-                v.processed_gcode.append(";-----------------------------------\n")
-                v.processed_gcode.append(";  GRID SKIP --TOWER DELTA {:6.2}mm\n".format(v.cur_tower_z_delta))
-                v.processed_gcode.append(";-----------------------------------\n")
+                v.processed_gcode.append(";-------------------------------------\n")
+                v.processed_gcode.append(";  GRID SKIP --TOWER DELTA {:6.2f}mm\n".format(v.cur_tower_z_delta))
+                v.processed_gcode.append(";-------------------------------------\n")
 
         # entering the purge tower with a delta
         ########################################
         if classupdate and block_class == CLS_TOOL_PURGE:
-            v.create_tower_entry = True
-
-        if v.create_tower_entry and g.has_parameter("X") and g.has_parameter("Y"):
-            v.create_tower_entry = False
-            g.issue_command()
             entertower()
 
-            return
+        if block_class == CLS_TOOLCHANGE and g.fullcommand == "G4":
+            g.move_to_comment("mmu unload tool")
+
 
         if v.towerskipped:
             if not g.is_comment():
@@ -417,7 +419,10 @@ def gcode_parseline(index):
             extruder_movement = g.get_parameter("E") * v.extrusion_multiplier * v.extrusion_multiplier_correction
             v.total_material_extruded += extruder_movement
             v.material_extruded_per_color[v.current_tool] += extruder_movement
+            # DEBUG INFO g.add_comment(" - {}".format(v.total_material_extruded))
 
+    ## After Material update processing of special features
+    #######################################################
     if v.side_wipe:
         if block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE]:
             v.side_wipe_length += e_parameter
@@ -427,6 +432,7 @@ def gcode_parseline(index):
             create_side_wipe()
 
     # catch all
+
     g.issue_command()
 
     if v.accessory_mode:
