@@ -222,7 +222,7 @@ def parse_gcode():
             if line.startswith(";LAYER"):
                 layer = int(line[7:])
                 if layer > 0:
-                    v.skippable_layer.append((emptygrid == 2) and (toolchange == 0))
+                    v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
                 toolchange = 0
                 emptygrid = 0
 
