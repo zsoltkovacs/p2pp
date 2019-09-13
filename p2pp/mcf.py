@@ -312,10 +312,12 @@ def gcode_parseline(index):
     g = v.parsedgcode[index]
 
     if not v.side_wipe:
-        if v.wipe_tower_info['minx'] <= g.X <= v.wipe_tower_info['maxx']:
-            v.keep_x = g.X
-        if v.wipe_tower_info['miny'] <= g.Y <= v.wipe_tower_info['maxy']:
-            v.keep_y = g.Y
+        if g.X:
+            if v.wipe_tower_info['minx'] <= g.X <= v.wipe_tower_info['maxx']:
+                v.keep_x = g.X
+        if g.Y:
+            if v.wipe_tower_info['miny'] <= g.Y <= v.wipe_tower_info['maxy']:
+                v.keep_y = g.Y
     elif not x_on_bed(g.X):
         g.remove_parameter("X")
 
