@@ -152,6 +152,14 @@ processtime = 0
 versioncheck = False
 upgradeprocess = None
 
+purgetower = []
+purge_last_posx = None
+purge_last_posy = None
+purgelayer = 0
+purge_current_index = 0
+full_purge_reduction = False
+purge_first_empty = True
+
 parsedgcode = []
 gcodeclass = []
 linetool = []

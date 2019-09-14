@@ -160,6 +160,10 @@ def check_config_parameters(line):
             v.max_tower_z_delta = abs(floatparameter(line))
             gui.create_logitem("Max Purge Tower Delta set to {:-2.2f}mm".format(v.max_tower_z_delta))
         return
+    if "FULLPURGEREDUCTION" in line:
+        gui.create_logitem("Full purge reduction configured")
+        v.full_purge_reduction = True
+
 
     # REPRAP COMPATIBILITY
     if "REPRAPCOMPATIBLE" in line:

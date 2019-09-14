@@ -7,6 +7,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
+import copy
 import os
 import time
 
@@ -14,6 +15,7 @@ import p2pp.gcode as gcode
 import p2pp.gui as gui
 import p2pp.parameters as parameters
 import p2pp.pings as pings
+import p2pp.purgetower as purgetower
 import p2pp.variables as v
 from p2pp.gcodeparser import get_gcode_parameter, parse_slic3r_config
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
@@ -139,18 +141,21 @@ def entertower():
 CLS_UNDEFINED = 0
 CLS_NORMAL = 1
 CLS_TOOL_START = 2
-CLS_TOOL_UNLOAD = 4
-CLS_TOOL_PURGE = 8
-CLS_EMPTY = 16
-CLS_BRIM = 32
-CLS_ENDGRID = 64
-CLS_TONORMAL = 128
-CLS_HOPUP = 256
-CLS_HOPDOWN = 512
-CLS_COMMENT = 1024
-CLS_RETRACTS = 2048
-CLS_TOOLCHANGE = 4096
-CLS_ENDPURGE = 8192
+CLS_TOOL_UNLOAD = 3
+CLS_TOOL_PURGE = 4
+CLS_EMPTY = 5
+CLS_FIRST_EMPTY = 6
+CLS_BRIM = 7
+CLS_ENDGRID = 8
+CLS_COMMENT = 9
+CLS_ENDPURGE = 10
+CLS_TONORMAL = 99
+
+SPEC_HOPUP = 1
+SPEC_HOPDOWN = 2
+SPEC_RETRACTS = 4
+SPEC_TOOLCHANGE = 8
+
 
 
 def update_class(gcode_line):
@@ -185,6 +190,10 @@ def update_class(gcode_line):
 
         if v.block_classification == CLS_TONORMAL and v.previous_block_classification == CLS_TOOL_PURGE:
             v.block_classification = CLS_ENDPURGE
+
+        if v.block_classification == CLS_EMPTY and v.purge_first_empty:
+            v.block_classification = CLS_FIRST_EMPTY
+            v.purge_first_empty = False
 
     return v.block_classification == v.previous_block_classification
 
@@ -251,6 +260,19 @@ def parse_gcode():
             if v.block_classification == CLS_EMPTY:
                 emptygrid += 1
 
+        if v.block_classification in [CLS_FIRST_EMPTY]:
+            if not (v.purge_last_posy and v.purge_last_posy):
+                # if v.parsedgcode[-1].E:
+                #     gui.create_logitem('Purge tower basis does not have a base.',"red", False)
+                if v.parsedgcode[-1].X:
+                    v.purge_last_posx = v.parsedgcode[-1].X
+                if v.parsedgcode[-1].Y:
+                    v.purge_last_posy = v.parsedgcode[-1].Y
+
+            if v.parsedgcode[-1].is_movement_command():
+                v.purgetower.append(copy.copy(v.parsedgcode[-1]))
+
+
         ## Z-HOPS detection
         ###################
         if v.parsedgcode[-1].has_parameter("Z"):
@@ -259,14 +281,14 @@ def parse_gcode():
             delta = (to_z - cur_z)
 
             if abs(delta - retract) < 0.0001:
-                specifier |= CLS_HOPUP
+                specifier |= SPEC_HOPUP
                 last_hopup = len(v.parsedgcode)
 
                 if v.block_classification == CLS_TONORMAL:
                     v.previous_block_classification = v.block_classification = CLS_NORMAL
 
             if abs(- delta - retract) < 0.0001:
-                specifier |= CLS_HOPDOWN
+                specifier |= SPEC_HOPDOWN
 
             cur_z = to_z
 
@@ -274,14 +296,14 @@ def parse_gcode():
         #####################
         if v.parsedgcode[-1].has_parameter("E"):
             if v.parsedgcode[-1].get_parameter("E", 0) < 0:
-                specifier |= CLS_RETRACTS
+                specifier |= SPEC_RETRACTS
 
         ## tool change detection
         ########################
         if v.parsedgcode[-1].Command == 'T':
             cur_tool = int(v.parsedgcode[-1].Command_value)
             retract = v.retract_lift[cur_tool]
-            specifier |= CLS_TOOLCHANGE
+            specifier |= SPEC_TOOLCHANGE
 
         ## Extend block backwards towards last hop up
         #############################################
@@ -293,7 +315,7 @@ def parse_gcode():
                 idx += 1
 
         if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
-            if flagset(specifier, CLS_RETRACTS):
+            if flagset(specifier, SPEC_RETRACTS):
                 v.block_classification = CLS_NORMAL
 
 
@@ -366,9 +388,9 @@ def gcode_parseline(index):
 
     # SIDE WIPE SPECIFIC CODE
     #########################
-    if v.side_wipe:
+    if v.side_wipe or v.full_purge_reduction:
 
-        if block_class in [CLS_BRIM, CLS_EMPTY, CLS_ENDGRID]:
+        if block_class in [CLS_BRIM, CLS_EMPTY, CLS_FIRST_EMPTY, CLS_ENDGRID]:
             if not g.is_comment():
                 g.move_to_comment("unnecessary wipe")
             g.issue_command()
@@ -386,7 +408,7 @@ def gcode_parseline(index):
 
         # changing from NORMAL to EMPTY
         ###############################
-        if classupdate and block_class == CLS_EMPTY:
+        if classupdate and block_class in [CLS_FIRST_EMPTY, CLS_EMPTY]:
             if v.skippable_layer[v.layernumber[index]]:
                 v.cur_tower_z_delta += v.layer_height
                 v.towerskipped = True
@@ -447,6 +469,14 @@ def gcode_parseline(index):
 
         if block_class == CLS_NORMAL and classupdate:
             create_side_wipe()
+
+    if v.full_purge_reduction:
+        if block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE]:
+            v.side_wipe_length += e_parameter
+            g.move_to_comment("purge consolidation")
+
+        if block_class == CLS_NORMAL and classupdate:
+            purgetower.generate_purge_sequence()
 
     # catch all
 
