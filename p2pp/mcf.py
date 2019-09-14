@@ -105,26 +105,26 @@ def gcode_process_toolchange(new_tool, location):
     v.current_tool = new_tool
 
 
-def x_on_bed(x):
-    if not x:
-        return True
-    if v.bed_origin_x > x:
+def inrange(number, low, high):
+    if number == None:
         return False
-    if x >= v.bed_origin_x + v.bed_size_x:
+    if number < low or number > high:
         return False
     return True
+
+
+def x_on_bed(x):
+    return inrange(x, v.bed_origin_x, v.bed_origin_x + v.bed_size_x)
+
 
 def coordinate_on_bed(x, y):
-    if v.bed_origin_x > x:
-        return False
-    if x >= v.bed_origin_x + v.bed_size_x:
-        return False
-    if v.bed_origin_y >= y:
-        return False
-    if y >= v.bed_origin_y + v.bed_size_y:
-        return False
-    return True
+    return inrange(x, v.bed_origin_x, v.bed_origin_x + v.bed_size_x) and \
+           inrange(y, v.bed_origin_y, v.bed_origin_y + v.bed_size_y)
 
+
+def coordinate_in_tower(x, y):
+    return inrange(x, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']) and \
+           inrange(y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy'])
 
 def entertower():
     if v.cur_tower_z_delta > 0:
@@ -382,13 +382,14 @@ def gcode_parseline(index):
     ### ALL UNLOAD CODE FROM PRUSA CAN BE UNLOADED
     ##############################################
     if block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
-        g.move_to_comment("mmu unload tool")
+        if not coordinate_in_tower(g.X, g.Y):
+            g.move_to_comment("mmu unload tool")
         g.issue_command()
         return
 
     # SIDE WIPE SPECIFIC CODE
     #########################
-    if v.side_wipe or v.full_purge_reduction:
+    if v.side_wipe:
 
         if block_class in [CLS_BRIM, CLS_EMPTY, CLS_FIRST_EMPTY, CLS_ENDGRID]:
             if not g.is_comment():
@@ -436,6 +437,14 @@ def gcode_parseline(index):
         if classupdate and block_class in [CLS_TOOL_PURGE, CLS_EMPTY] and v.acc_ping_left <= 0:
             pings.check_accessorymode_first()
 
+    if block_class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
+        if g.E:
+            if g.X:
+                if not inrange(g.X, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']):
+                    g.remove_parameter["E"]
+            if g.Y:
+                if not inrange(g.Y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy']):
+                    g.remove_parameter["E"]
     # movement commands
     ###################
 
