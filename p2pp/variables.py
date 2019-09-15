@@ -32,6 +32,7 @@ filament_short = [0, 0, 0, 0]
 
 retract_lift = [0.6, 0.6, 0.6, 0.6]
 retract_length = [0.8, 0.8, 0.8, 0.8]
+filament_diameter = [1.75, 1.75, 1.75, 1.75]
 
 accessory_mode = False  # type Bool
 
@@ -98,6 +99,8 @@ wipe_tower_info = {'minx': 9999,
 
 wipetower_posx = 0.0  # type: float
 wipetower_posy = 0.0  # type: float
+wipetower_width = 0.0  # type: float
+extrusion_width = 0.45  # type: float
 
 current_position_x = 0.0  # type: float
 current_position_y = 0.0  # type: float
@@ -152,13 +155,9 @@ processtime = 0
 versioncheck = False
 upgradeprocess = None
 
-purgetower = []
-purge_last_posx = None
-purge_last_posy = None
-purgelayer = 0
-purge_current_index = 0
 full_purge_reduction = False
 purge_first_empty = True
+purgelayer = 0
 
 parsedgcode = []
 gcodeclass = []

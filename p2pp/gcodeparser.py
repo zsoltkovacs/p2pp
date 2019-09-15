@@ -7,6 +7,8 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
+import math
+
 import p2pp.gui as gui
 import p2pp.variables as v
 
@@ -44,6 +46,9 @@ def get_gcode_parameter(gcode, parameter, default=None):
     return default
 
 
+def filament_volume_to_length(x):
+    return x / (v.filament_diameter[v.current_tool] / 2 * v.filament_diameter[v.current_tool] / 2 * math.pi)
+
 def parse_slic3r_config():
     for idx in range(len(v.input_gcode) - 1, -1, -1):
 
@@ -57,10 +62,20 @@ def parse_slic3r_config():
             if parameter_start != -1:
                 v.wipetower_posx = float(gcode_line[parameter_start + 1:].strip())
 
+        if gcode_line.startswith("; wipe_tower_width"):
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                v.wipetower_width = float(gcode_line[parameter_start + 1:].strip())
+
         if gcode_line.startswith("; wipe_tower_y"):
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 v.wipetower_posy = float(gcode_line[parameter_start + 1:].strip())
+
+        if gcode_line.startswith("; extrusion_width"):
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                v.extrusion_width = float(gcode_line[parameter_start + 1:].strip())
 
         if gcode_line.startswith("; infill_speed"):
             parameter_start = gcode_line.find("=")
@@ -82,6 +97,14 @@ def parse_slic3r_config():
             if len(filament_colour) == 4:
                 v.filament_color_code = filament_colour
             continue
+
+        if gcode_line.startswith("; filament_diameter"):
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                filament_diameters = gcode_line[parameter_start + 1:].strip(" ").split(",")
+                if len(filament_diameters) == 4:
+                    for i in range(4):
+                        v.filament_diameter[i] = float(filament_diameters[i])
 
         if gcode_line.startswith("; filament_type"):
             parameter_start = gcode_line.find("=")
@@ -142,6 +165,26 @@ def parse_slic3r_config():
                 if len(wiping_info) != 16:
                     continue
                 for i in range(len(wiping_info)):
-                    wiping_info[i] = int(wiping_info[i])
+                    wiping_info[i] = filament_volume_to_length(float(wiping_info[i]))
             v.max_wipe = max(wiping_info)
+            if len(wiping_info) == 16:
+                gui.create_logitem("", "black", False)
+                gui.create_logitem("Wiping matrix information (mm)", "blue", False)
+                gui.create_logitem("{:>5}{:>10}{:>10}{:>10}{:>10}".format(" S/D", 1, 2, 3, 4))
+                gui.create_logitem("{:>5}{:>10.2f}{:>10.2f}{:>10.2f}{:>10.2f}".format(1, wiping_info[0], wiping_info[1],
+                                                                                      wiping_info[2], wiping_info[2]),
+                                   "black", False)
+                gui.create_logitem(
+                    "{:>5}{:>10.2f}{:>10.2f}{:>10.2f}{:>10.2f}".format(2, wiping_info[4], wiping_info[5],
+                                                                       wiping_info[6],
+                                                                       wiping_info[7]), "black", False)
+                gui.create_logitem(
+                    "{:>5}{:>10.2f}{:>10.2f}{:>10.2f}{:>10.2f}".format(3, wiping_info[8], wiping_info[9],
+                                                                       wiping_info[10],
+                                                                       wiping_info[11]), "black", False)
+                gui.create_logitem(
+                    "{:>5}{:>10.2f}{:>10.2f}{:>10.2f}{:>10.2f}".format(4, wiping_info[12], wiping_info[13],
+                                                                       wiping_info[14],
+                                                                       wiping_info[15]), "black", False)
+                gui.create_logitem("", "black", True)
             continue

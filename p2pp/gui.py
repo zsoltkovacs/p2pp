@@ -76,6 +76,7 @@ def completed(text, color):
 color_count = 0
 
 def create_logitem(text, color="black", force_update = True):
+    text = text.strip()
     global color_count
     color_count += 1
     tagname = "color"+str(color_count)

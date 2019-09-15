@@ -28,6 +28,7 @@ earlier versions may generate different code patterns and may not work correctly
 -  01/09/2019 - GUI update / Corrected first slice length
 -  04/09/2019 - Fixes for PrusaSlicer 2.1.0
 -  11/09/2019 - Release of 3.4.0 with the parsingroutined untangled and simplified [BETA]
+-  16/09/2019 - Release 3.5.0 - FULLPURGEREDUCTION [ALPHA]
    
 
 
@@ -286,6 +287,16 @@ The *WIPEFEEDRATE* parameter described above can be used to change the speed at 
  ![ptower delta](https://github.com/tomvandeneede/p2pp/blob/master/docs/tower_delta.JPG)
  
  
+  > **;P2PP FULLPURGEREDUCTION** *[EXPERIMENTAL,OPTIONAL, NOT FOR P+]*
+  
+  The FULLPURGEREDUCTION option is very similar to the PURGETOWERDELTA except that it will rewrite the complete purge tower.
+  It required unlimited tower delta so it can only be applied in very specific cases.
+  In addition to removing the full empty layers from your print it will also remove parts of the block that are hollow.
+  
+  Future development will focus on optimizing the Z-distance travels to a minimum by also using sparse layers inbetween solid 
+  ayers to make the tower grow with the print...
+ 
+ 
  > **SIDEWIPELOC=X#** *[EXPERIMENTAL,OPTIONAL,NOT FOR P+]*
   This is used to define the location on the X-Axis the printer needs to go to to do a side transition instead of doing a tower purge.  In Slic3r all still needs to be setup with a purge, tower, but the tower needs to be **MOVE COMPLETELY OFF THE BED** to enable the SIDE WIPE .  p2pp will convert the tower purges into side wipes and fileter out all purges that are not necessary (i.e. empty towe shells). 
   If you want to perform a side wipe on the MK3 use the following line.  
@@ -310,13 +321,6 @@ The *WIPEFEEDRATE* parameter described above can be used to change the speed at 
   These parameters allow the user to insert blocks of GCode right before or after the side wipe purge block is executed.  There can be only one GCode command per line but you can include multiple BEFORE/AFTERSIDEWIPEGCODE commands in the section.  The commands are always executed in the given order.
 
 
-
-> **;P2PP REPRAPCOMPATIBLE**  *[OPTIONAL]*
-  Enhances the compatibility with RepRap type boards (e.g. Duet) by filtering out Slic3r default commands that are incompatible with this firmware
-
-  ```
-  ;P2PP REPRAPCOMPATIBLE
-  ```
 
 > **;P2PP ACCESSORYMODE_MAF**  *[OPTIONAL, ALPHA, PALETTE 2]*
   Generates separate MAF and GCODE files with pause to run files in accessory mode.  This mode is currently NOT compatible with the Asychronous tower and side wipe functions.
@@ -363,7 +367,6 @@ The *WIPEFEEDRATE* parameter described above can be used to change the speed at 
   ``` 
 
 
-
 ### Print Settings
 1. In Slic3r, Click the "Print Settings Tab"
 2. Click the "Multiple Extruders" menu item
@@ -397,9 +400,7 @@ For Mac/Unix:
 ```
     python your_p2pp_path/p2pp/P2PP.py -i ;
 ```    
-  
-  
-    
+
     
 Click the floppy-disk icon, and append "Palette P2PP" to the end of the Print Settings profile name.
 
@@ -408,14 +409,7 @@ Click the floppy-disk icon, and append "Palette P2PP" to the end of the Print Se
 
 
 ### Filament Settings (!!!)
-1. In Slic3r, Click the "Filament Settings Tab"
-2. Each filament should define a linear advance factor of greater than 0 (nn value).  
-Normally filament has this value defined based on bowden or direct drive so no action is required.
-```
-M900 Knn
-```
 
- Remember to click the floppy-disk icon to save!
 
  > **PROFILETYPEOVERRIDE=** *[OPTIONAL]*
  
@@ -487,7 +481,7 @@ For all future prints using **Chroma** or **Canvas**, make sure to keep the same
 
 Thanks to.....
 Tim Brookman for the co-development of this plugin.
-Klaus, Khalil ,Casey, Jermaul, Paul  (and all others) for the endless testing and valuable feedback and the ongoing P2PP support to the community...it's them driving the improvements...
+Klaus, Khalil ,Casey, Jermaul, Paul, Gideon,   (and all others) for the endless testing and valuable feedback and the ongoing P2PP support to the community...it's them driving the improvements...
 Kurt for making the instructional video n setting up and using p2pp.
 
 ## Make a donation...

@@ -7,7 +7,6 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
-import copy
 import os
 import time
 
@@ -146,9 +145,10 @@ CLS_TOOL_PURGE = 4
 CLS_EMPTY = 5
 CLS_FIRST_EMPTY = 6
 CLS_BRIM = 7
-CLS_ENDGRID = 8
-CLS_COMMENT = 9
-CLS_ENDPURGE = 10
+CLS_BRIM_END = 8
+CLS_ENDGRID = 9
+CLS_COMMENT = 10
+CLS_ENDPURGE = 11
 CLS_TONORMAL = 99
 
 SPEC_HOPUP = 1
@@ -180,7 +180,10 @@ def update_class(gcode_line):
             v.block_classification = CLS_BRIM
 
         if "WIPE TOWER FIRST LAYER BRIM END" in gcode_line:
-            v.block_classification = CLS_TONORMAL
+            if v.full_purge_reduction:
+                v.block_classification = CLS_BRIM_END
+            else:
+                v.block_classification = CLS_TONORMAL
 
         if "EMPTY GRID START" in gcode_line:
             v.block_classification = CLS_EMPTY
@@ -260,18 +263,6 @@ def parse_gcode():
             if v.block_classification == CLS_EMPTY:
                 emptygrid += 1
 
-        if v.block_classification in [CLS_FIRST_EMPTY]:
-            if not (v.purge_last_posy and v.purge_last_posy):
-                # if v.parsedgcode[-1].E:
-                #     gui.create_logitem('Purge tower basis does not have a base.',"red", False)
-                if v.parsedgcode[-1].X:
-                    v.purge_last_posx = v.parsedgcode[-1].X
-                if v.parsedgcode[-1].Y:
-                    v.purge_last_posy = v.parsedgcode[-1].Y
-
-            if v.parsedgcode[-1].is_movement_command():
-                v.purgetower.append(copy.copy(v.parsedgcode[-1]))
-
 
         ## Z-HOPS detection
         ###################
@@ -329,6 +320,9 @@ def parse_gcode():
         v.previous_block_classification = v.block_classification
         index = index + 1
 
+        if v.block_classification == CLS_BRIM_END:
+            v.block_classification = CLS_NORMAL
+
 
 def gcode_parseline(index):
     g = v.parsedgcode[index]
@@ -379,6 +373,13 @@ def gcode_parseline(index):
         g.issue_command()
         return
 
+    if block_class == CLS_BRIM_END:
+        purgetower.purge_create_layers(v.wipetower_posx, v.wipetower_posy, purgetower.purge_width - 0.9,
+                                       purgetower.purge_height - 0.9)
+        gui.create_logitem(" Layer Length Solid={:.2f}mm   Sparse={:.2f}mm".format(purgetower.sequence_length_solid,
+                                                                                   purgetower.sequence_length_empty))
+        block_class = CLS_NORMAL
+
     ### ALL UNLOAD CODE FROM PRUSA CAN BE UNLOADED
     ##############################################
     if block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
@@ -391,11 +392,13 @@ def gcode_parseline(index):
     #########################
     if v.side_wipe:
 
-        if block_class in [CLS_BRIM, CLS_EMPTY, CLS_FIRST_EMPTY, CLS_ENDGRID]:
+        if (block_class in [CLS_EMPTY, CLS_FIRST_EMPTY, CLS_ENDGRID]) or \
+                (block_class == CLS_BRIM and not v.full_purge_reduction):
             if not g.is_comment():
                 g.move_to_comment("unnecessary wipe")
             g.issue_command()
             return
+
 
     # PRUGE TOWER DELATE SPECIFIC CODE
     ##################################
@@ -437,14 +440,16 @@ def gcode_parseline(index):
         if classupdate and block_class in [CLS_TOOL_PURGE, CLS_EMPTY] and v.acc_ping_left <= 0:
             pings.check_accessorymode_first()
 
-    if block_class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
-        if g.E:
-            if g.X:
-                if not inrange(g.X, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']):
-                    g.remove_parameter["E"]
-            if g.Y:
-                if not inrange(g.Y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy']):
-                    g.remove_parameter["E"]
+    if not v.side_wipe:
+        if block_class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
+            if g.E:
+                if g.X:
+                    if not inrange(g.X, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']):
+                        g.remove_parameter("E")
+                if g.Y:
+                    if not inrange(g.Y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy']):
+                        g.remove_parameter("E")
+
     # movement commands
     ###################
 
@@ -457,6 +462,16 @@ def gcode_parseline(index):
         v.current_position_z = g.get_parameter("Z", v.current_position_z)
 
         if block_class == CLS_BRIM:
+
+            if not (g.X and g.Y):
+                if g.X:
+                    purgetower.purge_width = min(purgetower.purge_width,
+                                                 abs(v.current_position_x - v.previous_position_x))
+                if g.Y:
+                    purgetower.purge_height = min(purgetower.purge_height,
+                                                  abs(v.current_position_y - v.previous_position_y))
+
+
             v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], v.current_position_x - 1)
             v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], v.current_position_y - 1)
             v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], v.current_position_x + 1)
@@ -467,7 +482,6 @@ def gcode_parseline(index):
             extruder_movement = g.get_parameter("E") * v.extrusion_multiplier * v.extrusion_multiplier_correction
             v.total_material_extruded += extruder_movement
             v.material_extruded_per_color[v.current_tool] += extruder_movement
-            # g.add_comment(" - {}".format(v.total_material_extruded))
 
     ## After Material update processing of special features
     #######################################################
@@ -477,15 +491,10 @@ def gcode_parseline(index):
             g.move_to_comment("side wipe")
 
         if block_class == CLS_NORMAL and classupdate:
-            create_side_wipe()
-
-    if v.full_purge_reduction:
-        if block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE]:
-            v.side_wipe_length += e_parameter
-            g.move_to_comment("purge consolidation")
-
-        if block_class == CLS_NORMAL and classupdate:
-            purgetower.generate_purge_sequence()
+            if v.full_purge_reduction:
+                purgetower.purge_generate_sequence()
+            else:
+                create_side_wipe()
 
     # catch all
 
@@ -561,6 +570,16 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     if v.side_wipe:
         gui.create_logitem("Side wipe activated", "blue")
+        if v.full_purge_reduction:
+            gui.log_warning("Full Purge Reduction is not compatible with Side Wipe, performing Side Wipe")
+            v.full_purge_reduction = False
+
+    if v.full_purge_reduction:
+        v.side_wipe = True
+        gui.create_logitem("Full Tower Reduction activated", "blue")
+        if v.tower_delta:
+            gui.log_warning("Full Purge Reduction is not compatible with Tower Delta, performing Full Purge Reduction")
+            v.tower_delta = False
 
     if v.tower_delta:
         optimize_tower_skip(v.max_tower_z_delta, v.layer_height)
