@@ -173,3 +173,8 @@ keep_x = None
 keep_y = None
 block_classification = 0
 previous_block_classification = 0
+
+retract_move = False
+
+max_tower_delta = 0.0
+min_tower_delta = 0.0

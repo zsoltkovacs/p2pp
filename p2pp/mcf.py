@@ -127,6 +127,7 @@ def coordinate_in_tower(x, y):
 
 def entertower():
     if v.cur_tower_z_delta > 0:
+        v.max_tower_delta = max(v.cur_tower_z_delta, v.max_tower_delta)
         v.processed_gcode.append(";------------------------------\n")
         v.processed_gcode.append(";  P2PP DELTA >> TOWER {:.2f}mm\n".format(
             v.current_position_z - v.cur_tower_z_delta - v.retract_lift[v.current_tool]))
@@ -299,7 +300,8 @@ def parse_gcode():
         ## Extend block backwards towards last hop up
         #############################################
 
-        if v.block_classification in [CLS_TOOL_START, CLS_TOOL_UNLOAD, CLS_EMPTY, CLS_BRIM]:
+        if v.block_classification in [CLS_TOOL_START, CLS_TOOL_UNLOAD, CLS_EMPTY,
+                                      CLS_BRIM] and not v.full_purge_reduction:
             idx = max(last_hopup, last_backpoint)
             while idx < len(v.gcodeclass):
                 v.gcodeclass[idx] = v.block_classification
@@ -373,12 +375,25 @@ def gcode_parseline(index):
         g.issue_command()
         return
 
-    if block_class == CLS_BRIM_END:
-        purgetower.purge_create_layers(v.wipetower_posx, v.wipetower_posy, purgetower.purge_width - 0.9,
-                                       purgetower.purge_height - 0.9)
+    if block_class == CLS_BRIM_END and v.full_purge_reduction:
+
+        purgetower.purge_create_layers(v.wipetower_posx, v.wipetower_posy,
+                                       purgetower.purge_width - 2 * v.extrusion_width,
+                                       purgetower.purge_height - 2 * v.extrusion_width)
+        gui.create_logitem(
+            " Purge Tower :Loc X{:.2f} Y{:.2f}  W{:.2f} H{:.2f}".format(v.wipetower_posx, v.wipetower_posy,
+                                                                        purgetower.purge_width - 2 * v.extrusion_width,
+                                                                        purgetower.purge_height - 2 * v.extrusion_width))
         gui.create_logitem(" Layer Length Solid={:.2f}mm   Sparse={:.2f}mm".format(purgetower.sequence_length_solid,
                                                                                    purgetower.sequence_length_empty))
-        block_class = CLS_NORMAL
+        for i in purgetower.brimlayer:
+            i.issue_command()
+
+        v.retract_move = True
+
+        tmp = purgetower.sequence_length_brim * v.extrusion_multiplier * v.extrusion_multiplier_correction
+        v.total_material_extruded += tmp
+        v.material_extruded_per_color[v.current_tool] += tmp
 
     ### ALL UNLOAD CODE FROM PRUSA CAN BE UNLOADED
     ##############################################
@@ -392,8 +407,8 @@ def gcode_parseline(index):
     #########################
     if v.side_wipe:
 
-        if (block_class in [CLS_EMPTY, CLS_FIRST_EMPTY, CLS_ENDGRID]) or \
-                (block_class == CLS_BRIM and not v.full_purge_reduction):
+        if (block_class in [CLS_EMPTY, CLS_FIRST_EMPTY, CLS_ENDGRID]) or (
+                not v.full_purge_reduction and block_class == CLS_BRIM):
             if not g.is_comment():
                 g.move_to_comment("unnecessary wipe")
             g.issue_command()
@@ -456,7 +471,19 @@ def gcode_parseline(index):
     extruder_movement = 0
     e_parameter = 0
 
+    if v.full_purge_reduction and block_class == CLS_NORMAL and classupdate:
+        purgetower.purge_generate_sequence()
+
     if g.is_movement_command():
+        if v.retract_move and g.E and g.E < 0:
+            if not block_class == CLS_BRIM_END:
+                g.update_parameter("X", purgetower.last_posx)
+                g.update_parameter("Y", purgetower.last_posy)
+            else:
+                g.update_parameter("X", purgetower.last_brim_x)
+                g.update_parameter("Y", purgetower.last_brim_y)
+            v.retract_move = False
+
         v.current_position_x = g.get_parameter("X", v.current_position_x)
         v.current_position_y = g.get_parameter("Y", v.current_position_y)
         v.current_position_z = g.get_parameter("Z", v.current_position_z)
@@ -471,11 +498,13 @@ def gcode_parseline(index):
                     purgetower.purge_height = min(purgetower.purge_height,
                                                   abs(v.current_position_y - v.previous_position_y))
 
-
             v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], v.current_position_x - 1)
             v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], v.current_position_y - 1)
             v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], v.current_position_x + 1)
             v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], v.current_position_y + 1)
+
+            if v.full_purge_reduction:
+                g.move_to_comment("unnecessary wipe")
 
         if g.has_parameter("E"):
             e_parameter = g.get_parameter("E")
@@ -490,13 +519,11 @@ def gcode_parseline(index):
             v.side_wipe_length += e_parameter
             g.move_to_comment("side wipe")
 
-        if block_class == CLS_NORMAL and classupdate:
-            if v.full_purge_reduction:
-                purgetower.purge_generate_sequence()
-            else:
+        if block_class == CLS_NORMAL and classupdate and not v.full_purge_reduction:
                 create_side_wipe()
 
     # catch all
+
 
     g.issue_command()
 
@@ -591,6 +618,10 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         gcode_parseline(process_line_count)
         gui.progress_string(50 + 50 * process_line_count // total_line_count)
 
+    if abs(v.min_tower_delta) >= min(v.retract_lift) + v.layer_height:
+        gui.log_warning("Increase retraction Z hop, {:2f}mm needed to print correctly".v.retract_lift[v.current_tool])
+        if abs(v.min_tower_delta) > min(v.retract_lift) + v.layer_height:
+            gui.log_warning("THIS FILE WILL NOT PRINT CORRECTLY")
     v.processtime = time.time() - starttime
 
     gcode_process_toolchange(-1, v.total_material_extruded)

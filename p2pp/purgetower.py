@@ -13,6 +13,7 @@ import p2pp.variables as v
 
 solidlayer = []
 emptylayer = []
+brimlayer = []
 
 PURGE_SOLID = 1
 PURGE_EMPTY = 2
@@ -24,9 +25,13 @@ purge_height = 999
 
 sequence_length_solid = 0
 sequence_length_empty = 0
+sequence_length_brim = 0
 
 last_posx = None
 last_posy = None
+
+last_brim_x = None
+last_brim_y = None
 
 
 def if_defined(x, y):
@@ -54,10 +59,11 @@ def generate_rectangle(result, x, y, w, h):
 
 
 def _purge_calculate_sequences_length():
-    global sequence_length_solid, sequence_length_empty
+    global sequence_length_solid, sequence_length_empty, sequence_length_brim
 
     sequence_length_solid = 0
     sequence_length_empty = 0
+    sequence_length_brim = 0
 
     for i in solidlayer:
         if i.E:
@@ -67,6 +73,9 @@ def _purge_calculate_sequences_length():
         if i.E:
             sequence_length_empty += i.E
 
+    for i in brimlayer:
+        if i.E:
+            sequence_length_brim += i.E
 
 def _purge_create_sequence(code, pformat, start1, end1, step1, start2, end2):
     generate_front = False
@@ -133,6 +142,8 @@ def purge_create_layers(x, y, w, h):
 
     _purge_create_sequence(emptylayer, "G1 X{:.3f} Y{:.3f}", a_dir_start, a_dir_end, a_dir_step, long_start, long_end)
 
+    _purge_generate_tower_brim(x, y, w, h)
+
     _purge_calculate_sequences_length()
 
 
@@ -143,12 +154,15 @@ def _purge_number_of_gcodelines():
         return len(emptylayer)
 
 
-def _purge_update_sequence_index(preferred):
+def _purge_update_sequence_index():
     global current_purge_form, current_purge_index
 
     current_purge_index = (current_purge_index + 1) % _purge_number_of_gcodelines()
     if current_purge_index == 0:
-        current_purge_form = preferred
+        if v.purgelayer * v.layer_height < v.current_position_z:
+            current_purge_form = PURGE_EMPTY
+        else:
+            current_purge_form = PURGE_SOLID
         v.purgelayer += 1
         if v.side_wipe_length > 0:
             v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
@@ -161,7 +175,32 @@ def _purge_get_nextcommand_in_sequence():
         return emptylayer[current_purge_index]
 
 
-def purge_generate_sequence(preferred=PURGE_SOLID):
+def _purge_generate_tower_brim(x, y, w, h):
+    global brimlayer, last_brim_x, last_brim_y
+
+    brimlayer = []
+    ew = v.extrusion_width
+    y -= ew
+    w += ew
+    h += 2 * ew
+
+    brimlayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}".format(x, y)))
+
+    for i in range(4):
+        brimlayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}  E{:.4f}".format(x + w, y, calculate_purge(w))))
+        brimlayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}  E{:.4f}".format(x + w, y + h, calculate_purge(h))))
+        x -= ew
+        w += 2 * ew
+        brimlayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}  E{:.4f}".format(x, y + h, calculate_purge(w))))
+        y -= ew
+        h += 2 * ew
+        brimlayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}  E{:.4f}".format(x, y, calculate_purge(h))))
+
+    last_brim_x = x
+    last_brim_y = y
+
+
+def purge_generate_sequence():
     global last_posx, last_posy
 
     if not v.side_wipe_length > 0:
@@ -169,8 +208,14 @@ def purge_generate_sequence(preferred=PURGE_SOLID):
 
     v.processed_gcode.append("; --------------------------------------------------\n")
     v.processed_gcode.append("; --- P2PP WIPE SEQUENCE START  FOR {:5.2f}mm\n".format(v.side_wipe_length))
+    v.processed_gcode.append(
+        "; --- DELTA = {:.2f}\n".format(v.current_position_z - (v.purgelayer + 1) * v.layer_height))
     v.processed_gcode.append("; --------------------------------------------------\n")
     v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
+
+    v.max_tower_delta = max(v.max_tower_delta, v.current_position_z - (v.purgelayer + 1) * v.layer_height)
+    v.min_tower_delta = min(v.min_tower_delta, v.current_position_z - (v.purgelayer + 1) * v.layer_height)
+
     if last_posx and last_posy:
         v.processed_gcode.append("G1 X{} Y{}\n".format(last_posx, last_posy))
         v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
@@ -184,7 +229,7 @@ def purge_generate_sequence(preferred=PURGE_SOLID):
 
         next_command.issue_command()
 
-        _purge_update_sequence_index(preferred)
+        _purge_update_sequence_index()
 
     # return to print height
     v.processed_gcode.append("; -------------------------------------\n")
@@ -198,3 +243,4 @@ def purge_generate_sequence(preferred=PURGE_SOLID):
     v.total_material_extruded += correction
     v.material_extruded_per_color[v.current_tool] += correction
     v.side_wipe_length = 0
+    v.retract_move = True

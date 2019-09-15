@@ -41,6 +41,9 @@ def print_summary(summary):
     create_logitem("Number of pings:      {0:5}".format(len(v.ping_extruder_position)))
     create_logitem("Total print length {:-8.2f}mm".format(v.total_material_extruded))
     create_emptyline()
+    if v.full_purge_reduction or v.tower_delta:
+        create_logitem("Tower Delta Range  {:.2f}mm -  {:.2f}mm".format(v.min_tower_delta, v.max_tower_delta))
+    create_emptyline()
     create_logitem("Inputs/Materials used:")
 
     for i in range(len(v.palette_inputs_used)):
