@@ -415,14 +415,19 @@ def gcode_parseline(index):
 
             if block_class == CLS_BRIM_END:
                 # generate a purge tower alternative
-                purgetower.purge_create_layers(v.wipetower_posx, v.wipetower_posy,
-                                               purgetower.purge_width - 2 * v.extrusion_width,
-                                               purgetower.purge_height - 2 * v.extrusion_width)
+
+                _x = v.wipe_tower_info['minx'] + 4 * v.extrusion_width
+                _y = v.wipe_tower_info['miny'] + 4 * v.extrusion_width
+                _w = v.wipe_tower_info['maxx'] - v.wipe_tower_info['minx'] - 8 * v.extrusion_width
+                _h = v.wipe_tower_info['maxy'] - v.wipe_tower_info['miny'] - 8 * v.extrusion_width
+
+                # purgetower.purge_create_layers(v.wipetower_posx, v.wipetower_posy,
+                #                                purgetower.purge_width - 2 * v.extrusion_width,
+                #                                purgetower.purge_height - 2 * v.extrusion_width)
+                purgetower.purge_create_layers(_x, _y, _w, _h)
                 # generate og items for the new purge tower
                 gui.create_logitem(
-                    " Purge Tower :Loc X{:.2f} Y{:.2f}  W{:.2f} H{:.2f}".format(v.wipetower_posx, v.wipetower_posy,
-                                                                                purgetower.purge_width - 2 * v.extrusion_width,
-                                                                                purgetower.purge_height - 2 * v.extrusion_width))
+                    " Purge Tower :Loc X{:.2f} Y{:.2f}  W{:.2f} H{:.2f}".format(_x, _y, _w, _h))
                 gui.create_logitem(
                     " Layer Length Solid={:.2f}mm   Sparse={:.2f}mm".format(purgetower.sequence_length_solid,
                                                                             purgetower.sequence_length_empty))
