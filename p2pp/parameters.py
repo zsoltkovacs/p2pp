@@ -117,7 +117,7 @@ def check_config_parameters(line):
             gui.log_warning("Minimal slice length adjusted to 70mm")
         return
 
-    # LINEAR PING
+    # LINEAR PING removed
 
     if "LINEARPINGLENGTH" in line:
         v.ping_interval = floatparameter(line)

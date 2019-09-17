@@ -154,6 +154,7 @@ CLS_TONORMAL = 99
 
 SPEC_HOPUP = 1
 SPEC_HOPDOWN = 2
+SPEC_HOPPEDUP = 16
 SPEC_RETRACTS = 4
 SPEC_TOOLCHANGE = 8
 
@@ -188,6 +189,7 @@ def update_class(gcode_line):
 
         if "EMPTY GRID START" in gcode_line:
             v.block_classification = CLS_EMPTY
+
 
         if "EMPTY GRID END" in gcode_line:
             v.block_classification = CLS_ENDGRID
@@ -275,12 +277,14 @@ def parse_gcode():
             if abs(delta - retract) < 0.0001:
                 specifier |= SPEC_HOPUP
                 last_hopup = len(v.parsedgcode)
+                v.keep_hopspec = SPEC_HOPPEDUP
 
                 if v.block_classification == CLS_TONORMAL:
                     v.previous_block_classification = v.block_classification = CLS_NORMAL
 
             if abs(- delta - retract) < 0.0001:
                 specifier |= SPEC_HOPDOWN
+                v.keep_hopspec = 0
 
             cur_z = to_z
 
@@ -317,7 +321,7 @@ def parse_gcode():
         v.gcodeclass.append(v.block_classification)
         v.layernumber.append(layer)
         v.linetool.append(cur_tool)
-        v.parsecomment.append(specifier)
+        v.parsecomment.append(specifier | v.keep_hopspec)
         v.classupdates.append(v.block_classification != v.previous_block_classification)
         v.previous_block_classification = v.block_classification
         index = index + 1
@@ -360,9 +364,20 @@ def gcode_parseline(index):
     ## ALL SITUATIONS
     ##############################################
     if block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
-        if not coordinate_in_tower(g.X, g.Y):
-            g.move_to_comment("tool unload code - skipped")
-            g.issue_command()
+        if v.tower_delta:
+            if g.is_movement_command():
+                if g.fullcommand == "G4":
+                    g.move_to_comment("tool unload")
+                if not (g.has_parameter("Z")):
+                    g.move_to_comment("tool unload")
+                else:
+                    g.remove_parameter("X")
+                    g.remove_parameter("Y")
+                    g.remove_parameter("F")
+                    g.remove_parameter("E")
+        else:
+            g.move_to_comment("tool unload")
+        g.issue_command()
         return
 
     if not v.side_wipe:
@@ -435,11 +450,15 @@ def gcode_parseline(index):
         # entering the purge tower with a delta
         ########################################
         if v.tower_delta:
-            if classupdate and block_class == CLS_TOOL_PURGE:
-                g.issue_command()
-                v.processed_gcode.append("G1 X{} Y{}\n".format(v.keep_x, v.keep_y))
-                entertower()
-                return
+
+            if classupdate:
+
+                if block_class == CLS_TOOL_PURGE:
+                    g.issue_command()
+                    v.processed_gcode.append("G1 X{} Y{}\n".format(v.keep_x, v.keep_y))
+                    entertower()
+                    return
+
 
         # going into an empty grid -- check if it should be consolidated
         ################################################################
@@ -461,7 +480,6 @@ def gcode_parseline(index):
             if not g.is_comment():
                 g.move_to_comment("tower skipped")
             g.issue_command()
-
             return
     else:
         if classupdate and block_class in [CLS_TOOL_PURGE, CLS_EMPTY] and v.acc_ping_left <= 0:
