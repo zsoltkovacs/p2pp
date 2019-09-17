@@ -159,14 +159,13 @@ def _purge_update_sequence_index():
 
     current_purge_index = (current_purge_index + 1) % _purge_number_of_gcodelines()
     if current_purge_index == 0:
-        if v.purgelayer * v.layer_height < v.current_position_z:
+        if (v.purgelayer + 1) * v.layer_height < v.current_position_z:
             current_purge_form = PURGE_EMPTY
         else:
             current_purge_form = PURGE_SOLID
         v.purgelayer += 1
         if v.side_wipe_length > 0:
             v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
-
 
 def _purge_get_nextcommand_in_sequence():
     if current_purge_form == PURGE_SOLID:
@@ -200,16 +199,27 @@ def _purge_generate_tower_brim(x, y, w, h):
     last_brim_y = y
 
 
+
 def purge_generate_sequence():
     global last_posx, last_posy
 
     if not v.side_wipe_length > 0:
         return
 
+    actual = 0
+    expected = v.side_wipe_length
+
     v.processed_gcode.append("; --------------------------------------------------\n")
     v.processed_gcode.append("; --- P2PP WIPE SEQUENCE START  FOR {:5.2f}mm\n".format(v.side_wipe_length))
     v.processed_gcode.append(
         "; --- DELTA = {:.2f}\n".format(v.current_position_z - (v.purgelayer + 1) * v.layer_height))
+
+    if v.previous_tool != -1:
+        index = v.previous_tool * 4 + v.current_tool
+        if v.side_wipe_length > v.wiping_info[index]:
+            v.side_wipe_length = v.wiping_info[index]
+            v.processed_gcode.append(
+                "; --- CORRECTED PURGE TO TRANSITION LENGTH {:.2f}mm\n".format(v.wiping_info[index]))
     v.processed_gcode.append("; --------------------------------------------------\n")
     v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
 
@@ -226,7 +236,7 @@ def purge_generate_sequence():
         last_posx = if_defined(next_command.X, last_posx)
         last_posy = if_defined(next_command.Y, last_posy)
         v.side_wipe_length -= if_defined(next_command.E, 0)
-
+        actual += if_defined(next_command.E, 0)
         next_command.issue_command()
 
         _purge_update_sequence_index()
@@ -239,8 +249,10 @@ def purge_generate_sequence():
 
     # if we extruded more we need to account for that in the total count
 
-    correction = -v.side_wipe_length * v.extrusion_multiplier * v.extrusion_multiplier_correction
+    correction = (actual - expected) * v.extrusion_multiplier * v.extrusion_multiplier_correction
     v.total_material_extruded += correction
     v.material_extruded_per_color[v.current_tool] += correction
     v.side_wipe_length = 0
     v.retract_move = True
+    v.retract_x = last_posx
+    v.retract_y = last_posy

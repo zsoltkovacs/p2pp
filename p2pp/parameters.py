@@ -128,7 +128,7 @@ def check_config_parameters(line):
         gui.create_logitem("Linear Ping interval of  {:-6.2f}mm".format(v.ping_interval))
         return
 
-    if "LINEARPING" in line:
+    if line.endswith("LINEARPING"):
         gui.log_warning("LINEARPING deprecated, use LINEARPINGLENGTH  parameter instead")
         return
 

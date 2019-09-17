@@ -24,7 +24,7 @@ from p2pp.sidewipe import create_side_wipe
 def optimize_tower_skip(skipmax, layersize):
     skipped = 0.0
     skipped_num = 0
-    for idx in range(len(v.skippable_layer) - 1, -1, -1):
+    for idx in range(len(v.skippable_layer) - 1, 0, -1):
         if skipped >= skipmax:
             v.skippable_layer[idx] = False
         elif v.skippable_layer[idx]:
@@ -100,13 +100,13 @@ def gcode_process_toolchange(new_tool, location):
                 v.filament_short[new_tool] = max(v.filament_short[new_tool], filamentshortage)
 
         v.previous_toolchange_location = location
-
+    v.previous_tool = v.current_tool
     v.current_tool = new_tool
 
 
 def inrange(number, low, high):
-    if number == None:
-        return False
+    if not number:
+        return True
     if number < low or number > high:
         return False
     return True
@@ -181,7 +181,7 @@ def update_class(gcode_line):
             v.block_classification = CLS_BRIM
 
         if "WIPE TOWER FIRST LAYER BRIM END" in gcode_line:
-            if v.full_purge_reduction:
+            if v.full_purge_reduction or v.tower_delta:
                 v.block_classification = CLS_BRIM_END
             else:
                 v.block_classification = CLS_TONORMAL
@@ -286,7 +286,7 @@ def parse_gcode():
 
         ## retract detections
         #####################
-        if v.parsedgcode[-1].has_parameter("E"):
+        if v.parsedgcode[-1].is_movement_command() and v.parsedgcode[-1].has_parameter("E"):
             if v.parsedgcode[-1].get_parameter("E", 0) < 0:
                 specifier |= SPEC_RETRACTS
 
@@ -326,8 +326,44 @@ def parse_gcode():
             v.block_classification = CLS_NORMAL
 
 
+def update_extrusion(length):
+    v.total_material_extruded += length
+    v.material_extruded_per_color[v.current_tool] += length
+
 def gcode_parseline(index):
+
     g = v.parsedgcode[index]
+    block_class = v.gcodeclass[index]
+    previous_block_class = v.gcodeclass[max(0, index - 1)]
+    classupdate = block_class != previous_block_class
+
+    if g.Command == 'T':
+        gcode_process_toolchange(int(g.Command_value), v.total_material_extruded)
+        g.move_to_comment("Color Change")
+        g.issue_command()
+        return
+
+    if g.fullcommand in ["M104", "M106", "M109", "M140", "M190", "M73", "M900"]:
+        g.issue_command()
+        return
+
+    if g.fullcommand in ["M220"]:
+        g.move_to_comment("Flow Rate Adjustments are removed")
+        g.issue_command()
+        return
+
+    if g.fullcommand == "M221":
+        v.extrusion_multiplier = float(g.get_parameter("S", v.extrusion_multiplier * 100)) / 100
+        g.issue_command()
+        return
+
+    ## ALL SITUATIONS
+    ##############################################
+    if block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
+        if not coordinate_in_tower(g.X, g.Y):
+            g.move_to_comment("tool unload code - skipped")
+            g.issue_command()
+        return
 
     if not v.side_wipe:
         if g.X:
@@ -339,149 +375,119 @@ def gcode_parseline(index):
     elif not x_on_bed(g.X):
         g.remove_parameter("X")
 
-    block_class = v.gcodeclass[index]
-    if index == 0:
-        previous_block_class = block_class
-    else:
-        previous_block_class = v.gcodeclass[index - 1]
+    ## SIDEWIPE / FULLPURGEREDUCTION / TOWER DELTA
+    ###############################################
+    if v.pathprocessing:
 
-    classupdate = block_class != previous_block_class
+        if block_class == CLS_TONORMAL:
 
-    if g.Command == 'T':
-        gcode_process_toolchange(int(g.Command_value), v.total_material_extruded)
-        g.move_to_comment("toolchange")
-        g.issue_command()
-        return
-
-    if g.fullcommand in ["M104", "M106", "M109", "M140", "M190", "M73", "M900"]:
-        g.issue_command()
-        return
-
-    if g.fullcommand in ["M220"]:
-        g.move_to_comment("removed commands")
-        g.issue_command()
-        return
-
-    if g.fullcommand == "M221":
-        v.extrusion_multiplier = float(g.get_parameter("S", v.extrusion_multiplier * 100)) / 100
-        g.issue_command()
-        return
-
-    #### PROCESSING VALID FOR BOTH SIDEWIPE and DELTAPURGE
-    #######################################################
-    if block_class == CLS_TONORMAL:
-        if not g.is_comment():
-            g.move_to_comment("tool change return")
-        g.issue_command()
-        return
-
-    if block_class == CLS_BRIM_END and v.full_purge_reduction:
-
-        purgetower.purge_create_layers(v.wipetower_posx, v.wipetower_posy,
-                                       purgetower.purge_width - 2 * v.extrusion_width,
-                                       purgetower.purge_height - 2 * v.extrusion_width)
-        gui.create_logitem(
-            " Purge Tower :Loc X{:.2f} Y{:.2f}  W{:.2f} H{:.2f}".format(v.wipetower_posx, v.wipetower_posy,
-                                                                        purgetower.purge_width - 2 * v.extrusion_width,
-                                                                        purgetower.purge_height - 2 * v.extrusion_width))
-        gui.create_logitem(" Layer Length Solid={:.2f}mm   Sparse={:.2f}mm".format(purgetower.sequence_length_solid,
-                                                                                   purgetower.sequence_length_empty))
-        for i in purgetower.brimlayer:
-            i.issue_command()
-
-        v.retract_move = True
-
-        tmp = purgetower.sequence_length_brim * v.extrusion_multiplier * v.extrusion_multiplier_correction
-        v.total_material_extruded += tmp
-        v.material_extruded_per_color[v.current_tool] += tmp
-
-    ### ALL UNLOAD CODE FROM PRUSA CAN BE UNLOADED
-    ##############################################
-    if block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
-        if not coordinate_in_tower(g.X, g.Y):
-            g.move_to_comment("mmu unload tool")
-        g.issue_command()
-        return
-
-    # SIDE WIPE SPECIFIC CODE
-    #########################
-    if v.side_wipe:
-
-        if (block_class in [CLS_EMPTY, CLS_FIRST_EMPTY, CLS_ENDGRID]) or (
-                not v.full_purge_reduction and block_class == CLS_BRIM):
             if not g.is_comment():
-                g.move_to_comment("unnecessary wipe")
+                g.move_to_comment("post block processing")
             g.issue_command()
             return
 
+        # sepcific for FULL_PURGE_REDUCTION
+        if v.full_purge_reduction:
 
-    # PRUGE TOWER DELATE SPECIFIC CODE
-    ##################################
-    if v.tower_delta:
+            # get information about the purge tower dimensions
+            if block_class == CLS_BRIM and not (g.X and g.Y):
+                if g.X:
+                    purgetower.purge_width = min(purgetower.purge_width,
+                                                 abs(g.X - v.previous_position_x))
+                if g.Y:
+                    purgetower.purge_height = min(purgetower.purge_height,
+                                                  abs(g.Y - v.previous_position_y))
+
+            if block_class == CLS_BRIM_END:
+                # generate a purge tower alternative
+                purgetower.purge_create_layers(v.wipetower_posx, v.wipetower_posy,
+                                               purgetower.purge_width - 2 * v.extrusion_width,
+                                               purgetower.purge_height - 2 * v.extrusion_width)
+                # generate og items for the new purge tower
+                gui.create_logitem(
+                    " Purge Tower :Loc X{:.2f} Y{:.2f}  W{:.2f} H{:.2f}".format(v.wipetower_posx, v.wipetower_posy,
+                                                                                purgetower.purge_width - 2 * v.extrusion_width,
+                                                                                purgetower.purge_height - 2 * v.extrusion_width))
+                gui.create_logitem(
+                    " Layer Length Solid={:.2f}mm   Sparse={:.2f}mm".format(purgetower.sequence_length_solid,
+                                                                            purgetower.sequence_length_empty))
+                # issue the new purge tower
+                for i in purgetower.brimlayer:
+                    i.issue_command()
+                # set the flag to update the post-session retraction move section
+                v.retract_move = True
+                v.retract_x = purgetower.last_brim_x
+                v.retract_y = purgetower.last_brim_y
+                # correct the amount of extrusion for the brim
+                update_extrusion(
+                    purgetower.sequence_length_brim * v.extrusion_multiplier * v.extrusion_multiplier_correction)
+
+        # sepcific for SIDEWIPE
+        if v.side_wipe:
+
+            # side wipe does not need a brim
+            if block_class == CLS_BRIM:
+                if not g.is_comment():
+                    g.move_to_comment("side wipe - removed")
+                g.issue_command()
+                return
+
+        # entering the purge tower with a delta
+        ########################################
+        if v.tower_delta:
+            if classupdate and block_class == CLS_TOOL_PURGE:
+                g.issue_command()
+                v.processed_gcode.append("G1 X{} Y{}\n".format(v.keep_x, v.keep_y))
+                entertower()
+                return
+
+        # going into an empty grid -- check if it should be consolidated
+        ################################################################
+        if classupdate and block_class in [CLS_FIRST_EMPTY, CLS_EMPTY]:
+            if v.skippable_layer[v.layernumber[index]]:
+                v.towerskipped = True
+                if v.tower_delta:
+                    v.cur_tower_z_delta += v.layer_height
+                    v.processed_gcode.append(";-------------------------------------\n")
+                    v.processed_gcode.append(";  GRID SKIP --TOWER DELTA {:6.2f}mm\n".format(v.cur_tower_z_delta))
+                    v.processed_gcode.append(";-------------------------------------\n")
 
         # changing from EMPTY to NORMAL
         ###############################
         if (previous_block_class == CLS_ENDGRID) and (block_class == CLS_NORMAL):
             v.towerskipped = False
 
-
-        # changing from NORMAL to EMPTY
-        ###############################
-        if classupdate and block_class in [CLS_FIRST_EMPTY, CLS_EMPTY]:
-            if v.skippable_layer[v.layernumber[index]]:
-                v.cur_tower_z_delta += v.layer_height
-                v.towerskipped = True
-                v.processed_gcode.append(";-------------------------------------\n")
-                v.processed_gcode.append(";  GRID SKIP --TOWER DELTA {:6.2f}mm\n".format(v.cur_tower_z_delta))
-                v.processed_gcode.append(";-------------------------------------\n")
-
-        # entering the purge tower with a delta
-        ########################################
-        if classupdate and block_class == CLS_TOOL_PURGE:
-            g.issue_command()
-            v.processed_gcode.append("G1 X{} Y{}\n".format(v.keep_x, v.keep_y))
-            entertower()
-            return
-
-
         if v.towerskipped:
             if not g.is_comment():
-                g.move_to_comment("tower delta")
+                g.move_to_comment("tower skipped")
             g.issue_command()
 
             return
-
     else:
         if classupdate and block_class in [CLS_TOOL_PURGE, CLS_EMPTY] and v.acc_ping_left <= 0:
             pings.check_accessorymode_first()
 
-    if not v.side_wipe:
-        if block_class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
-            if g.E:
-                if g.X:
-                    if not inrange(g.X, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']):
-                        g.remove_parameter("E")
-                if g.Y:
-                    if not inrange(g.Y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy']):
-                        g.remove_parameter("E")
+    if v.tower_delta:
+        if g.E and block_class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
+            if not inrange(g.X, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']):
+                g.remove_parameter("E")
+            if not inrange(g.Y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy']):
+                g.remove_parameter("E")
 
-    # movement commands
-    ###################
+    # process movement commands
+    ###########################
 
-    extruder_movement = 0
-    e_parameter = 0
+    if not g.has_parameter("E"):
+        g.E = 0
 
     if v.full_purge_reduction and block_class == CLS_NORMAL and classupdate:
         purgetower.purge_generate_sequence()
 
     if g.is_movement_command():
-        if v.retract_move and g.E and g.E < 0:
-            if not block_class == CLS_BRIM_END:
-                g.update_parameter("X", purgetower.last_posx)
-                g.update_parameter("Y", purgetower.last_posy)
-            else:
-                g.update_parameter("X", purgetower.last_brim_x)
-                g.update_parameter("Y", purgetower.last_brim_y)
+
+        if v.retract_move and g.E < 0:
+            g.update_parameter("X", v.retract_x)
+            g.update_parameter("Y", v.retract_y)
             v.retract_move = False
 
         v.current_position_x = g.get_parameter("X", v.current_position_x)
@@ -489,53 +495,40 @@ def gcode_parseline(index):
         v.current_position_z = g.get_parameter("Z", v.current_position_z)
 
         if block_class == CLS_BRIM:
-
-            if not (g.X and g.Y):
-                if g.X:
-                    purgetower.purge_width = min(purgetower.purge_width,
-                                                 abs(v.current_position_x - v.previous_position_x))
-                if g.Y:
-                    purgetower.purge_height = min(purgetower.purge_height,
-                                                  abs(v.current_position_y - v.previous_position_y))
-
             v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], v.current_position_x - 1)
             v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], v.current_position_y - 1)
             v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], v.current_position_x + 1)
             v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], v.current_position_y + 1)
 
             if v.full_purge_reduction:
-                g.move_to_comment("unnecessary wipe")
+                g.move_to_comment("replaced by P2PP brim code")
+                g.remove_parameter("E")
+                g.E = 0
 
-        if g.has_parameter("E"):
-            e_parameter = g.get_parameter("E")
-            extruder_movement = g.get_parameter("E") * v.extrusion_multiplier * v.extrusion_multiplier_correction
-            v.total_material_extruded += extruder_movement
-            v.material_extruded_per_color[v.current_tool] += extruder_movement
+        update_extrusion(g.E * v.extrusion_multiplier * v.extrusion_multiplier_correction)
 
-    ## After Material update processing of special features
-    #######################################################
-    if v.side_wipe:
-        if block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE]:
-            v.side_wipe_length += e_parameter
-            g.move_to_comment("side wipe")
+    if v.side_wipe or v.full_purge_reduction:
+        if block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE, CLS_EMPTY, CLS_FIRST_EMPTY]:
+            v.side_wipe_length += g.E
+            g.move_to_comment("side wipe/full purge")
 
-        if block_class == CLS_NORMAL and classupdate and not v.full_purge_reduction:
-                create_side_wipe()
+    if v.side_wipe and block_class == CLS_NORMAL and classupdate:
+        create_side_wipe()
 
-    # catch all
-
-
+    # g.Comment = " ; - {}".format(v.total_material_extruded)
     g.issue_command()
 
-    if v.accessory_mode:
-        pings.check_accessorymode_second(extruder_movement)
+    ### PING PROCESSING
+    ###################
 
-    if extruder_movement > 0 and v.side_wipe_length == 0:
+    if v.accessory_mode:
+        pings.check_accessorymode_second(g.E)
+
+    if g.E > 0 and v.side_wipe_length == 0:
         pings.check_connected_ping()
 
     v.previous_position_x = v.current_position_x
     v.previous_position_y = v.current_position_y
-
 
 # Generate the file and glue it all together!
 # #####################################################################
@@ -602,14 +595,15 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
             v.full_purge_reduction = False
 
     if v.full_purge_reduction:
-        v.side_wipe = True
+        v.side_wipe = False
         gui.create_logitem("Full Tower Reduction activated", "blue")
         if v.tower_delta:
             gui.log_warning("Full Purge Reduction is not compatible with Tower Delta, performing Full Purge Reduction")
             v.tower_delta = False
 
-    if v.tower_delta:
-        optimize_tower_skip(v.max_tower_z_delta, v.layer_height)
+    v.pathprocessing = (v.tower_delta or v.full_purge_reduction or v.side_wipe)
+
+    optimize_tower_skip(v.max_tower_z_delta, v.layer_height)
 
     gui.create_logitem("Generate processed GCode")
 

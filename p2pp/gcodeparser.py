@@ -187,4 +187,5 @@ def parse_slic3r_config():
                                                                        wiping_info[14],
                                                                        wiping_info[15]), "black", False)
                 gui.create_logitem("", "black", True)
+                v.wiping_info = wiping_info
             continue

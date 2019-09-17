@@ -30,10 +30,12 @@ filament_color_code = ["-",
 
 filament_short = [0, 0, 0, 0]
 
+
 retract_lift = [0.6, 0.6, 0.6, 0.6]
 retract_length = [0.8, 0.8, 0.8, 0.8]
 filament_diameter = [1.75, 1.75, 1.75, 1.75]
 
+wiping_info = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 accessory_mode = False  # type Bool
 
 
@@ -80,6 +82,7 @@ sidewipe_miny = 25  # type: float
 sidewipe_maxy = 175  # type: float
 wipe_feedrate = 2000  # type: int
 toolchange_start = False
+
 
 before_sidewipe_gcode = []
 after_sidewipe_gcode = []
@@ -131,6 +134,7 @@ volumetric_e = False  # type: bool
 gcode_has_relative_e = False
 absolute_extruder = False  # type : bool
 
+previous_tool = -1
 current_tool = -1  # type: int
 previous_toolchange_location = 0  # type: float
 
@@ -169,12 +173,19 @@ classupdates = []
 create_tower_entry = False
 acc_ping_left = 0.0
 infill_speed = 0.0
-keep_x = None
-keep_y = None
+
 block_classification = 0
 previous_block_classification = 0
+
+pathprocessing = False
 
 retract_move = False
 
 max_tower_delta = 0.0
 min_tower_delta = 0.0
+
+retract_x = None
+retract_y = None
+
+keep_x = 0.0
+keep_y = 0.0
