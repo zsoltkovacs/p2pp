@@ -13,6 +13,7 @@ import p2pp.variables as v
 
 solidlayer = []
 emptylayer = []
+filllayer = []
 brimlayer = []
 
 PURGE_SOLID = 1
@@ -50,12 +51,21 @@ def calculate_purge(movelength):
 
 
 def generate_rectangle(result, x, y, w, h):
+    ew = v.extrusion_width
     x2 = x + w
     y2 = y + h
+    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}".format(x, y)))
     result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x2, y, calculate_purge(w))))
     result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x2, y2, calculate_purge(h))))
     result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x, y2, calculate_purge(w))))
     result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x, y, calculate_purge(h))))
+
+    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}".format(x + ew, y + ew)))
+    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x2 - ew, y + ew, calculate_purge(w - 2 * ew))))
+    result.append(
+        gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x2 - ew, y2 - ew, calculate_purge(h - 2 * ew))))
+    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x + ew, y2 - ew, calculate_purge(w - 2 * ew))))
+    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x + ew, y + ew, calculate_purge(h - 2 * ew))))
 
 
 def _purge_calculate_sequences_length():
@@ -77,8 +87,20 @@ def _purge_calculate_sequences_length():
         if i.E:
             sequence_length_brim += i.E
 
-def _purge_create_sequence(code, pformat, start1, end1, step1, start2, end2):
+
+def _purge_create_sequence(code, pformat, x, y, w, h, step1):
     generate_front = False
+
+    ew = v.extrusion_width
+
+    cw = w - 4 * ew
+
+    start1 = x + 2 * ew + (cw % step1) / 2
+    end1 = x + 2 * ew + cw - (cw % step1) / 2
+
+    start2 = y + 2 * ew - ew * 0.15
+    end2 = y + h - 2 * ew + ew * 0.15
+
     code.append(gcode.GCodeCommand(pformat.format(start1, start2)))
     pformat = (pformat + " E{:.4f}")
 
@@ -97,11 +119,13 @@ def _purge_create_sequence(code, pformat, start1, end1, step1, start2, end2):
         start1 += step1
 
 
+
 def purge_create_layers(x, y, w, h):
-    global solidlayer, emptylayer
+    global solidlayer, emptylayer, filllayer
 
     solidlayer = []
     emptylayer = []
+    filllayer = []
 
     ew = v.extrusion_width
 
@@ -109,38 +133,17 @@ def purge_create_layers(x, y, w, h):
     h = int(h / ew) * ew
 
     solidlayer.append(gcode.GCodeCommand(";---- SOLID WIPE -------"))
-    solidlayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}".format(x, y)))
+    generate_rectangle(solidlayer, x, y, w, h)
 
     emptylayer.append(gcode.GCodeCommand(";---- EMPTY WIPE -------"))
-    emptylayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}".format(x, y)))
-
-    generate_rectangle(solidlayer, x, y, w, h)
-    solidlayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}".format(x + ew, y + ew)))
-    generate_rectangle(solidlayer, x + ew, y + ew, w - 2 * ew, h - 2 * ew)
-
     generate_rectangle(emptylayer, x, y, w, h)
-    emptylayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}".format(x + ew, y + ew)))
-    generate_rectangle(emptylayer, x + ew, y + ew, w - 2 * ew, h - 2 * ew)
 
-    a_dir_start = y + 2 * ew
-    a_dir_end = y + h - 4 * ew + 2 * ew
-    a_dir_step = ew
+    filllayer.append(gcode.GCodeCommand(";---- FILL LAYER -------"))
+    generate_rectangle(filllayer, x, y, w, h)
 
-    long_start = x + 2 * ew - ew * 0.15
-    long_end = x + w - 4 * ew + 2 * ew + ew * 0.15
-
-    _purge_create_sequence(solidlayer, "G1 Y{:.3f} X{:.3f}", a_dir_start, a_dir_end, a_dir_step, long_start, long_end)
-
-    cw = w - 4 * ew
-
-    a_dir_step = 2
-    a_dir_start = x + 2 * ew + (cw % a_dir_step) / 2
-    a_dir_end = x + 2 * ew + cw - (cw % a_dir_step) / 2
-
-    long_start = y + 2 * ew - ew * 0.15
-    long_end = y + h - 2 * ew + ew * 0.15
-
-    _purge_create_sequence(emptylayer, "G1 X{:.3f} Y{:.3f}", a_dir_start, a_dir_end, a_dir_step, long_start, long_end)
+    _purge_create_sequence(solidlayer, "G1 X{:.3f} Y{:.3f}", x, y, w, h, ew)
+    _purge_create_sequence(emptylayer, "G1 Y{:.3f} X{:.3f}", y, x, h, w, 2)
+    _purge_create_sequence(filllayer, "G1 Y{:.3f} X{:.3f}", y, x, h, w, 15)
 
     _purge_generate_tower_brim(x, y, w, h)
 
@@ -238,7 +241,6 @@ def purge_generate_sequence():
         v.side_wipe_length -= if_defined(next_command.E, 0)
         actual += if_defined(next_command.E, 0)
         next_command.issue_command()
-
         _purge_update_sequence_index()
 
     # return to print height

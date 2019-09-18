@@ -347,7 +347,7 @@ def gcode_parseline(index):
         g.issue_command()
         return
 
-    if g.fullcommand in ["M104", "M106", "M109", "M140", "M190", "M73", "M900"]:
+    if g.fullcommand in ["M104", "M106", "M109", "M140", "M190", "M73", "M900", "M84"]:
         g.issue_command()
         return
 
