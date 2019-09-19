@@ -136,6 +136,7 @@ def entertower():
             "G1 Z{:.2f} F10810\n".format(v.current_position_z - v.cur_tower_z_delta - v.retract_lift[v.current_tool]))
         v.processed_gcode.append("G1 E{}\n".format(-v.retract_length[v.current_tool]))
         v.processed_gcode.append(";------------------------------\n")
+        v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
 
 
 CLS_UNDEFINED = 0
