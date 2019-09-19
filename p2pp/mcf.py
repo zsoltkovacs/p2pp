@@ -154,10 +154,9 @@ CLS_TONORMAL = 99
 
 SPEC_HOPUP = 1
 SPEC_HOPDOWN = 2
-SPEC_HOPPEDUP = 16
+SPEC_INTOWER = 16
 SPEC_RETRACTS = 4
 SPEC_TOOLCHANGE = 8
-
 
 
 def update_class(gcode_line):
@@ -208,13 +207,35 @@ def flagset(value, mask):
     return (value & mask) == mask
 
 
+def backpass(currentclass):
+    idx = len(v.parsedgcode) - 2
+    end_search = max(1, v.lasthopup)
+    while idx > end_search:
+        tmp = v.parsedgcode[idx]
+        if tmp.fullcommand == "G1" and tmp.has_parameter("E") and tmp.has_parameter("F"):
+            v.gcodeclass[idx] = currentclass
+            tmp = v.parsedgcode[idx - 1]
+            if tmp.fullcommand == "G1" and tmp.has_parameter("Z"):
+                v.gcodeclass[idx - 1] = currentclass
+                tmp = v.parsedgcode[idx - 2]
+                idx = idx - 1
+            if tmp.fullcommand == "G1" and tmp.has_parameter("X") and tmp.has_parameter("Y") and not tmp.has_parameter(
+                    "E"):
+                tmp.Comment = "Part of next block"
+            else:
+                idx = idx + 1
+            while idx <= len(v.parsedgcode) - 2:
+                v.gcodeclass[idx - 1] = currentclass
+                idx = idx + 1
+            break
+        idx = idx - 1
+
+
 def parse_gcode():
     cur_z = -999
     cur_tool = 0
     retract = 0.6
     layer = -1
-    last_hopup = 0
-    last_backpoint = 0
     toolchange = 0
     emptygrid = 0
 
@@ -255,14 +276,13 @@ def parse_gcode():
             #########################################################
             classupdate = update_class(line)
 
-        ## further enhance block classification by detecting...
-        #######################################################
-        if classupdate and v.block_classification in [CLS_TONORMAL, CLS_ENDPURGE]:
-            last_backpoint = len(v.parsedgcode)
+
 
         if classupdate:
+
             if v.block_classification == CLS_TOOL_START:
                 toolchange += 1
+
             if v.block_classification == CLS_EMPTY:
                 emptygrid += 1
 
@@ -276,15 +296,12 @@ def parse_gcode():
 
             if abs(delta - retract) < 0.0001:
                 specifier |= SPEC_HOPUP
-                last_hopup = len(v.parsedgcode)
-                v.keep_hopspec = SPEC_HOPPEDUP
 
                 if v.block_classification == CLS_TONORMAL:
                     v.previous_block_classification = v.block_classification = CLS_NORMAL
 
             if abs(- delta - retract) < 0.0001:
                 specifier |= SPEC_HOPDOWN
-                v.keep_hopspec = 0
 
             cur_z = to_z
 
@@ -304,14 +321,17 @@ def parse_gcode():
         ## Extend block backwards towards last hop up
         #############################################
 
+
         if v.block_classification in [CLS_TOOL_START, CLS_TOOL_UNLOAD, CLS_EMPTY,
                                       CLS_BRIM] and not v.full_purge_reduction:
-            idx = max(last_hopup, last_backpoint)
-            while idx < len(v.gcodeclass):
-                v.gcodeclass[idx] = v.block_classification
-                idx += 1
+            backpass(v.block_classification)
+
 
         if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
+            if v.parsedgcode[-1].fullcommand == "G1":
+                if v.parsedgcode[-1].X and v.parsedgcode[-1].Y:
+                    specifier |= SPEC_INTOWER
+
             if flagset(specifier, SPEC_RETRACTS):
                 v.block_classification = CLS_NORMAL
 
@@ -321,7 +341,7 @@ def parse_gcode():
         v.gcodeclass.append(v.block_classification)
         v.layernumber.append(layer)
         v.linetool.append(cur_tool)
-        v.parsecomment.append(specifier | v.keep_hopspec)
+        v.parsecomment.append(specifier)
         v.classupdates.append(v.block_classification != v.previous_block_classification)
         v.previous_block_classification = v.block_classification
         index = index + 1
@@ -401,6 +421,13 @@ def gcode_parseline(index):
             g.issue_command()
             return
 
+        if flagset(v.parsecomment[index], SPEC_INTOWER):
+            if coordinate_in_tower(g.X, g.Y):
+                g.Comment = "removed parms X{:.3f} and Y{:.3f}".format(g.X, g.Y)
+                g.remove_parameter("X")
+                g.remove_parameter("Y")
+
+
         # sepcific for FULL_PURGE_REDUCTION
         if v.full_purge_reduction:
 
@@ -463,7 +490,6 @@ def gcode_parseline(index):
                     v.processed_gcode.append("G1 X{} Y{}\n".format(v.keep_x, v.keep_y))
                     entertower()
                     return
-
 
         # going into an empty grid -- check if it should be consolidated
         ################################################################
