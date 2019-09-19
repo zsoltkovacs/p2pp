@@ -224,7 +224,7 @@ def purge_generate_sequence():
             v.processed_gcode.append(
                 "; --- CORRECTED PURGE TO TRANSITION LENGTH {:.2f}mm\n".format(v.wiping_info[index]))
     v.processed_gcode.append("; --------------------------------------------------\n")
-    v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
+
 
     v.max_tower_delta = max(v.max_tower_delta, v.current_position_z - (v.purgelayer + 1) * v.layer_height)
     v.min_tower_delta = min(v.min_tower_delta, v.current_position_z - (v.purgelayer + 1) * v.layer_height)
@@ -233,6 +233,7 @@ def purge_generate_sequence():
         v.processed_gcode.append("G1 X{} Y{}\n".format(last_posx, last_posy))
         v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
 
+    v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
     # generate wipe code
     while v.side_wipe_length > 0:
         next_command = _purge_get_nextcommand_in_sequence()

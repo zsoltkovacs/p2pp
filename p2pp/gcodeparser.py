@@ -168,24 +168,5 @@ def parse_slic3r_config():
                     wiping_info[i] = filament_volume_to_length(float(wiping_info[i]))
             v.max_wipe = max(wiping_info)
             if len(wiping_info) == 16:
-                gui.create_logitem("", "black", False)
-                gui.create_logitem("Wiping matrix information (mm)", "blue", False)
-                gui.create_logitem("{:>5}{:>10}{:>10}{:>10}{:>10}".format(" S/D", 1, 2, 3, 4))
-                gui.create_logitem("{:>5}{:>10.2f}{:>10.2f}{:>10.2f}{:>10.2f}".format(1, wiping_info[0], wiping_info[1],
-                                                                                      wiping_info[2], wiping_info[2]),
-                                   "black", False)
-                gui.create_logitem(
-                    "{:>5}{:>10.2f}{:>10.2f}{:>10.2f}{:>10.2f}".format(2, wiping_info[4], wiping_info[5],
-                                                                       wiping_info[6],
-                                                                       wiping_info[7]), "black", False)
-                gui.create_logitem(
-                    "{:>5}{:>10.2f}{:>10.2f}{:>10.2f}{:>10.2f}".format(3, wiping_info[8], wiping_info[9],
-                                                                       wiping_info[10],
-                                                                       wiping_info[11]), "black", False)
-                gui.create_logitem(
-                    "{:>5}{:>10.2f}{:>10.2f}{:>10.2f}{:>10.2f}".format(4, wiping_info[12], wiping_info[13],
-                                                                       wiping_info[14],
-                                                                       wiping_info[15]), "black", False)
-                gui.create_logitem("", "black", True)
                 v.wiping_info = wiping_info
             continue
