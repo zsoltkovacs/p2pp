@@ -382,6 +382,14 @@ def gcode_parseline(index):
         g.issue_command()
         return
 
+    if g.is_movement_command():
+        if g.X:
+            v.previous_purge_keep_x = v.purge_keep_x
+            v.purge_keep_x = g.X
+        if g.Y:
+            v.previous_purge_keep_y = v.purge_keep_y
+            v.purge_keep_y = g.Y
+
     ## ALL SITUATIONS
     ##############################################
     if block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
@@ -514,8 +522,16 @@ def gcode_parseline(index):
             g.issue_command()
             return
     else:
-        if classupdate and block_class in [CLS_TOOL_PURGE, CLS_EMPTY] and v.acc_ping_left <= 0:
-            pings.check_accessorymode_first()
+        if classupdate and block_class in [CLS_TOOL_PURGE, CLS_EMPTY]:
+            if v.acc_ping_left <= 0:
+                pings.check_accessorymode_first()
+            v.enterpurge = True
+
+        if v.enterpurge and g.is_movement_command():
+            v.enterpurge = False
+            v.processed_gcode.append("G1 X{:.3f} Y{:.3f}\n".format(v.previous_purge_keep_x, v.previous_purge_keep_y))
+
+
 
     if v.tower_delta:
         if g.E and block_class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:

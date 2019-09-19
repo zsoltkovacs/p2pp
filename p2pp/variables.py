@@ -82,7 +82,12 @@ sidewipe_miny = 25  # type: float
 sidewipe_maxy = 175  # type: float
 wipe_feedrate = 3000  # type: int
 toolchange_start = False
+enterpurge = False
 
+purge_keep_x = None
+purge_keep_y = None
+previous_purge_keep_x = None
+previous_purge_keep_y = None
 
 before_sidewipe_gcode = []
 after_sidewipe_gcode = []
