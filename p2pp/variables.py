@@ -80,7 +80,7 @@ side_wipe = False  # type: bool
 side_wipe_length = 0  # type: float
 sidewipe_miny = 25  # type: float
 sidewipe_maxy = 175  # type: float
-wipe_feedrate = 2000  # type: int
+wipe_feedrate = 3000  # type: int
 toolchange_start = False
 
 
