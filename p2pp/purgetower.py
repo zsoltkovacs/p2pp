@@ -169,6 +169,7 @@ def _purge_update_sequence_index():
         v.purgelayer += 1
         if v.side_wipe_length > 0:
             v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
+            v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
 
 def _purge_get_nextcommand_in_sequence():
     if current_purge_form == PURGE_SOLID:
