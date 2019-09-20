@@ -164,6 +164,21 @@ def check_config_parameters(line):
         gui.create_logitem("Full purge reduction configured")
         v.full_purge_reduction = True
 
+    if line.endswith("CHECKVERSION"):
+        import p2pp.checkversion as cv
+        import version
+        latest = cv.get_version(cv.MASTER)
+        if latest > version.Version:
+            gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False)
+        else:
+            if (latest < version.Version):
+                latest = cv.get_version(cv.DEV)
+                if (latest > version.Version):
+                    gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False)
+                else:
+                    gui.create_logitem("P2PP is up to date (v{})".format(latest), "black", False)
+            else:
+                gui.create_logitem("P2PP is up to date (v{})".format(latest), "black", False)
 
     # REPRAP COMPATIBILITY
     if "REPRAPCOMPATIBLE" in line:
