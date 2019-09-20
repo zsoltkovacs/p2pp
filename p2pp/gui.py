@@ -78,13 +78,14 @@ def completed(text, color):
 
 color_count = 0
 
-def create_logitem(text, color="black", force_update = True):
+
+def create_logitem(text, color="black", force_update=True, position=tkinter.END):
     text = text.strip()
     global color_count
     color_count += 1
     tagname = "color"+str(color_count)
     loglist.tag_configure(tagname, foreground=color)
-    loglist.insert(tkinter.END, "  "+text+"\n", tagname)
+    loglist.insert(position, "  " + text + "\n", tagname)
     if force_update:
         mainwindow.update()
 

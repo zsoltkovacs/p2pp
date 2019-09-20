@@ -169,16 +169,14 @@ def check_config_parameters(line):
         import version
         latest = cv.get_version(cv.MASTER)
         if latest > version.Version:
-            gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False)
+            gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False, "2.0")
         else:
             if (latest < version.Version):
                 latest = cv.get_version(cv.DEV)
                 if (latest > version.Version):
-                    gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False)
-                else:
-                    gui.create_logitem("P2PP is up to date (v{})".format(latest), "black", False)
-            else:
-                gui.create_logitem("P2PP is up to date (v{})".format(latest), "black", False)
+                    gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False,
+                                       "2.0")
+
 
     # REPRAP COMPATIBILITY
     if "REPRAPCOMPATIBLE" in line:
