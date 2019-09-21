@@ -130,7 +130,7 @@ if __name__ == "__main__":
         if platformD == 'Darwin':
             gui.create_logitem("{}/p2pp.command".format(os.path.dirname(sys.argv[0])), "red")
         elif platformD == 'Windows':
-            gui.create_logitem("{}/\\p2pp.bat".format(os.path.dirname(sys.argv[0])), "red")
+            gui.create_logitem("{}\\p2pp.bat".format(os.path.dirname(sys.argv[0])), "red")
 
         gui.create_emptyline()
         gui.create_logitem("This requires ADVANCED/EXPERT settings to be enabled", "blue")
