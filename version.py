@@ -12,13 +12,12 @@ __status__ = 'BETA'
 # general version info
 MajorVersion = 3
 MinorVersion = 5
-Build = 4
+Build = 5
 
 latest_stable_version = ""
 
 
 Version = "{}.{}.{}".format(MajorVersion, MinorVersion, Build)
-
 
 ##################################
 # UPDATE FILES FOR CURRENT VERSION
