@@ -652,6 +652,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     gui.progress_string(4)
     parse_gcode()
 
+
     if v.palette_plus:
         if v.palette_plus_ppm == -9:
             gui.log_warning("P+ parameter P+PPM not set correctly in startup GCODE")
@@ -676,7 +677,8 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     v.pathprocessing = (v.tower_delta or v.full_purge_reduction or v.side_wipe)
 
-    optimize_tower_skip(v.max_tower_z_delta, v.layer_height)
+    if v.tower_delta:
+        optimize_tower_skip(v.max_tower_z_delta, v.layer_height)
 
     gui.create_logitem("Generate processed GCode")
 
