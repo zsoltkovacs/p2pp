@@ -21,6 +21,19 @@ from p2pp.omega import header_generate_omega, algorithm_process_material_configu
 from p2pp.sidewipe import create_side_wipe
 
 
+def remove_previous_move_in_tower():
+    idx = len(v.processed_gcode) - 10
+
+    while idx < len(v.processed_gcode):
+        line = v.processed_gcode[idx]
+        tmp = gcode.GCodeCommand(line)
+        if tmp.X and tmp.Y:
+            if coordinate_in_tower(tmp.X, tmp.Y):
+                tmp.move_to_comment("tower skipped")
+                v.processed_gcode[idx] = tmp.__str__()
+        idx = idx + 1
+
+
 def optimize_tower_skip(skipmax, layersize):
     skipped = 0.0
     skipped_num = 0
@@ -512,6 +525,7 @@ def gcode_parseline(index):
         if classupdate and block_class in [CLS_FIRST_EMPTY, CLS_EMPTY]:
             if v.skippable_layer[v.layernumber[index]]:
                 v.towerskipped = True
+                remove_previous_move_in_tower()
                 if v.tower_delta:
                     v.cur_tower_z_delta += v.layer_height
                     v.processed_gcode.append(";-------------------------------------\n")

@@ -231,7 +231,7 @@ def purge_generate_sequence():
     v.min_tower_delta = min(v.min_tower_delta, v.current_position_z - (v.purgelayer + 1) * v.layer_height)
 
     if last_posx and last_posy:
-        v.processed_gcode.append("G1 X{} Y{}\n".format(last_posx, last_posy))
+        v.processed_gcode.append("G1 X{} Y{} \n".format(last_posx, last_posy))
         v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
 
     v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
