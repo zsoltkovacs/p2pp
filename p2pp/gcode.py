@@ -15,7 +15,7 @@ EXTRUDER = "E"
 RELATIVE = True
 ABSOLUTE = False
 
-import p2pp.variables as v
+import p2pp.variables as vars
 
 class GCodeCommand:
     Command = None
@@ -23,6 +23,7 @@ class GCodeCommand:
     Command_value = None
     Parameters = {}
     Comment = None
+    Layer = None
     X = None
     Y = None
     Z = None
@@ -34,6 +35,7 @@ class GCodeCommand:
         self.Command_value = None
         self.Parameters = {}
         self.Comment = None
+        self.Layer = vars.parsedlayer + 1
         gcode_line = gcode_line.strip()
         pos = gcode_line.find(";")
 
@@ -114,7 +116,7 @@ class GCodeCommand:
         return defaultvalue
 
     def issue_command(self):
-        v.processed_gcode.append(str(self))
+        vars.processed_gcode.append(str(self))
 
     def add_comment(self, text):
         if self.Comment:

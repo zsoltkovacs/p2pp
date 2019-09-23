@@ -138,15 +138,18 @@ def coordinate_in_tower(x, y):
     return inrange(x, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']) and \
            inrange(y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy'])
 
-def entertower():
+
+def entertower(layer_hght):
     if v.cur_tower_z_delta > 0:
+        purgeheight = layer_hght - v.cur_tower_z_delta
         v.max_tower_delta = max(v.cur_tower_z_delta, v.max_tower_delta)
         v.processed_gcode.append(";------------------------------\n")
         v.processed_gcode.append(";  P2PP DELTA >> TOWER {:.2f}mm\n".format(
-            v.current_position_z - v.cur_tower_z_delta - v.retract_lift[v.current_tool]))
+            purgeheight))
         v.processed_gcode.append("G1 E{}\n".format(v.retract_length[v.current_tool]))
+        print ("Layer Z{:.2f} Delta {:.3f} ".format(purgeheight, v.cur_tower_z_delta))
         v.processed_gcode.append(
-            "G1 Z{:.2f} F10810\n".format(v.current_position_z - v.cur_tower_z_delta - v.retract_lift[v.current_tool]))
+            "G1 Z{:.2f} F10810\n".format(purgeheight))
         v.processed_gcode.append("G1 E{}\n".format(-v.retract_length[v.current_tool]))
         v.processed_gcode.append(";------------------------------\n")
         v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
@@ -281,6 +284,7 @@ def parse_gcode():
 
             if line.startswith(";LAYER"):
                 layer = int(line[7:])
+                v.parsedlayer = layer
                 if layer > 0:
                     v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
                 toolchange = 0
@@ -517,7 +521,7 @@ def gcode_parseline(index):
                 if block_class == CLS_TOOL_PURGE:
                     g.issue_command()
                     v.processed_gcode.append("G1 X{} Y{}\n".format(v.keep_x, v.keep_y))
-                    entertower()
+                    entertower(g.Layer * v.layer_height)
                     return
 
         # going into an empty grid -- check if it should be consolidated
@@ -525,6 +529,7 @@ def gcode_parseline(index):
         if classupdate and block_class in [CLS_FIRST_EMPTY, CLS_EMPTY]:
             if v.skippable_layer[v.layernumber[index]]:
                 v.towerskipped = True
+                # print("Skipped: {:.3f} now at delta {:.3f}".format(v.current_position_z- v.retract_lift[v.current_tool]+v.layer_height,v.cur_tower_z_delta+v.layer_height))
                 remove_previous_move_in_tower()
                 if v.tower_delta:
                     v.cur_tower_z_delta += v.layer_height
