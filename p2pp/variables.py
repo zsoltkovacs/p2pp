@@ -195,5 +195,7 @@ min_tower_delta = 0.0
 retract_x = None
 retract_y = None
 
+retracted = False
+
 keep_x = 0.0
 keep_y = 0.0
