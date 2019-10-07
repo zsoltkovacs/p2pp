@@ -433,6 +433,13 @@ def gcode_parseline(index):
         g.issue_command()
         return
 
+    if block_class == CLS_TOOL_PURGE and not (v.side_wipe or v.full_purge_reduction):
+        if g.is_movement_command():
+            _x = g.get_parameter("X", v.current_position_x)
+            _y = g.get_parameter("Y", v.current_position_y)
+            if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.current_position_x, v.current_position_y)):
+                g.remove_parameter("E")
+
     if not v.side_wipe:
         if g.X:
             if v.wipe_tower_info['minx'] <= g.X <= v.wipe_tower_info['maxx']:
@@ -520,7 +527,7 @@ def gcode_parseline(index):
 
                 if block_class == CLS_TOOL_PURGE:
                     g.issue_command()
-                    v.processed_gcode.append("G1 X{} Y{}\n".format(v.keep_x, v.keep_y))
+                    v.processed_gcode.append("G1 X{} Y{} ;\n".format(v.keep_x, v.keep_y))
                     entertower(g.Layer * v.layer_height)
                     return
 
@@ -555,7 +562,7 @@ def gcode_parseline(index):
 
         if v.enterpurge and g.is_movement_command():
             v.enterpurge = False
-            v.processed_gcode.append("G1 X{:.3f} Y{:.3f}\n".format(v.previous_purge_keep_x, v.previous_purge_keep_y))
+            v.processed_gcode.append("G1 X{:.3f} Y{:.3f}\n".format(v.purge_keep_x, v.purge_keep_y))
 
 
 
