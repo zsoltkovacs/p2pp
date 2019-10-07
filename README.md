@@ -29,6 +29,7 @@ earlier versions may generate different code patterns and may not work correctly
 -  04/09/2019 - Fixes for PrusaSlicer 2.1.0
 -  11/09/2019 - Release of 3.4.0 with the parsingroutined untangled and simplified [BETA]
 -  16/09/2019 - Release 3.5.0 - FULLPURGEREDUCTION [ALPHA]
+-  06/10/2019 - Added comment on initial extruder priming
    
 
 
@@ -179,6 +180,12 @@ E.G. If your O22 line reads "O22 De827315ff39aaaaa", then your printer profile i
     ;P2PP AFTERSIDEWIPEGCODE ;--- ENTER GCODE TO BE EXECUTED AFTER SIDEWIPE (one coomand per line,can be multiple lines)
     
     ```
+    
+  When you are using a purge or priming line (typically printed in front of the bed outside of the printing area on an MK3 Printer) 
+  make sure that you leave enough space for the purge to flow at the expected rate.  When printing at a very high rate, very close to the bed or with very high speed the backpressure caused by already extruded material on the extruder will cause actual extrusion to be significantly smaller than the expected extrusion.     
+  Palette and P2PP however still will expect the right amount so in this case you will get  a lower ping and a needed correction by Palette hardware.
+  If the correction becomes to large, the print may be compromised.
+ 
 
  ![splice offset](https://github.com/tomvandeneede/p2pp/blob/master/docs/overallconfig.png)
 

@@ -609,8 +609,9 @@ def gcode_parseline(index):
 
     # g.Comment = " ; - {}".format(v.total_material_extruded)
     g.issue_command()
+
     if (g.X or g.Y) and v.retracted:
-        v.processed_gcode.append("G1 E{:.2f}\n".format(v.retract_length[v.current_tool]))
+        purgetower.unretract(v.current_tool)
         v.retracted = False
 
     ### PING PROCESSING

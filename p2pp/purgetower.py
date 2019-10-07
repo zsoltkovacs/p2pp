@@ -203,6 +203,12 @@ def _purge_generate_tower_brim(x, y, w, h):
     last_brim_y = y
 
 
+def retract(tool):
+    v.processed_gcode.append("G1 E-{:.2f}\n".format(v.retract_length[tool]))
+
+
+def unretract(tool):
+    v.processed_gcode.append("G1 E{:.2f}\n".format(v.retract_length[tool]))
 
 def purge_generate_sequence():
     global last_posx, last_posy
@@ -231,10 +237,10 @@ def purge_generate_sequence():
     v.min_tower_delta = min(v.min_tower_delta, v.current_position_z - (v.purgelayer + 1) * v.layer_height)
 
     if last_posx and last_posy:
-        v.processed_gcode.append("G1 E-{:.2f}\n".format(v.retract_length[v.current_tool]))
+        retract(v.current_tool)
         v.processed_gcode.append("G1 X{} Y{} \n".format(last_posx, last_posy))
         v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
-        v.processed_gcode.append("G1 E{:.2f} F5000\n".format(v.retract_length[v.current_tool]))
+        unretract(v.current_tool)
 
     v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
     # generate wipe code
@@ -249,7 +255,7 @@ def purge_generate_sequence():
 
     # return to print height
     v.processed_gcode.append("; -------------------------------------\n")
-    v.processed_gcode.append("G1 E-{:.2f}\n".format(v.retract_length[v.current_tool]))
+    retract(v.current_tool)
     v.processed_gcode.append("G1 Z{:.2f} F10800\n".format(v.current_position_z))
     v.processed_gcode.append("; --- P2PP WIPE SEQUENCE END DONE\n")
     v.processed_gcode.append("; -------------------------------------\n")
