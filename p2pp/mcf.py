@@ -283,7 +283,11 @@ def parse_gcode():
             ########################################################
 
             if line.startswith(";LAYER"):
-                layer = int(line[7:])
+                try:
+                    layer = int(line[7:])
+                except ValueError:
+                    layer = 0
+
                 v.parsedlayer = layer
                 if layer > 0:
                     v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
