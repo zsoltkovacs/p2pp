@@ -393,9 +393,12 @@ def gcode_parseline(index):
         g.issue_command()
         return
 
-    if g.fullcommand in ["M104", "M106", "M109", "M140", "M190", "M73", "M900", "M84"]:
+    if g.fullcommand in ["M104", "M106", "M109", "M140", "M190", "M73", "M84"]:
         g.issue_command()
         return
+
+    if block_class == CLS_TOOL_UNLOAD and g.fullcommand in ["M900"] and g.get_parameter("K", 0) == 0:
+        g.move_to_comment("tool unload")
 
     if g.fullcommand in ["M220"]:
         g.move_to_comment("Flow Rate Adjustments are removed")
@@ -448,8 +451,6 @@ def gcode_parseline(index):
             _x = g.get_parameter("X", v.current_position_x)
             _y = g.get_parameter("Y", v.current_position_y)
             if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y)):
-                g.Comment = (
-                    "; --- ({:.3f} , {:.3f}) --> ({:.3f} , {:.3f})\n".format(v.purge_keep_x, v.purge_keep_y, _x, _y))
                 g.remove_parameter("E")
 
 
