@@ -105,9 +105,9 @@ class GCodeCommand:
     def remove_parameter(self, parameter):
         if parameter in self.Parameters:
             if self.Comment:
-                self.Comment = "[removed {}{}] - ".format(parameter, self.Parameters[parameter]) + self.Comment
+                self.Comment = "[removed_{}{}] - ".format(parameter, self.Parameters[parameter]) + self.Comment
             else:
-                self.Comment = "[removed {}{}] ".format(parameter, self.Parameters[parameter])
+                self.Comment = "[removed_{}{}] ".format(parameter, self.Parameters[parameter])
             self.Parameters.pop(parameter)
 
     def move_to_comment(self, text):

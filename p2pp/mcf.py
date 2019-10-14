@@ -57,6 +57,7 @@ def convert_to_absolute():
         line = v.processed_gcode[i]
 
         if line.startswith("G1") or line.startswith("G0"):
+
             if "E" in line:
                 fields = line.split()
                 for j in range(1, len(fields)):
