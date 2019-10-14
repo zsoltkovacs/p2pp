@@ -78,7 +78,15 @@ class GCodeCommand:
     def __str__(self):
         p = ""
         for key in self.Parameters:
-            p = p + "{}{} ".format(key, self.Parameters[key])
+            form = "{}{} "
+            if self.Command in ["G0", "G1"]:
+                if key in "XYZ":
+                    form = "{}{.3f} "
+                if key in "E":
+                    form = "{}{.4f} "
+                if key in "F":
+                    form = "{}{.0f} "
+            p = p + form.format(key, self.Parameters[key])
 
         c = self.fullcommand
         if not c:
@@ -96,6 +104,10 @@ class GCodeCommand:
 
     def remove_parameter(self, parameter):
         if parameter in self.Parameters:
+            if self.Comment:
+                self.Comment = "[removed {}{}] - ".format(parameter, self.Parameters[parameter]) + self.Comment
+            else:
+                self.Comment = "[removed {}{}] ".format(parameter, self.Parameters[parameter])
             self.Parameters.pop(parameter)
 
     def move_to_comment(self, text):

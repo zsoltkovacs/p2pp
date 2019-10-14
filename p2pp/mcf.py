@@ -415,9 +415,9 @@ def gcode_parseline(index):
     ##############################################
     if block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
         if v.tower_delta:
+            if g.fullcommand == "G4":
+                g.move_to_comment("tool unload")
             if g.is_movement_command():
-                if g.fullcommand == "G4":
-                    g.move_to_comment("tool unload")
                 if not (g.has_parameter("Z")):
                     g.move_to_comment("tool unload")
                 else:
@@ -426,6 +426,8 @@ def gcode_parseline(index):
                     g.remove_parameter("F")
                     g.remove_parameter("E")
         else:
+            if g.fullcommand == "G4":
+                g.move_to_comment("tool unload")
             if g.is_movement_command():
                 if g.has_parameter("Z"):
                     g.remove_parameter("X")
@@ -443,6 +445,12 @@ def gcode_parseline(index):
             _y = g.get_parameter("Y", v.current_position_y)
             if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.current_position_x, v.current_position_y)):
                 g.remove_parameter("E")
+                if _x == v.current_position_x:
+                    g.remove_parameter("X")
+                if _y == v.current_position_y:
+                    g.remove_parameter("Y")
+                if len(g.Parameters) == 0:
+                    g.move_to_comment("Unnecessary Move")
 
     if not v.side_wipe:
         if g.X:
@@ -532,6 +540,8 @@ def gcode_parseline(index):
                 if block_class == CLS_TOOL_PURGE:
                     g.issue_command()
                     v.processed_gcode.append("G1 X{} Y{} ;\n".format(v.keep_x, v.keep_y))
+                    v.current_position_x = v.keep_x
+                    v.current_position_x = v.keep_y
                     entertower(g.Layer * v.layer_height)
                     return
 
@@ -566,8 +576,18 @@ def gcode_parseline(index):
 
         if v.enterpurge and g.is_movement_command():
             v.enterpurge = False
-            v.processed_gcode.append("G1 X{:.3f} Y{:.3f}\n".format(v.purge_keep_x, v.purge_keep_y))
+            if g.has_parameter("X"):
+                _x = v.previous_purge_keep_x
+            else:
+                _x = v.purge_keep_x
+            if g.has_parameter("Y"):
+                _y = v.previous_purge_keep_y
+            else:
+                _y = v.purge_keep_y
 
+            v.processed_gcode.append("G1 X{:.3f} Y{:.3f}\n".format(_x, _y))
+            v.current_position_x = _x
+            v.current_position_x = _y
 
 
     if v.tower_delta:
