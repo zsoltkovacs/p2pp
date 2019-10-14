@@ -443,7 +443,9 @@ def gcode_parseline(index):
         if g.is_movement_command():
             _x = g.get_parameter("X", v.current_position_x)
             _y = g.get_parameter("Y", v.current_position_y)
-            if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.current_position_x, v.current_position_y)):
+            if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y)):
+                g.Comment = (
+                    "; --- ({:.3f} , {:.3f}) --> ({:.3f} , {:.3f})\n".format(v.purge_keep_x, v.purge_keep_y, _x, _y))
                 g.remove_parameter("E")
                 if _x == v.current_position_x:
                     g.remove_parameter("X")

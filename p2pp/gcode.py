@@ -81,11 +81,11 @@ class GCodeCommand:
             form = "{}{} "
             if self.Command in ["G0", "G1"]:
                 if key in "XYZ":
-                    form = "{}{.3f} "
+                    form = "{}{:.3f} "
                 if key in "E":
-                    form = "{}{.4f} "
+                    form = "{}{:.4f} "
                 if key in "F":
-                    form = "{}{.0f} "
+                    form = "{}{:.0f} "
             p = p + form.format(key, self.Parameters[key])
 
         c = self.fullcommand
