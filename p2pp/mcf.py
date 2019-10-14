@@ -168,6 +168,7 @@ CLS_ENDGRID = 9
 CLS_COMMENT = 10
 CLS_ENDPURGE = 11
 CLS_TONORMAL = 99
+CLS_TOOLCOMMAND = 12
 
 SPEC_HOPUP = 1
 SPEC_HOPDOWN = 2
@@ -178,6 +179,8 @@ SPEC_TOOLCHANGE = 8
 
 def update_class(gcode_line):
     v.previous_block_classification = v.block_classification
+    if gcode_line[0] == "T":
+        v.block_classification = CLS_TOOLCOMMAND
     if gcode_line.startswith("; CP"):
         if "TOOLCHANGE START" in gcode_line:
             v.block_classification = CLS_TOOL_START
@@ -298,7 +301,8 @@ def parse_gcode():
             #########################################################
             classupdate = update_class(line)
 
-
+        if line.startswith('T'):
+            classupdate = update_class(line)
 
         if classupdate:
 
@@ -454,6 +458,7 @@ def gcode_parseline(index):
                 if len(g.Parameters) == 0:
                     g.move_to_comment("Unnecessary Move")
 
+
     if not v.side_wipe:
         if g.X:
             if v.wipe_tower_info['minx'] <= g.X <= v.wipe_tower_info['maxx']:
@@ -587,9 +592,9 @@ def gcode_parseline(index):
             else:
                 _y = v.purge_keep_y
 
-            v.processed_gcode.append("G1 X{:.3f} Y{:.3f}\n".format(_x, _y))
-            v.current_position_x = _x
-            v.current_position_x = _y
+            # v.processed_gcode.append("G1 X{:.3f} Y{:.3f}\n".format(_x, _y))
+            # v.current_position_x = _x
+            # v.current_position_x = _y
 
 
     if v.tower_delta:
