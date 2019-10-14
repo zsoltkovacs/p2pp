@@ -300,9 +300,9 @@ def parse_gcode():
             ## Update block class from comments information
             #########################################################
             classupdate = update_class(line)
-
-        if line.startswith('T'):
-            classupdate = update_class(line)
+        #
+        # if line.startswith('T'):
+        #     classupdate = update_class(line)
 
         if classupdate:
 
@@ -451,12 +451,6 @@ def gcode_parseline(index):
                 g.Comment = (
                     "; --- ({:.3f} , {:.3f}) --> ({:.3f} , {:.3f})\n".format(v.purge_keep_x, v.purge_keep_y, _x, _y))
                 g.remove_parameter("E")
-                if _x == v.current_position_x:
-                    g.remove_parameter("X")
-                if _y == v.current_position_y:
-                    g.remove_parameter("Y")
-                if len(g.Parameters) == 0:
-                    g.move_to_comment("Unnecessary Move")
 
 
     if not v.side_wipe:
@@ -592,9 +586,22 @@ def gcode_parseline(index):
             else:
                 _y = v.purge_keep_y
 
-            # v.processed_gcode.append("G1 X{:.3f} Y{:.3f}\n".format(_x, _y))
-            # v.current_position_x = _x
-            # v.current_position_x = _y
+            if not coordinate_in_tower(_x, _y):
+                _x = v.purge_keep_x
+                _y = v.purge_keep_y
+
+            v.processed_gcode.append(
+                "G1 X{:.3f} Y{:.3f}; P2PP Inserted to realign\n".format(v.purge_keep_x, v.purge_keep_y))
+            v.current_position_x = _x
+            v.current_position_x = _y
+
+            g.remove_parameter("E")
+            if g.get_parameter("X") == _x:
+                g.remove_parameter("X")
+            if len(g.Parameters) == 0:
+                g.move_to_comment("-useless command-")
+
+
 
 
     if v.tower_delta:
