@@ -77,7 +77,7 @@ def convert_to_absolute():
 
 
 # ################### GCODE PROCESSING ###########################
-def gcode_process_toolchange(new_tool, location):
+def gcode_process_toolchange(new_tool, location, current_layer):
     # some commands are generated at the end to unload filament,
     # they appear as a reload of current filament - messing up things
     if new_tool == v.current_tool:
@@ -109,7 +109,7 @@ def gcode_process_toolchange(new_tool, location):
         else:
             if v.splice_length[-1] < v.min_splice_length:
                 gui.log_warning("Warning: Short splice (<{}mm) Length:{:-3.2f} Layer:{} Input:{}".
-                                format(v.min_splice_length, length, v.current_layer, v.current_tool))
+                                format(v.min_splice_length, length, current_layer, v.current_tool))
                 filamentshortage = v.min_splice_length - v.splice_length[-1]
                 v.filament_short[new_tool] = max(v.filament_short[new_tool], filamentshortage)
 
@@ -389,7 +389,7 @@ def gcode_parseline(index):
     classupdate = block_class != previous_block_class
 
     if g.Command == 'T':
-        gcode_process_toolchange(int(g.Command_value), v.total_material_extruded)
+        gcode_process_toolchange(int(g.Command_value), v.total_material_extruded, g.Layer)
         g.move_to_comment("Color Change")
         g.issue_command()
         return
@@ -763,7 +763,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
             gui.log_warning("THIS FILE WILL NOT PRINT CORRECTLY")
     v.processtime = time.time() - starttime
 
-    gcode_process_toolchange(-1, v.total_material_extruded)
+    gcode_process_toolchange(-1, v.total_material_extruded, 0)
     omega_result = header_generate_omega(_taskName)
     header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
 
