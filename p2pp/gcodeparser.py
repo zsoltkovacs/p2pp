@@ -87,16 +87,19 @@ def parse_slic3r_config():
             if parameter_start != -1:
                 v.layer_height = float(gcode_line[parameter_start + 1:].strip())
 
-
         if gcode_line.startswith("; extruder_colour"):
             filament_colour = ''
+            parameter_start = gcode_line.find("=")
+            gcode_line = gcode_line[parameter_start + 1:].strip()
             parameter_start = gcode_line.find("#")
             if parameter_start != -1:
-                gcode_line = gcode_line[parameter_start + 1:].replace(";", "")
-                filament_colour = gcode_line.split("#")
+                filament_colour = gcode_line.split(";")
             if len(filament_colour) == 4:
-                v.filament_color_code = filament_colour
-            continue
+                for i in range(4):
+                    if filament_colour[i] == "":
+                        filament_colour[i] = "000000"
+                    else:
+                        filament_colour[i] = filament_colour[i][1:]
 
         if gcode_line.startswith("; filament_diameter"):
             parameter_start = gcode_line.find("=")

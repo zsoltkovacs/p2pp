@@ -169,7 +169,7 @@ def _purge_update_sequence_index():
         v.purgelayer += 1
         if v.side_wipe_length > 0:
             v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
-            v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
+            setwipespeed()
 
 def _purge_get_nextcommand_in_sequence():
     if current_purge_form == PURGE_SOLID:
@@ -210,6 +210,14 @@ def retract(tool):
 def unretract(tool):
     v.processed_gcode.append("G1 E{:.2f}\n".format(v.retract_length[tool]))
 
+
+def setwipespeed():
+    if (v.purgelayer == 0):
+        # first purge layer prints at 1200
+        v.processed_gcode.append("G1 F{}\n".format(1200))
+    else:
+        v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
+
 def purge_generate_sequence():
     global last_posx, last_posy
 
@@ -241,8 +249,7 @@ def purge_generate_sequence():
         v.processed_gcode.append("G1 X{} Y{} \n".format(last_posx, last_posy))
         v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
         unretract(v.current_tool)
-
-    v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
+        setwipespeed()
     # generate wipe code
     while v.side_wipe_length > 0:
         next_command = _purge_get_nextcommand_in_sequence()
