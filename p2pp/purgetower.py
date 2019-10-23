@@ -214,7 +214,7 @@ def unretract(tool):
 def setwipespeed():
     if (v.purgelayer == 0):
         # first purge layer prints at 1200
-        v.processed_gcode.append("G1 F{}\n".format(1200))
+        v.processed_gcode.append("G1 F{}\n".format(min(1200, v.wipe_feedrate)))
     else:
         v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
 
