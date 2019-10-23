@@ -153,7 +153,7 @@ def entertower(layer_hght):
             "G1 Z{:.2f} F10810\n".format(purgeheight))
         v.processed_gcode.append("G1 E{}\n".format(-v.retract_length[v.current_tool]))
         v.processed_gcode.append(";------------------------------\n")
-        if v.purgeheight <= 0.21:
+        if purgeheight <= 0.21:
             v.processed_gcode.append("G1 F{}\n".format(min(1200, v.wipe_feedrate)))
         else:
             v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
