@@ -148,7 +148,6 @@ def entertower(layer_hght):
         v.processed_gcode.append(";  P2PP DELTA >> TOWER {:.2f}mm\n".format(
             purgeheight))
         v.processed_gcode.append("G1 E{}\n".format(v.retract_length[v.current_tool]))
-        print ("Layer Z{:.2f} Delta {:.3f} ".format(purgeheight, v.cur_tower_z_delta))
         v.processed_gcode.append(
             "G1 Z{:.2f} F10810\n".format(purgeheight))
         v.processed_gcode.append("G1 E{}\n".format(-v.retract_length[v.current_tool]))
