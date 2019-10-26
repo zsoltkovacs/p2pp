@@ -128,8 +128,6 @@ def parse_slic3r_config():
                         v.retract_lift[i] = float(retracts[i])
                         if v.retract_lift[i] == 0:
                             lift_error = True
-            if lift_error:
-                gui.log_warning("[Printer Settings]->[Extruders 1/2/3/4]->[Lift Z] should not be set to zero.")
             continue
 
         if gcode_line.startswith("; retract_length = "):
