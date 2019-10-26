@@ -289,10 +289,18 @@ def parse_gcode():
             ########################################################
 
             if line.startswith(";LAYER"):
+                layer = 0
                 try:
                     layer = int(line[7:])
                 except ValueError:
-                    layer = 0
+                    fields = line[7:].split(" ")
+                    for field in fields:
+                        try:
+                            layer = int(field)
+                            break
+                        except ValueError:
+                            pass;
+
 
                 v.parsedlayer = layer
                 if layer > 0:
