@@ -182,15 +182,16 @@ def _purge_generate_tower_brim(x, y, w, h):
     global brimlayer, last_brim_x, last_brim_y
 
     brimlayer = []
-    ew = v.extrusion_width
     y -= ew
     w += ew
     h += 2 * ew
 
-    brimlayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}".format(x, y)))
+    brimlayer.append(gcode.GCodeCommand("G0 X{:.3f} Y{:.3f} F4000".format(x, y)))
+    brimlayer.append(gcode.GCodeCommand("G0 Z{:.3f}".format(v.layer_height)))
 
     for i in range(4):
-        brimlayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}  E{:.4f}".format(x + w, y, calculate_purge(w))))
+        brimlayer.append(
+            gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}  E{:.4f} F{}".format(x + w, y, calculate_purge(w), 1200)))
         brimlayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}  E{:.4f}".format(x + w, y + h, calculate_purge(h))))
         x -= ew
         w += 2 * ew
@@ -198,9 +199,6 @@ def _purge_generate_tower_brim(x, y, w, h):
         y -= ew
         h += 2 * ew
         brimlayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}  E{:.4f}".format(x, y, calculate_purge(h))))
-
-    last_brim_x = x
-    last_brim_y = y
 
 
 def retract(tool):
