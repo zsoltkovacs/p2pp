@@ -181,6 +181,7 @@ def _purge_get_nextcommand_in_sequence():
 def _purge_generate_tower_brim(x, y, w, h):
     global brimlayer, last_brim_x, last_brim_y
 
+    ew = v.extrusion_width
     brimlayer = []
     y -= ew
     w += ew
@@ -247,7 +248,7 @@ def purge_generate_sequence():
         v.processed_gcode.append("G1 X{} Y{} \n".format(last_posx, last_posy))
         v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
         unretract(v.current_tool)
-        setwipespeed()
+    setwipespeed()
     # generate wipe code
     while v.side_wipe_length > 0:
         next_command = _purge_get_nextcommand_in_sequence()
