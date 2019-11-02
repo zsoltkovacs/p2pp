@@ -326,7 +326,7 @@ def parse_gcode():
 
         ## Z-HOPS detection
         ###################
-        if v.parsedgcode[-1].has_parameter("Z"):
+        if v.parsedgcode[-1].has_parameter("Z") and v.parsedgcode[-1].is_movement_command():
 
             to_z = v.parsedgcode[-1].get_parameter("Z", 0)
             delta = (to_z - cur_z)
