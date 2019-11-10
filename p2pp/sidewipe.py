@@ -78,7 +78,7 @@ def create_side_wipe():
     for line in v.before_sidewipe_gcode:
         v.processed_gcode.append(line + "\n")
 
-    if not v.user_firemware_retraction:
+    if not v.use_firmware_retraction:
         v.processed_gcode.append("G1 E{}\n".format(-v.retract_length[v.current_tool]))
     else:
         v.processed_gcode.append("G10")
@@ -107,7 +107,7 @@ def create_side_wipe():
     for line in v.after_sidewipe_gcode:
         v.processed_gcode.append(line + "\n")
 
-    if not v.user_firemware_retraction:
+    if not v.use_firmware_retraction:
         v.processed_gcode.append("G1 E{}\n".format(v.retract_length[v.current_tool]))
     else:
         v.processed_gcode.append("G11")
