@@ -110,6 +110,18 @@ def check_config_parameters(line):
         v.bed_origin_y = floatparameter(line)
         return
 
+    if "BIGBRAIN3D_BLOBSIZE" in line:
+        v.bigbrain3d_blob_size = int(floatparameter(line))
+
+    if "BIGBRAIN3D_COOLINGTIME" in line:
+        v.bigbrain3d_blob_cooling_time = int(floatparameter(line))
+
+    if "BIGBRAIN3D_PURGEPOSITION" in line:
+        v.bigbrain3d_x_position = floatparameter(line)
+
+    if "BIGBRAIN3D_ENABLE" in line:
+        v.bigbrain3d_purge_enabled = True
+
     if "MINSPLICE" in line:
         v.min_splice_length = floatparameter(line)
         if v.min_splice_length < 70:

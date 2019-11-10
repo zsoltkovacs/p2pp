@@ -235,7 +235,10 @@ def backpass(currentclass):
     end_search = max(1, v.lasthopup)
     while idx > end_search:
         tmp = v.parsedgcode[idx]
-        if tmp.fullcommand == "G1" and tmp.has_parameter("E") and tmp.has_parameter("F"):
+
+        # retrct can be either a firmware retrct of a manually programmed unretract
+        if (tmp.fullcommand == "G1" and tmp.has_parameter("E") and tmp.has_parameter("F")) or (
+                tmp.fullcommand == "G11"):
             v.gcodeclass[idx] = currentclass
             tmp = v.parsedgcode[idx - 1]
             if tmp.fullcommand == "G1" and tmp.has_parameter("Z"):
@@ -252,6 +255,7 @@ def backpass(currentclass):
                 idx = idx + 1
             break
         idx = idx - 1
+
 
 
 def parse_gcode():
@@ -284,6 +288,9 @@ def parse_gcode():
 
             if line.startswith(";P2PP MATERIAL_"):
                 algorithm_process_material_configuration(line[15:])
+
+            # if line.startswith(";P2PP WIPERATE_"):
+            #     wiperate_process(line[15:])
 
             ## LAYER DISCRIMINATION COMMANDS
             ########################################################
@@ -369,6 +376,7 @@ def parse_gcode():
                 if v.parsedgcode[-1].X and v.parsedgcode[-1].Y:
                     specifier |= SPEC_INTOWER
 
+
             if flagset(specifier, SPEC_RETRACTS):
                 v.block_classification = CLS_NORMAL
 
@@ -404,8 +412,20 @@ def gcode_parseline(index):
         g.issue_command()
         return
 
-    if g.fullcommand in ["M104", "M106", "M109", "M140", "M190", "M73", "M84"]:
+    if g.fullcommand in ["M104", "M109", "M140", "M190", "M73", "M84"]:
         g.issue_command()
+        return
+
+    # fan speed command
+
+    if g.fullcommand == "M107":
+        g.issue_command()
+        v.saved_fanspeed = 0
+        return
+
+    if g.fullcommand == "M106":
+        g.issue_command()
+        v.saved_fanspeed = g.get_parameter("S", v.saved_fanspeed)
         return
 
     if block_class == CLS_TOOL_UNLOAD and g.fullcommand in ["M900"] and g.get_parameter("K", 0) == 0:
@@ -491,7 +511,6 @@ def gcode_parseline(index):
                 g.Comment = "removed parms X{:.3f} and Y{:.3f}".format(g.X, g.Y)
                 g.remove_parameter("X")
                 g.remove_parameter("Y")
-
 
         # sepcific for FULL_PURGE_REDUCTION
         if v.full_purge_reduction:

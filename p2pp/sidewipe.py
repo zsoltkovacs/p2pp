@@ -10,6 +10,63 @@ __email__ = 'P2PP@pandora.be'
 import p2pp.variables as v
 
 
+#
+# to be implemented - Big Brain 3D purge mechanism support
+#
+
+
+def setfanspeed(n):
+    if n == 0:
+        v.processed_gcode.append("M107")
+    else:
+        v.processed_gcode.append("M106 S{}".format(n))
+
+
+def resetfanspeed():
+    setfanspeed(v.saved_fanspeed)
+
+
+def retract():
+    v.processed_gcode.append("G1 E{}\n".format(-v.retract_length[v.current_tool]))
+
+
+def unretract():
+    v.processed_gcode.append("G1 E{}\n".format(v.retract_length[v.current_tool]))
+
+
+def generate_blob(n):
+    v.processed_gcode.append(";---- BIGBRAIN3D SIDEWIPE BLOB -- purge {:.3f}mm\n".format(n))
+    v.processed_gcode.append("M907 X{} ; set motor power\n".format(int(v.purgemotorpower)))
+    v.processed_gcode.append("G1 X200 F10800 ; go near the edge of the print\n")
+    v.processed_gcode.append("G4 S0 ; wait for the print buffer to clear\n")
+    v.processed_gcode.append("G1 X249.5 F3000 ; go near the edge of the print\n")
+    v.processed_gcode.append(
+        "G1 X{} F1000; go to the actual wiping position\n".format(v.bigbrain3d_x_position))  # takes 2.5 seconds
+    setfanspeed(0)
+    unretract()
+    v.processed_gcode.append("G1 E{:6.3f}".format(n))
+    retract()
+    setfanspeed(255)
+    v.processed_gcode.append("G4 S{:03} ; blob cooling time\n".forat(v.bigbrain3d_blob_cooling_time))
+    v.processed_gcode.append("G1 X240 F10800 ; go near the edge of the print\n")
+
+
+def create_sidewipe_BigBrain3D(purgesize):
+    while purgesize > 0:
+        blob = min(v.bigbrain3d_blob_size, purgesize)
+        if (purgesize - blob) < 10:
+            blob += purgesize
+            purgesize = 0
+        retract()
+        generate_blob(blob)
+        unretract()
+    resetfanspeed()
+    retract()
+    pass
+
+
+
+
 def create_side_wipe():
     if not v.side_wipe or v.side_wipe_length == 0:
         return

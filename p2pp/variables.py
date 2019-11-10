@@ -99,6 +99,8 @@ bed_size_y = 220  # type: int
 bed_origin_x = 0  # type: int
 bed_origin_y = -10.00  # type: int  # Account for the purge line at the start of the print
 
+# wipe_feedrates = {}
+
 wipe_tower_info = {'minx': 9999,
                    'miny': 9999,
                    'maxx': -9999,
@@ -199,3 +201,11 @@ retracted = False
 
 keep_x = 0.0
 keep_y = 0.0
+
+saved_fanspeed = 0
+
+# prusa side wipe contraption
+bigbrain3d_x_position = 256.5
+bigbrain3d_blob_cooling_time = 12
+bigbrain3d_blob_size = 40
+bigbrain3d_purge_enabled = False
