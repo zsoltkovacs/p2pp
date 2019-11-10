@@ -78,7 +78,11 @@ def create_side_wipe():
     for line in v.before_sidewipe_gcode:
         v.processed_gcode.append(line + "\n")
 
-    v.processed_gcode.append("G1 E{}\n".format(-v.retract_length[v.current_tool]))
+    if not v.user_firemware_retraction:
+        v.processed_gcode.append("G1 E{}\n".format(-v.retract_length[v.current_tool]))
+    else:
+        v.processed_gcode.append("G10")
+
     v.processed_gcode.append("G1 F8640\n")
     v.processed_gcode.append("G0 {} Y{}\n".format(v.side_wipe_loc, v.sidewipe_miny))
 
@@ -103,7 +107,11 @@ def create_side_wipe():
     for line in v.after_sidewipe_gcode:
         v.processed_gcode.append(line + "\n")
 
-    v.processed_gcode.append("G1 E{}\n".format(v.retract_length[v.current_tool]))
+    if not v.user_firemware_retraction:
+        v.processed_gcode.append("G1 E{}\n".format(v.retract_length[v.current_tool]))
+    else:
+        v.processed_gcode.append("G11")
+
     v.processed_gcode.append(";---------------------------\n")
 
     v.side_wipe_length = 0

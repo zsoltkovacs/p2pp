@@ -138,6 +138,7 @@ ping_length_multiplier = 1.03  # type: float
 sidewipe_correction = 1.0  # type: float
 volumetric_e = False  # type: bool
 
+user_firemware_retraction = False
 gcode_has_relative_e = False
 absolute_extruder = False  # type : bool
 
