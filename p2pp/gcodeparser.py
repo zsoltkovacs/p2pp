@@ -151,6 +151,15 @@ def parse_slic3r_config():
             if "reprap" in gcode_line:
                 v.isReprap_Mode = True
 
+        if "use_firmware_retraction" in gcode_line:
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                gcode_line = gcode_line[parameter_start + 1:].replace(";", "")
+                if "1" in gcode_line:
+                    v.use_firmware_retraction = True
+                else:
+                    v.use_firmware_retraction = False
+
         if "use_relative_e_distances" in gcode_line:
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:

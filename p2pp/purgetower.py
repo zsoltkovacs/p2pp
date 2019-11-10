@@ -203,11 +203,17 @@ def _purge_generate_tower_brim(x, y, w, h):
 
 
 def retract(tool):
-    v.processed_gcode.append("G1 E-{:.2f}\n".format(v.retract_length[tool]))
+    if not v.use_firmware_retraction:
+        v.processed_gcode.append("G1 E-{:.2f}\n".format(v.retract_length[tool]))
+    else:
+        v.processed_gcode.append("G10")
 
 
 def unretract(tool):
-    v.processed_gcode.append("G1 E{:.2f}\n".format(v.retract_length[tool]))
+    if not v.use_firmware_retraction:
+        v.processed_gcode.append("G1 E{:.2f}\n".format(v.retract_length[tool]))
+    else:
+        v.processed_gcode.append("G11")
 
 
 def setwipespeed():

@@ -147,10 +147,19 @@ def entertower(layer_hght):
         v.processed_gcode.append(";------------------------------\n")
         v.processed_gcode.append(";  P2PP DELTA >> TOWER {:.2f}mm\n".format(
             purgeheight))
-        v.processed_gcode.append("G1 E{}\n".format(v.retract_length[v.current_tool]))
+        if v.use_firmware_retraction == False:
+            v.processed_gcode.append("G1 E{}\n".format(v.retract_length[v.current_tool]))
+        else:
+            v.processed_gcode.append("G10")
+
         v.processed_gcode.append(
-            "G1 Z{:.2f} F10810\n".format(purgeheight))
-        v.processed_gcode.append("G1 E{}\n".format(-v.retract_length[v.current_tool]))
+                "G1 Z{:.2f} F10810\n".format(purgeheight))
+
+        if v.use_firmware_retraction == False:
+            v.processed_gcode.append("G1 E{}\n".format(-v.retract_length[v.current_tool]))
+        else:
+            v.processed_gcode.append("G11")
+        
         v.processed_gcode.append(";------------------------------\n")
         if purgeheight <= 0.21:
             v.processed_gcode.append("G1 F{}\n".format(min(1200, v.wipe_feedrate)))
@@ -344,8 +353,12 @@ def parse_gcode():
 
         ## retract detections
         #####################
-        if v.parsedgcode[-1].is_movement_command() and v.parsedgcode[-1].has_parameter("E"):
-            if v.parsedgcode[-1].get_parameter("E", 0) < 0:
+        if not v.use_firmware_retraction:
+            if v.parsedgcode[-1].is_movement_command() and v.parsedgcode[-1].has_parameter("E"):
+                if v.parsedgcode[-1].get_parameter("E", 0) < 0:
+                    specifier |= SPEC_RETRACTS
+        else:
+            if v.parsedgcode[-1].Command == 'G' and v.parsedgcode[-1].Command_value == '10':
                 specifier |= SPEC_RETRACTS
 
         ## tool change detection
@@ -634,7 +647,8 @@ def gcode_parseline(index):
 
     if g.is_movement_command():
 
-        if v.retract_move and g.E < 0:
+        if v.retract_move and g.is_retract_command():
+            # This is going to break stuff, G10 cannot take X and Y, what to do?
             g.update_parameter("X", v.retract_x)
             g.update_parameter("Y", v.retract_y)
             v.retract_move = False
@@ -816,5 +830,4 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     gui.print_summary(omega_result['summary'])
 
     gui.progress_string(100)
-    if (len(v.process_warnings) > 0 and not silent) or v.consolewait:
-        gui.close_button_enable()
+    gui.close_button_enable()
