@@ -121,6 +121,7 @@ def check_config_parameters(line):
 
     if "BIGBRAIN3D_ENABLE" in line:
         v.bigbrain3d_purge_enabled = True
+        gui.log_warning("BIGBRAIN3D Will only work with installed hardware on a Prusa Printer")
 
     if "MINSPLICE" in line:
         v.min_splice_length = floatparameter(line)
@@ -202,6 +203,9 @@ def check_config_parameters(line):
 
     if "CONSOLEWAIT" in line:
         v.consolewait = True
+
+    if "IGNOREWARNINGS" in line:
+        v.ignore_warnings = True
 
     if "ABSOLUTEEXTRUDER" in line:
         v.absolute_extruder = True

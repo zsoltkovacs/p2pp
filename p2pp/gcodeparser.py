@@ -102,7 +102,6 @@ def parse_slic3r_config():
                         v.filament_color_code[i] = filament_colour[i][1:]
 
 
-
         if gcode_line.startswith("; filament_diameter"):
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:

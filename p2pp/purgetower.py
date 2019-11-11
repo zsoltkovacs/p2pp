@@ -206,14 +206,14 @@ def retract(tool):
     if not v.use_firmware_retraction:
         v.processed_gcode.append("G1 E-{:.2f}\n".format(v.retract_length[tool]))
     else:
-        v.processed_gcode.append("G10")
+        v.processed_gcode.append("G10\n")
 
 
 def unretract(tool):
     if not v.use_firmware_retraction:
         v.processed_gcode.append("G1 E{:.2f}\n".format(v.retract_length[tool]))
     else:
-        v.processed_gcode.append("G11")
+        v.processed_gcode.append("G11\n")
 
 
 def setwipespeed():

@@ -204,6 +204,7 @@ keep_x = 0.0
 keep_y = 0.0
 
 saved_fanspeed = 0
+ignore_warnings = False
 
 # prusa side wipe contraption
 bigbrain3d_x_position = 256.5

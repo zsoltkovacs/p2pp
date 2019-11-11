@@ -110,6 +110,16 @@ class GCodeCommand:
                 self.Comment = "[removed_{}{}] ".format(parameter, self.Parameters[parameter])
             self.Parameters.pop(parameter)
 
+            if parameter == "X":
+                self.X = None
+            if parameter == "Y":
+                self.Y = None
+            if parameter == "Z":
+                self.Z = None
+            if parameter == "E":
+                self.E = None
+
+
     def move_to_comment(self, text):
         if self.Command:
             self.Comment = "-- P2PP -- removed [{}] - {}".format(text, self)
@@ -144,3 +154,7 @@ class GCodeCommand:
 
     def is_retract_command(self):
         return (self.Command == "G" and self.E < 0) or (self.Command == "G" and self.Command_value == '10')
+
+    def is_unretract_command(self):
+        return (self.is_movement_command() and self.E > 0 and not g.X and not g.Y and not g.Z) or (
+                    self.Command == "G" and self.Command_value == '11')

@@ -147,18 +147,12 @@ def entertower(layer_hght):
         v.processed_gcode.append(";------------------------------\n")
         v.processed_gcode.append(";  P2PP DELTA >> TOWER {:.2f}mm\n".format(
             purgeheight))
-        if v.use_firmware_retraction == False:
-            v.processed_gcode.append("G1 E{}\n".format(v.retract_length[v.current_tool]))
-        else:
-            v.processed_gcode.append("G10")
+        purgetower.retract(v.current_tool)
 
         v.processed_gcode.append(
                 "G1 Z{:.2f} F10810\n".format(purgeheight))
 
-        if v.use_firmware_retraction == False:
-            v.processed_gcode.append("G1 E{}\n".format(-v.retract_length[v.current_tool]))
-        else:
-            v.processed_gcode.append("G11")
+        purgetower.unretract(v.current_tool)
         
         v.processed_gcode.append(";------------------------------\n")
         if purgeheight <= 0.21:
@@ -465,21 +459,11 @@ def gcode_parseline(index):
     ## ALL SITUATIONS
     ##############################################
     if block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
-        if v.tower_delta:
-            if g.fullcommand == "G4":
-                g.move_to_comment("tool unload")
+        if g.fullcommand == "G4":
+            g.move_to_comment("tool unload")
             if g.is_movement_command():
-                if not (g.has_parameter("Z")):
-                    g.move_to_comment("tool unload")
-                else:
-                    g.remove_parameter("X")
-                    g.remove_parameter("Y")
-                    g.remove_parameter("F")
-                    g.remove_parameter("E")
-        else:
-            if g.fullcommand == "G4":
-                g.move_to_comment("tool unload")
-            if g.is_movement_command():
+                if g.is_unretract_command():
+                    v.retracted = True
                 if g.has_parameter("Z"):
                     g.remove_parameter("X")
                     g.remove_parameter("Y")
@@ -487,6 +471,7 @@ def gcode_parseline(index):
                     g.remove_parameter("E")
                 else:
                     g.move_to_comment("tool unload")
+
         g.issue_command()
         return
 
@@ -645,9 +630,6 @@ def gcode_parseline(index):
             if len(g.Parameters) == 0:
                 g.move_to_comment("-useless command-")
 
-
-
-
     if v.tower_delta:
         if g.E and block_class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
             if not inrange(g.X, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']):
@@ -701,6 +683,7 @@ def gcode_parseline(index):
     g.issue_command()
 
     if (g.X or g.Y) and v.retracted:
+        v.processed_gcode.append("; Retract Fixup\n")
         purgetower.unretract(v.current_tool)
         v.retracted = False
 
@@ -849,4 +832,5 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     gui.print_summary(omega_result['summary'])
 
     gui.progress_string(100)
-    gui.close_button_enable()
+    if (len(v.process_warnings) > 0 and not v.ignore_warnings) or v.consolewait:
+        gui.close_button_enable()
