@@ -238,24 +238,17 @@ def backpass(currentclass):
     end_search = max(1, v.lasthopup)
     while idx > end_search:
         tmp = v.parsedgcode[idx]
-
-        # retrct can be either a firmware retrct of a manually programmed unretract
-        if (tmp.fullcommand == "G1" and tmp.has_parameter("E") and tmp.has_parameter("F")) or (
-                tmp.fullcommand == "G11"):
+        # retract can be either a firmware retrct of a manually programmed unretract
+        if (tmp.fullcommand == "G1" and tmp.E and tmp.has_parameter("F")) or (tmp.fullcommand == "G11"):
             v.gcodeclass[idx] = currentclass
             tmp = v.parsedgcode[idx - 1]
             if tmp.fullcommand == "G1" and tmp.has_parameter("Z"):
                 v.gcodeclass[idx - 1] = currentclass
                 tmp = v.parsedgcode[idx - 2]
-                idx = idx - 1
-            if tmp.fullcommand == "G1" and tmp.has_parameter("X") and tmp.has_parameter("Y") and not tmp.has_parameter(
-                    "E"):
-                tmp.Comment = "Part of next block"
-            else:
-                idx = idx + 1
-            while idx <= len(v.parsedgcode) - 2:
-                v.gcodeclass[idx - 1] = currentclass
-                idx = idx + 1
+            if tmp.fullcommand == "G1" and tmp.X and tmp.Y and not tmp.E:
+                v.parsedgcode[idx - 2].Comment = "Part of next block"
+                v.gcodeclass[idx - 2] = currentclass
+
             break
         idx = idx - 1
 
@@ -374,7 +367,7 @@ def parse_gcode():
 
 
         if v.block_classification in [CLS_TOOL_START, CLS_TOOL_UNLOAD, CLS_EMPTY,
-                                      CLS_BRIM] and not v.full_purge_reduction:
+                                      CLS_BRIM]:  # and not v.full_purge_reduction:
             backpass(v.block_classification)
 
 
@@ -383,7 +376,11 @@ def parse_gcode():
                 if v.parsedgcode[-1].X and v.parsedgcode[-1].Y:
                     specifier |= SPEC_INTOWER
 
+        if CLS_ENDGRID:
+            if v.parsedgcode[-1].fullcommand == "G1" and v.parsedgcode[-1].Z:
+                v.block_classification = CLS_NORMAL
 
+        else:
             if flagset(specifier, SPEC_RETRACTS):
                 v.block_classification = CLS_NORMAL
 
@@ -684,8 +681,8 @@ def gcode_parseline(index):
     g.issue_command()
 
     if (g.X or g.Y) and v.retracted:
-        v.processed_gcode.append("; Retract Fixup\n")
         purgetower.unretract(v.current_tool)
+
         v.retracted = False
 
     ### PING PROCESSING

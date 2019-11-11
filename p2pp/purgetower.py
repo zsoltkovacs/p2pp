@@ -279,6 +279,5 @@ def purge_generate_sequence():
     v.total_material_extruded += correction
     v.material_extruded_per_color[v.current_tool] += correction
     v.side_wipe_length = 0
-    v.retract_move = True
     v.retract_x = last_posx
     v.retract_y = last_posy
