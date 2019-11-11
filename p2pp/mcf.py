@@ -459,18 +459,19 @@ def gcode_parseline(index):
     ## ALL SITUATIONS
     ##############################################
     if block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
+
         if g.fullcommand == "G4":
             g.move_to_comment("tool unload")
-            if g.is_movement_command():
-                if g.is_unretract_command():
-                    v.retracted = True
-                if g.has_parameter("Z"):
-                    g.remove_parameter("X")
-                    g.remove_parameter("Y")
-                    g.remove_parameter("F")
-                    g.remove_parameter("E")
-                else:
-                    g.move_to_comment("tool unload")
+        if g.is_movement_command():
+            if g.is_unretract_command():
+                v.retracted = True
+            if g.has_parameter("Z"):
+                g.remove_parameter("X")
+                g.remove_parameter("Y")
+                g.remove_parameter("F")
+                g.remove_parameter("E")
+            else:
+                g.move_to_comment("tool unload")
 
         g.issue_command()
         return

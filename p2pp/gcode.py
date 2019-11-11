@@ -15,7 +15,7 @@ EXTRUDER = "E"
 RELATIVE = True
 ABSOLUTE = False
 
-import p2pp.variables as vars
+import p2pp.variables as v
 
 class GCodeCommand:
     Command = None
@@ -35,7 +35,7 @@ class GCodeCommand:
         self.Command_value = None
         self.Parameters = {}
         self.Comment = None
-        self.Layer = vars.parsedlayer + 1
+        self.Layer = v.parsedlayer + 1
         gcode_line = gcode_line.strip()
         pos = gcode_line.find(";")
 
@@ -56,17 +56,17 @@ class GCodeCommand:
                 param = fields[0].strip()
                 if len(param) > 0:
                     p = param[0]
-                    v = param[1:]
+                    val = param[1:]
 
                     try:
-                        if "." in v:
-                            v = float(v)
+                        if "." in val:
+                            val = float(val)
                         else:
-                            v = int(v)
+                            val = int(val)
                     except ValueError:
                         pass
 
-                    self.Parameters[p] = v
+                    self.Parameters[p] = val
 
                 fields = fields[1:]
 
@@ -138,7 +138,7 @@ class GCodeCommand:
         return defaultvalue
 
     def issue_command(self):
-        vars.processed_gcode.append(str(self))
+        v.processed_gcode.append(str(self))
 
     def add_comment(self, text):
         if self.Comment:
@@ -156,5 +156,6 @@ class GCodeCommand:
         return (self.Command == "G" and self.E < 0) or (self.Command == "G" and self.Command_value == '10')
 
     def is_unretract_command(self):
-        return (self.is_movement_command() and self.E > 0 and not g.X and not g.Y and not g.Z) or (
+        return (self.is_movement_command() and self.E == v.retract_length[
+            v.current_tool] and not g.X and not g.Y and not g.Z) or (
                     self.Command == "G" and self.Command_value == '11')
