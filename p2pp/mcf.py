@@ -460,8 +460,6 @@ def gcode_parseline(index):
         if g.fullcommand == "G4":
             g.move_to_comment("tool unload")
         if g.is_movement_command():
-            if g.is_unretract_command():
-                v.retracted = True
             if g.has_parameter("Z"):
                 g.remove_parameter("X")
                 g.remove_parameter("Y")
@@ -679,11 +677,24 @@ def gcode_parseline(index):
 
     # check here issue with unretract
     #################################
-    if (g.X or g.Y) and v.retracted:
-        purgetower.unretract(v.current_tool)
-        v.retracted = False
 
     # g.Comment = " ; - {}".format(v.total_material_extruded)
+
+    if g.is_retract_command():
+        if g.E:
+            v.retraction += g.E
+        else:
+            v.retraction -= 1
+
+    if g.is_unretract_command():
+        v.retraction = 0
+
+    if (g.X or g.Y) and (g.E and g.E > 0) and v.retraction < 0:
+        v.processed_gcode.append(";fixup retracts\n")
+        purgetower.unretract(v.current_tool)
+        # v.retracted = False
+
+
     g.issue_command()
 
     ### PING PROCESSING
@@ -692,7 +703,7 @@ def gcode_parseline(index):
     if v.accessory_mode:
         pings.check_accessorymode_second(g.E)
 
-    if g.E > 0 and v.side_wipe_length == 0:
+    if (g.E and g.E > 0) and v.side_wipe_length == 0:
         pings.check_connected_ping()
 
     v.previous_position_x = v.current_position_x

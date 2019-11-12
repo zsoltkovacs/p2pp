@@ -204,16 +204,25 @@ def _purge_generate_tower_brim(x, y, w, h):
 
 def retract(tool):
     if not v.use_firmware_retraction:
+        length = v.retract_length[tool]
         v.processed_gcode.append("G1 E-{:.2f}\n".format(v.retract_length[tool]))
+        v.total_material_extruded -= length
+        v.material_extruded_per_color[v.current_tool] -= length
+        v.retraction -= length
     else:
         v.processed_gcode.append("G10\n")
+        v.retraction -= 1
 
 
 def unretract(tool):
     if not v.use_firmware_retraction:
+        length = v.retract_length[tool]
         v.processed_gcode.append("G1 E{:.2f}\n".format(v.retract_length[tool]))
+        v.total_material_extruded += length
+        v.material_extruded_per_color[v.current_tool] += length
     else:
         v.processed_gcode.append("G11\n")
+    v.retraction = 0
 
 
 def setwipespeed():
@@ -250,7 +259,8 @@ def purge_generate_sequence():
     v.min_tower_delta = min(v.min_tower_delta, v.current_position_z - (v.purgelayer + 1) * v.layer_height)
 
     if last_posx and last_posy:
-        retract(v.current_tool)
+        if v.retraction == 0:
+            retract(v.current_tool)
         v.processed_gcode.append("G1 X{} Y{} \n".format(last_posx, last_posy))
         v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
         unretract(v.current_tool)
@@ -267,11 +277,11 @@ def purge_generate_sequence():
 
     # return to print height
     v.processed_gcode.append("; -------------------------------------\n")
-    retract(v.current_tool)
+    if v.retraction == 0:
+        retract(v.current_tool)
     v.processed_gcode.append("G1 Z{:.2f} F10800\n".format(v.current_position_z))
     v.processed_gcode.append("; --- P2PP WIPE SEQUENCE END DONE\n")
     v.processed_gcode.append("; -------------------------------------\n")
-    v.retracted = True
 
     # if we extruded more we need to account for that in the total count
 

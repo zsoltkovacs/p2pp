@@ -83,7 +83,7 @@ class GCodeCommand:
                 if key in "XYZ":
                     form = "{}{:.3f} "
                 if key in "E":
-                    form = "{}{:.4f} "
+                    form = "{}{:.5f} "
                 if key in "F":
                     form = "{}{:.0f} "
             p = p + form.format(key, self.Parameters[key])
@@ -127,6 +127,10 @@ class GCodeCommand:
         self.Command = None
         self.Command_value = None
         self.fullcommand = None
+        self.X = None
+        self.Y = None
+        self.Z = None
+        self.E = None
         self.Parameters.clear()
 
     def has_parameter(self, parametername):

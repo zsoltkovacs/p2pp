@@ -74,7 +74,8 @@ def create_side_wipe():
     for line in v.before_sidewipe_gcode:
         v.processed_gcode.append(line + "\n")
 
-    purgetower.retract(v.current_tool)
+    if v.retraction == 0:
+        purgetower.retract(v.current_tool)
 
     v.processed_gcode.append("G1 F8640\n")
     v.processed_gcode.append("G0 {} Y{}\n".format(v.side_wipe_loc, v.sidewipe_miny))
@@ -85,6 +86,8 @@ def create_side_wipe():
     yrange = [v.sidewipe_maxy, v.sidewipe_miny]
     rangeidx = 0
     moveto = yrange[rangeidx]
+
+    purgetower.unretract()
 
     while v.side_wipe_length > 0:
         sweep = min(v.side_wipe_length, sweep_length)
@@ -100,9 +103,7 @@ def create_side_wipe():
     for line in v.after_sidewipe_gcode:
         v.processed_gcode.append(line + "\n")
 
-    purgetower.unretract(v.current_tool)
-
-
+    purgetower.retract()
     v.processed_gcode.append(";---------------------------\n")
 
     v.side_wipe_length = 0
