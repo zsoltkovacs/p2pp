@@ -261,7 +261,7 @@ def purge_generate_sequence():
     if last_posx and last_posy:
         if v.retraction == 0:
             retract(v.current_tool)
-        v.processed_gcode.append("G1 X{} Y{} \n".format(last_posx, last_posy))
+        v.processed_gcode.append("G1 X{} Y{} F8640 \n".format(last_posx, last_posy))
         v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
         unretract(v.current_tool)
     setwipespeed()
