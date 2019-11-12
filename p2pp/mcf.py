@@ -646,8 +646,10 @@ def gcode_parseline(index):
 
         if v.retract_move and g.is_retract_command():
             # This is going to break stuff, G10 cannot take X and Y, what to do?
-            g.update_parameter("X", v.retract_x)
-            g.update_parameter("Y", v.retract_y)
+            if v.retract_x:
+                g.update_parameter("X", v.retract_x)
+            if v.retract_y:
+                g.update_parameter("Y", v.retract_y)
             v.retract_move = False
 
         v.current_position_x = g.get_parameter("X", v.current_position_x)
