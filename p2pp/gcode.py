@@ -150,7 +150,7 @@ class GCodeCommand:
         return self.Command == None and not (self.Comment == None)
 
     def is_movement_command(self):
-        return self.Command == "G" and self.Command_value in ['0', '1', '2', '3', '5']
+        return self.Command == "G" and self.Command_value in ['0', '1', '2', '3', '5', '10', '11']
 
     def is_retract_command(self):
         return (self.Command == "G" and self.E < 0) or (self.Command == "G" and self.Command_value == '10')
