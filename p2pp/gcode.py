@@ -89,7 +89,7 @@ class GCodeCommand:
                     form = "{}{:.5f} "
                 if key in "F":
                     form = "{}{:.0f} "
-                p = p + form.format(key, self.Parameters[key])
+                p = p + format(key, self.Parameters[key])
 
         for key in self.Parameters:
             if self.fullcommand not in ['G0', 'G1'] or key not in sorted_keys:
