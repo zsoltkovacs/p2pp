@@ -677,13 +677,14 @@ def gcode_parseline(index):
     if v.side_wipe and block_class == CLS_NORMAL and classupdate:
         create_side_wipe()
 
-    # g.Comment = " ; - {}".format(v.total_material_extruded)
-    g.issue_command()
-
+    # check here issue with unretract
+    #################################
     if (g.X or g.Y) and v.retracted:
         purgetower.unretract(v.current_tool)
-
         v.retracted = False
+
+    # g.Comment = " ; - {}".format(v.total_material_extruded)
+    g.issue_command()
 
     ### PING PROCESSING
     ###################

@@ -157,5 +157,5 @@ class GCodeCommand:
 
     def is_unretract_command(self):
         return (self.is_movement_command() and self.E == v.retract_length[
-            v.current_tool] and not g.X and not g.Y and not g.Z) or (
+            v.current_tool] and not self.X and not self.Y and not self.Z) or (
                     self.Command == "G" and self.Command_value == '11')
