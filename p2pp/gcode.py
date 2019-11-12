@@ -77,16 +77,30 @@ class GCodeCommand:
 
     def __str__(self):
         p = ""
-        for key in self.Parameters:
-            form = "{}{} "
-            if self.Command in ["G0", "G1"]:
+
+        # use the same formatting as prusa to ease file compares (X, Y, Z, E, F)
+        sorted_keys = "XYZEF"
+        for key in sorted_keys:
+            if self.fullcommand in ['G0', 'G1'] and key in self.Parameters:
+                form = ""
                 if key in "XYZ":
                     form = "{}{:.3f} "
-                if key in "E":
+                if key == "E":
                     form = "{}{:.5f} "
-                if key in "F":
+                if key == "F":
                     form = "{}{:.0f} "
-            p = p + form.format(key, self.Parameters[key])
+                value = self.Parameters[key]
+                if not value:
+                    value = -9999
+                p = p + form.format(key, value)
+
+        for key in self.Parameters:
+            if self.fullcommand not in ['G0', 'G1'] or key not in sorted_keys:
+                value = self.Parameters[key]
+                if not value:
+                    value = ""
+
+                p = p + "{}{} ".format(key, value)
 
         c = self.fullcommand
         if not c:
