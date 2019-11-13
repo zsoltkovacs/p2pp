@@ -204,6 +204,9 @@ keep_y = 0.0
 saved_fanspeed = 0
 ignore_warnings = False
 
+purge_sequence_x = 0
+purge_sequence_y = 0
+
 # prusa side wipe contraption
 bigbrain3d_x_position = 256.5
 bigbrain3d_blob_cooling_time = 12

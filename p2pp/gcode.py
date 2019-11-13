@@ -153,6 +153,18 @@ class GCodeCommand:
         self.E = None
         self.Parameters.clear()
 
+    def has_E(self):
+        return self.E is not None
+
+    def has_X(self):
+        return self.X is not None
+
+    def has_Y(self):
+        return self.Y is not None
+
+    def has_Z(self):
+        return self.Z is not None
+
     def has_parameter(self, parametername):
         return parametername in self.Parameters
 

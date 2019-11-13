@@ -241,7 +241,7 @@ def backpass(currentclass):
         if (tmp.fullcommand == "G1" and tmp.E and tmp.has_parameter("F")) or (tmp.fullcommand == "G11"):
             v.gcodeclass[idx] = currentclass
             tmp = v.parsedgcode[idx - 1]
-            if tmp.fullcommand == "G1" and tmp.has_parameter("Z"):
+            if tmp.fullcommand == "G1" and tmp.has_Z():
                 v.gcodeclass[idx - 1] = currentclass
                 tmp = v.parsedgcode[idx - 2]
             if tmp.fullcommand == "G1" and tmp.X and tmp.Y and not tmp.E:
@@ -325,7 +325,7 @@ def parse_gcode():
 
         ## Z-HOPS detection
         ###################
-        if v.parsedgcode[-1].has_parameter("Z") and v.parsedgcode[-1].is_movement_command():
+        if v.parsedgcode[-1].has_E() and v.parsedgcode[-1].is_movement_command():
 
             to_z = v.parsedgcode[-1].get_parameter("Z", 0)
             delta = (to_z - cur_z)
@@ -344,7 +344,7 @@ def parse_gcode():
         ## retract detections
         #####################
         if not v.use_firmware_retraction:
-            if v.parsedgcode[-1].is_movement_command() and v.parsedgcode[-1].has_parameter("E"):
+            if v.parsedgcode[-1].is_movement_command() and v.parsedgcode[-1].has_E():
                 if v.parsedgcode[-1].get_parameter("E", 0) < 0:
                     specifier |= SPEC_RETRACTS
         else:
@@ -439,10 +439,10 @@ def gcode_parseline(index):
         return
 
     if g.is_movement_command():
-        if g.X is not None:
+        if g.has_X():
             v.previous_purge_keep_x = v.purge_keep_x
             v.purge_keep_x = g.X
-        if g.Y is not None:
+        if g.has_Y():
             v.previous_purge_keep_y = v.purge_keep_y
             v.purge_keep_y = g.Y
 
@@ -453,7 +453,7 @@ def gcode_parseline(index):
         if g.fullcommand == "G4":
             g.move_to_comment("tool unload")
         if g.is_movement_command():
-            if g.has_parameter("Z"):
+            if g.has_Z():
                 g.remove_parameter("X")
                 g.remove_parameter("Y")
                 g.remove_parameter("F")
@@ -472,10 +472,10 @@ def gcode_parseline(index):
                 g.remove_parameter("E")
 
     if not v.side_wipe:
-        if g.X is not None:
+        if g.has_X():
             if v.wipe_tower_info['minx'] <= g.X <= v.wipe_tower_info['maxx']:
                 v.keep_x = g.X
-        if g.Y is not None:
+        if g.has_Y():
             if v.wipe_tower_info['miny'] <= g.Y <= v.wipe_tower_info['maxy']:
                 v.keep_y = g.Y
     elif not x_on_bed(g.X):
@@ -502,11 +502,11 @@ def gcode_parseline(index):
         if v.full_purge_reduction:
 
             # get information about the purge tower dimensions
-            if block_class == CLS_BRIM and (g.X is None or g.Y is None):
-                if g.X is not None:
+            if block_class == CLS_BRIM and not (g.has_X() and g.has_Y()):
+                if g.has_X():
                     purgetower.purge_width = min(purgetower.purge_width,
                                                  abs(g.X - v.previous_position_x))
-                if g.Y is not None:
+                if g.has_Y():
                     purgetower.purge_height = min(purgetower.purge_height,
                                                   abs(g.Y - v.previous_position_y))
 
@@ -594,11 +594,11 @@ def gcode_parseline(index):
 
         if v.enterpurge and g.is_movement_command():
             v.enterpurge = False
-            if g.has_parameter("X"):
+            if g.has_X():
                 _x = v.previous_purge_keep_x
             else:
                 _x = v.purge_keep_x
-            if g.has_parameter("Y"):
+            if g.has_Y():
                 _y = v.previous_purge_keep_y
             else:
                 _y = v.purge_keep_y
@@ -619,7 +619,7 @@ def gcode_parseline(index):
                 g.move_to_comment("-useless command-")
 
     if v.tower_delta:
-        if g.E is not None and block_class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
+        if g.has_E() and block_class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
             if not inrange(g.X, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']):
                 g.remove_parameter("E")
             if not inrange(g.Y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy']):
@@ -628,7 +628,7 @@ def gcode_parseline(index):
     # process movement commands
     ###########################
 
-    if not g.has_parameter("E"):
+    if not g.has_E():
         g.E = 0
 
     if v.full_purge_reduction and block_class == CLS_NORMAL and classupdate:
@@ -679,7 +679,7 @@ def gcode_parseline(index):
     # g.Comment = " ; - {}".format(v.total_material_extruded)
 
     if g.is_retract_command():
-        if g.E is not None:
+        if g.has_E():
             v.retraction += g.E
         else:
             v.retraction -= 1
@@ -687,7 +687,7 @@ def gcode_parseline(index):
     if g.is_unretract_command():
         v.retraction = 0
 
-    if not (g.X is None and g.Y is None) and (g.E is not None and g.E > 0) and v.retraction < 0:
+    if (g.has_X() or g.has_Y()) and (g.has_E() and g.E > 0) and v.retraction < 0:
         v.processed_gcode.append(";fixup retracts\n")
         purgetower.unretract(v.current_tool)
         # v.retracted = False
@@ -700,7 +700,7 @@ def gcode_parseline(index):
     if v.accessory_mode:
         pings.check_accessorymode_second(g.E)
 
-    if (g.E is not None and g.E > 0) and v.side_wipe_length == 0:
+    if (g.has_E() and g.E > 0) and v.side_wipe_length == 0:
         pings.check_connected_ping()
 
     v.previous_position_x = v.current_position_x
