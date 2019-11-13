@@ -230,7 +230,7 @@ def unretract(tool):
 
 
 def getwipespeed():
-    if (v.purgelayer == 0):
+    if v.purgelayer == 0:
         return min(1200, v.wipe_feedrate)
     else:
         return v.wipe_feedrate

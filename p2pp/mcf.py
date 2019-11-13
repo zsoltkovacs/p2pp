@@ -240,6 +240,7 @@ def backpass(currentclass):
         # retract can be either a firmware retrct of a manually programmed unretract
         if (tmp.fullcommand == "G1" and tmp.E and tmp.has_parameter("F")) or (tmp.fullcommand == "G11"):
             v.gcodeclass[idx] = currentclass
+            v.retraction -= tmp.E
             tmp = v.parsedgcode[idx - 1]
             if tmp.fullcommand == "G1" and tmp.has_Z():
                 v.gcodeclass[idx - 1] = currentclass
