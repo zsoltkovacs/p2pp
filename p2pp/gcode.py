@@ -81,25 +81,26 @@ class GCodeCommand:
         p = ""
 
         # use the same formatting as prusa to ease file compares (X, Y, Z, E, F)
-        sorted_keys = "XYZEF"
-        for key in sorted_keys:
-            if key in self.Parameters:
-                form = ""
-                if key in "XYZ":
-                    form = "{}{:0.3f} "
-                if key == "E":
-                    form = "{}{:0.5f} "
-                if key == "F":
-                    form = "{}{:0.0f} "
-                value = self.Parameters[key]
-                if value == None:
-                    gui.log_warning("GCode error detected, file might not print correctly")
-                    value = -9999
+        if self.is_movement_command():
+            sorted_keys = "XYZEF"
+            for key in sorted_keys:
+                if key in self.Parameters:
+                    form = ""
+                    if key in "XYZ":
+                        form = "{}{:0.3f} "
+                    if key == "E":
+                        form = "{}{:0.5f} "
+                    if key == "F":
+                        form = "{}{:0.0f} "
+                    value = self.Parameters[key]
+                    if value == None:
+                        gui.log_warning("GCode error detected, file might not print correctly")
+                        value = ""
 
-                p = p + form.format(key, value)
+                    p = p + form.format(key, value)
 
         for key in self.Parameters:
-            if key not in sorted_keys:
+            if key not in sorted_keys or not self.is_movement_command():
                 value = self.Parameters[key]
                 if not value:
                     value = ""
