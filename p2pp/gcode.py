@@ -82,7 +82,7 @@ class GCodeCommand:
 
         # use the same formatting as prusa to ease file compares (X, Y, Z, E, F)
 
-        sorted_keys = "XYZEF"
+        sorted_keys = "XYZE"
         if self.is_movement_command():
             for key in sorted_keys:
                 if key in self.Parameters:
@@ -91,8 +91,6 @@ class GCodeCommand:
                         form = "{}{:0.3f} "
                     if key == "E":
                         form = "{}{:0.5f} "
-                    if key == "F":
-                        form = "{}{:0.0f} "
                     value = self.Parameters[key]
                     if value == None:
                         gui.log_warning("GCode error detected, file might not print correctly")
@@ -175,6 +173,11 @@ class GCodeCommand:
 
     def issue_command(self):
         v.processed_gcode.append(str(self))
+
+    def issue_command_speed(self, speed):
+        s = str(self)
+        s = s.replace("%SPEED%", "{:0.0f}".format(speed))
+        v.processed_gcode.append(s)
 
     def add_comment(self, text):
         if self.Comment:

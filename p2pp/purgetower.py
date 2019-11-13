@@ -55,17 +55,19 @@ def generate_rectangle(result, x, y, w, h):
     x2 = x + w
     y2 = y + h
     result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} F8640".format(x, y)))
-    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f} ".format(x2, y, calculate_purge(w))))
-    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x2, y2, calculate_purge(h))))
-    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x, y2, calculate_purge(w))))
-    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x, y, calculate_purge(h))))
+    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f} F%SPEED%".format(x2, y, calculate_purge(w))))
+    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f} F%SPEED%".format(x2, y2, calculate_purge(h))))
+    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f} F%SPEED%".format(x, y2, calculate_purge(w))))
+    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f} F%SPEED%".format(x, y, calculate_purge(h))))
 
-    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}".format(x + ew, y + ew)))
+    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} F8640".format(x + ew, y + ew)))
     result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x2 - ew, y + ew, calculate_purge(w - 2 * ew))))
     result.append(
-        gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x2 - ew, y2 - ew, calculate_purge(h - 2 * ew))))
-    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x + ew, y2 - ew, calculate_purge(w - 2 * ew))))
-    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x + ew, y + ew, calculate_purge(h - 2 * ew))))
+        gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f} F%SPEED%".format(x2 - ew, y2 - ew, calculate_purge(h - 2 * ew))))
+    result.append(
+        gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f} F%SPEED%".format(x + ew, y2 - ew, calculate_purge(w - 2 * ew))))
+    result.append(
+        gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f} F%SPEED%".format(x + ew, y + ew, calculate_purge(h - 2 * ew))))
 
 
 def _purge_calculate_sequences_length():
@@ -141,9 +143,9 @@ def purge_create_layers(x, y, w, h):
     filllayer.append(gcode.GCodeCommand(";---- FILL LAYER -------"))
     generate_rectangle(filllayer, x, y, w, h)
 
-    _purge_create_sequence(solidlayer, "G1 X{:.3f} Y{:.3f}", x, y, w, h, ew)
-    _purge_create_sequence(emptylayer, "G1 Y{:.3f} X{:.3f}", y, x, h, w, 2)
-    _purge_create_sequence(filllayer, "G1 Y{:.3f} X{:.3f}", y, x, h, w, 15)
+    _purge_create_sequence(solidlayer, "G1 X{:.3f} Y{:.3f} F%SPEED%", x, y, w, h, ew)
+    _purge_create_sequence(emptylayer, "G1 Y{:.3f} X{:.3f} F%SPEED%", y, x, h, w, 2)
+    _purge_create_sequence(filllayer, "G1 Y{:.3f} X{:.3f} F%SPEED%", y, x, h, w, 15)
 
     _purge_generate_tower_brim(x, y, w, h)
 
@@ -172,7 +174,6 @@ def _purge_update_sequence_index():
         v.purgelayer += 1
         if v.side_wipe_length > 0:
             v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
-            setwipespeed()
 
 def _purge_get_nextcommand_in_sequence():
     if current_purge_form == PURGE_SOLID:
@@ -190,7 +191,7 @@ def _purge_generate_tower_brim(x, y, w, h):
     w += ew
     h += 2 * ew
 
-    brimlayer.append(gcode.GCodeCommand("G0 X{:.3f} Y{:.3f} F4000".format(x, y)))
+    brimlayer.append(gcode.GCodeCommand("G0 X{:.3f} Y{:.3f} F8640".format(x, y)))
     brimlayer.append(gcode.GCodeCommand("G0 Z{:.3f}".format(v.layer_height)))
 
     for i in range(4):
@@ -220,7 +221,7 @@ def retract(tool):
 def unretract(tool):
     if not v.use_firmware_retraction:
         length = v.retract_length[tool]
-        v.processed_gcode.append("G1 E{:.2f}\n".format(v.retract_length[tool]))
+        v.processed_gcode.append("G1 E{:.2f}\n".format(max(-v.retraction, v.retract_length[tool])))
         v.total_material_extruded += length
         v.material_extruded_per_color[v.current_tool] += length
     else:
@@ -228,12 +229,11 @@ def unretract(tool):
     v.retraction = 0
 
 
-def setwipespeed():
+def getwipespeed():
     if (v.purgelayer == 0):
-        # first purge layer prints at 1200
-        v.processed_gcode.append("G1 F{}\n".format(min(1200, v.wipe_feedrate)))
+        return min(1200, v.wipe_feedrate)
     else:
-        v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
+        return v.wipe_feedrate
 
 def purge_generate_sequence():
     global last_posx, last_posy
@@ -272,15 +272,15 @@ def purge_generate_sequence():
         v.processed_gcode.append("G1 X{} Y{} F8640 \n".format(last_posx, last_posy))
     v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
     unretract(v.current_tool)
-    setwipespeed()
     # generate wipe code
     while v.side_wipe_length > 0:
         next_command = _purge_get_nextcommand_in_sequence()
+
         last_posx = if_defined(next_command.X, last_posx)
         last_posy = if_defined(next_command.Y, last_posy)
         v.side_wipe_length -= if_defined(next_command.E, 0)
         actual += if_defined(next_command.E, 0)
-        next_command.issue_command()
+        next_command.issue_command_speed(getwipespeed())
         _purge_update_sequence_index()
 
     # return to print height
