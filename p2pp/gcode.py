@@ -81,8 +81,9 @@ class GCodeCommand:
         p = ""
 
         # use the same formatting as prusa to ease file compares (X, Y, Z, E, F)
+
+        sorted_keys = "XYZEF"
         if self.is_movement_command():
-            sorted_keys = "XYZEF"
             for key in sorted_keys:
                 if key in self.Parameters:
                     form = ""
