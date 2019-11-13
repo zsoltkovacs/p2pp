@@ -150,10 +150,10 @@ def entertower(layer_hght):
         purgetower.retract(v.current_tool)
 
         v.processed_gcode.append(
-                "G1 Z{:.2f} F10810\n".format(purgeheight))
+            "G1 Z{:.2f} F10810\n".format(purgeheight))
 
         purgetower.unretract(v.current_tool)
-        
+
         v.processed_gcode.append(";------------------------------\n")
         if purgeheight <= 0.21:
             v.processed_gcode.append("G1 F{}\n".format(min(1200, v.wipe_feedrate)))
@@ -215,7 +215,6 @@ def update_class(gcode_line):
         if "EMPTY GRID START" in gcode_line:
             v.block_classification = CLS_EMPTY
 
-
         if "EMPTY GRID END" in gcode_line:
             v.block_classification = CLS_ENDGRID
 
@@ -253,7 +252,6 @@ def backpass(currentclass):
         idx = idx - 1
 
 
-
 def parse_gcode():
     cur_z = -999
     cur_tool = 0
@@ -274,7 +272,6 @@ def parse_gcode():
         v.parsedgcode.append(gcode.GCodeCommand(line))
 
         classupdate = False
-
 
         if line.startswith(';'):
 
@@ -303,8 +300,7 @@ def parse_gcode():
                             layer = int(field)
                             break
                         except ValueError:
-                            pass;
-
+                            pass
 
                 v.parsedlayer = layer
                 if layer > 0:
@@ -326,7 +322,6 @@ def parse_gcode():
 
             if v.block_classification == CLS_EMPTY:
                 emptygrid += 1
-
 
         ## Z-HOPS detection
         ###################
@@ -366,11 +361,9 @@ def parse_gcode():
         ## Extend block backwards towards last hop up
         #############################################
 
-
         if v.block_classification in [CLS_TOOL_START, CLS_TOOL_UNLOAD, CLS_EMPTY,
                                       CLS_BRIM]:  # and not v.full_purge_reduction:
             backpass(v.block_classification)
-
 
         if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
             if v.parsedgcode[-1].fullcommand == "G1":
@@ -384,7 +377,6 @@ def parse_gcode():
         else:
             if flagset(specifier, SPEC_RETRACTS):
                 v.block_classification = CLS_NORMAL
-
 
         ## Put obtained values in global variables
         ##########################################
@@ -404,8 +396,8 @@ def update_extrusion(length):
     v.total_material_extruded += length
     v.material_extruded_per_color[v.current_tool] += length
 
-def gcode_parseline(index):
 
+def gcode_parseline(index):
     g = v.parsedgcode[index]
     block_class = v.gcodeclass[index]
     previous_block_class = v.gcodeclass[max(0, index - 1)]
@@ -447,10 +439,10 @@ def gcode_parseline(index):
         return
 
     if g.is_movement_command():
-        if not g.X is None:
+        if g.X is not None:
             v.previous_purge_keep_x = v.purge_keep_x
             v.purge_keep_x = g.X
-        if not g.Y is None:
+        if g.Y is not None:
             v.previous_purge_keep_y = v.purge_keep_y
             v.purge_keep_y = g.Y
 
@@ -479,12 +471,11 @@ def gcode_parseline(index):
             if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y)):
                 g.remove_parameter("E")
 
-
     if not v.side_wipe:
-        if not g.X is None:
+        if g.X is not None:
             if v.wipe_tower_info['minx'] <= g.X <= v.wipe_tower_info['maxx']:
                 v.keep_x = g.X
-        if not g.Y is None:
+        if g.Y is not None:
             if v.wipe_tower_info['miny'] <= g.Y <= v.wipe_tower_info['maxy']:
                 v.keep_y = g.Y
     elif not x_on_bed(g.X):
@@ -512,10 +503,10 @@ def gcode_parseline(index):
 
             # get information about the purge tower dimensions
             if block_class == CLS_BRIM and (g.X is None or g.Y is None):
-                if not g.X is None:
+                if g.X is not None:
                     purgetower.purge_width = min(purgetower.purge_width,
                                                  abs(g.X - v.previous_position_x))
-                if not g.Y is None:
+                if g.Y is not None:
                     purgetower.purge_height = min(purgetower.purge_height,
                                                   abs(g.Y - v.previous_position_y))
 
@@ -628,7 +619,7 @@ def gcode_parseline(index):
                 g.move_to_comment("-useless command-")
 
     if v.tower_delta:
-        if not g.E is None and block_class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
+        if g.E is not None and block_class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
             if not inrange(g.X, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']):
                 g.remove_parameter("E")
             if not inrange(g.Y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy']):
@@ -688,7 +679,7 @@ def gcode_parseline(index):
     # g.Comment = " ; - {}".format(v.total_material_extruded)
 
     if g.is_retract_command():
-        if not g.E is None:
+        if g.E is not None:
             v.retraction += g.E
         else:
             v.retraction -= 1
@@ -696,11 +687,10 @@ def gcode_parseline(index):
     if g.is_unretract_command():
         v.retraction = 0
 
-    if not (g.X is None and g.Y is None) and (not g.E is None and g.E > 0) and v.retraction < 0:
+    if not (g.X is None and g.Y is None) and (g.E is not None and g.E > 0) and v.retraction < 0:
         v.processed_gcode.append(";fixup retracts\n")
         purgetower.unretract(v.current_tool)
         # v.retracted = False
-
 
     g.issue_command()
 
@@ -710,11 +700,12 @@ def gcode_parseline(index):
     if v.accessory_mode:
         pings.check_accessorymode_second(g.E)
 
-    if (not g.E is None and g.E > 0) and v.side_wipe_length == 0:
+    if (g.E is not None and g.E > 0) and v.side_wipe_length == 0:
         pings.check_connected_ping()
 
     v.previous_position_x = v.current_position_x
     v.previous_position_y = v.current_position_y
+
 
 # Generate the file and glue it all together!
 # #####################################################################
@@ -764,7 +755,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     gui.create_logitem("Pre-parsing GCode")
     gui.progress_string(4)
     parse_gcode()
-
 
     if v.palette_plus:
         if v.palette_plus_ppm == -9:
