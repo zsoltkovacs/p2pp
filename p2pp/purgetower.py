@@ -220,8 +220,8 @@ def retract(tool):
 
 def unretract(tool):
     if not v.use_firmware_retraction:
-        length = v.retract_length[tool]
-        v.processed_gcode.append("G1 E{:.2f}\n".format(max(-v.retraction, v.retract_length[tool])))
+        length = max(-v.retraction, v.retract_length[tool])
+        v.processed_gcode.append("G1 E{:.2f}\n".format(length))
         v.total_material_extruded += length
         v.material_extruded_per_color[v.current_tool] += length
     else:
