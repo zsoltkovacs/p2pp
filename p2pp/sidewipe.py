@@ -87,7 +87,7 @@ def create_side_wipe():
     rangeidx = 0
     moveto = yrange[rangeidx]
 
-    purgetower.unretract()
+    purgetower.unretract(v.current_tool)
 
     while v.side_wipe_length > 0:
         sweep = min(v.side_wipe_length, sweep_length)
@@ -103,7 +103,7 @@ def create_side_wipe():
     for line in v.after_sidewipe_gcode:
         v.processed_gcode.append(line + "\n")
 
-    purgetower.retract()
+    purgetower.retract(v.current_tool)
     v.processed_gcode.append(";---------------------------\n")
 
     v.side_wipe_length = 0

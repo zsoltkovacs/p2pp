@@ -15,7 +15,9 @@ EXTRUDER = "E"
 RELATIVE = True
 ABSOLUTE = False
 
+import p2pp.gui as gui
 import p2pp.variables as v
+
 
 class GCodeCommand:
     Command = None
@@ -81,21 +83,23 @@ class GCodeCommand:
         # use the same formatting as prusa to ease file compares (X, Y, Z, E, F)
         sorted_keys = "XYZEF"
         for key in sorted_keys:
-            if self.fullcommand in ['G0', 'G1'] and key in self.Parameters:
+            if key in self.Parameters:
                 form = ""
                 if key in "XYZ":
-                    form = "{}{:.3f} "
+                    form = "{}{:0.3f} "
                 if key == "E":
-                    form = "{}{:.5f} "
+                    form = "{}{:0.5f} "
                 if key == "F":
-                    form = "{}{:.0f} "
+                    form = "{}{:0.0f} "
                 value = self.Parameters[key]
-                if not value:
+                if value == None:
+                    gui.log_warning("GCode error detected, file might not print correctly")
                     value = -9999
+
                 p = p + form.format(key, value)
 
         for key in self.Parameters:
-            if self.fullcommand not in ['G0', 'G1'] or key not in sorted_keys:
+            if key not in sorted_keys:
                 value = self.Parameters[key]
                 if not value:
                     value = ""

@@ -54,8 +54,8 @@ def generate_rectangle(result, x, y, w, h):
     ew = v.extrusion_width
     x2 = x + w
     y2 = y + h
-    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}".format(x, y)))
-    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x2, y, calculate_purge(w))))
+    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} F8640".format(x, y)))
+    result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f} ".format(x2, y, calculate_purge(w))))
     result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x2, y2, calculate_purge(h))))
     result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x, y2, calculate_purge(w))))
     result.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f} E{:.4f}".format(x, y, calculate_purge(h))))

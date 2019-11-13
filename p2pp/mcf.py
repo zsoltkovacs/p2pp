@@ -272,6 +272,7 @@ def parse_gcode():
 
         specifier = 0
         v.parsedgcode.append(gcode.GCodeCommand(line))
+
         classupdate = False
 
 
