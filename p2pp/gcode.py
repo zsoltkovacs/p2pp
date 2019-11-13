@@ -171,7 +171,7 @@ class GCodeCommand:
             self.Comment = text
 
     def is_comment(self):
-        return self.Command == None and not (self.Comment == None)
+        return self.Command is None and not (self.Comment is None)
 
     def is_movement_command(self):
         return self.Command == "G" and self.Command_value in ['0', '1', '2', '3', '5', '10', '11']
@@ -181,5 +181,5 @@ class GCodeCommand:
 
     def is_unretract_command(self):
         return (self.is_movement_command() and self.E == v.retract_length[
-            v.current_tool] and not self.X and not self.Y and not self.Z) or (
+            v.current_tool] and self.X is None and self.Y is None and self.Z is None) or (
                     self.Command == "G" and self.Command_value == '11')
