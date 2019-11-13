@@ -101,9 +101,9 @@ class GCodeCommand:
                     p = p + form.format(key, value)
 
         for key in self.Parameters:
-            if key not in sorted_keys or not self.is_movement_command():
+            if not self.is_movement_command() or key not in sorted_keys:
                 value = self.Parameters[key]
-                if not value:
+                if value == None:
                     value = ""
 
                 p = p + "{}{} ".format(key, value)
