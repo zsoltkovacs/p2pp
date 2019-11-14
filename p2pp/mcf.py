@@ -688,7 +688,10 @@ def gcode_parseline(index):
             v.retraction -= 1
 
     if g.is_unretract_command():
-        v.retraction = 0
+        if g.has_E():
+            v.retraction = max(0, v.retraction - g.E)
+        else:
+            v.retraction = 0
 
     if (g.has_X() or g.has_Y()) and (g.has_E() and g.E > 0) and v.retraction < 0:
         v.processed_gcode.append(";fixup retracts\n")
