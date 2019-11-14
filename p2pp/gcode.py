@@ -119,6 +119,14 @@ class GCodeCommand:
 
     def update_parameter(self, parameter, value):
         self.Parameters[parameter] = value
+        if parameter == "X":
+            self.X = value
+        if parameter == "Y":
+            self.Y = value
+        if parameter == "Z":
+            self.Z = value
+        if parameter == "E":
+            self.E = value
 
     def remove_parameter(self, parameter):
         if parameter in self.Parameters:

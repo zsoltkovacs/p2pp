@@ -267,6 +267,7 @@ def parse_gcode():
 
     index = 0
     for line in v.input_gcode:
+
         gui.progress_string(4 + 46 * index // total_line_count)
 
         specifier = 0
@@ -342,6 +343,7 @@ def parse_gcode():
 
             cur_z = to_z
 
+
         ## retract detections
         #####################
         if not v.use_firmware_retraction:
@@ -410,7 +412,7 @@ def gcode_parseline(index):
         g.issue_command()
         return
 
-    if g.fullcommand in ["M104", "M109", "M140", "M190", "M73", "M84"]:
+    if g.fullcommand in ["M104", "M109", "M140", "M190", "M73", "M84", "M201", "M204"]:
         g.issue_command()
         return
 
@@ -756,7 +758,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     gui.create_logitem("Pre-parsing GCode")
     gui.progress_string(4)
     parse_gcode()
-
     if v.palette_plus:
         if v.palette_plus_ppm == -9:
             gui.log_warning("P+ parameter P+PPM not set correctly in startup GCODE")
@@ -787,6 +788,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     gui.create_logitem("Generate processed GCode")
 
     total_line_count = len(v.input_gcode)
+    v.retraction = 0
     for process_line_count in range(total_line_count):
         gcode_parseline(process_line_count)
         gui.progress_string(50 + 50 * process_line_count // total_line_count)

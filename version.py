@@ -12,7 +12,8 @@ __status__ = 'BETA'
 # general version info
 MajorVersion = 3
 MinorVersion = 5
-Build = 24
+Build = 25
+
 
 latest_stable_version = ""
 
