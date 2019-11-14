@@ -72,10 +72,10 @@ class GCodeCommand:
 
                 fields = fields[1:]
 
-        self.X = self.get_parameter("X", None)
-        self.Y = self.get_parameter("Y", None)
-        self.Z = self.get_parameter("Z", None)
-        self.E = self.get_parameter("E", None)
+            self.X = self.get_parameter("X", None)
+            self.Y = self.get_parameter("Y", None)
+            self.Z = self.get_parameter("Z", None)
+            self.E = self.get_parameter("E", None)
 
     def __str__(self):
         p = ""
