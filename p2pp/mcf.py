@@ -689,11 +689,11 @@ def gcode_parseline(index):
 
     if g.is_unretract_command():
         if g.has_E():
-            v.retraction = max(0, v.retraction - g.E)
+            v.retraction = min(0, v.retraction + g.E)
         else:
             v.retraction = 0
 
-    if (g.has_X() or g.has_Y()) and (g.has_E() and g.E > 0) and v.retraction < 0:
+    if (g.has_X() or g.has_Y()) and (g.has_E() and g.E > 0) and v.retraction < 0 and abs(v.retraction) > 0.01:
         v.processed_gcode.append(";fixup retracts\n")
         purgetower.unretract(v.current_tool)
         # v.retracted = False
