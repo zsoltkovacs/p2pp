@@ -240,7 +240,10 @@ def backpass(currentclass):
         # retract can be either a firmware retrct of a manually programmed unretract
         if (tmp.fullcommand == "G1" and tmp.E and tmp.has_parameter("F")) or (tmp.fullcommand == "G11"):
             v.gcodeclass[idx] = currentclass
-            v.retraction -= tmp.E
+            if (tmp.fullcommand == "G11"):
+                v.retraction = 0
+            else:
+                v.retraction -= tmp.E
             tmp = v.parsedgcode[idx - 1]
             if tmp.fullcommand == "G1" and tmp.has_Z():
                 v.gcodeclass[idx - 1] = currentclass
@@ -532,8 +535,10 @@ def gcode_parseline(index):
                     " Layer Length Solid={:.2f}mm   Sparse={:.2f}mm".format(purgetower.sequence_length_solid,
                                                                             purgetower.sequence_length_empty))
                 # issue the new purge tower
-                for i in purgetower.brimlayer:
-                    i.issue_command()
+                for i in range(len(purgetower.brimlayer)):
+                    purgetower.brimlayer[i].issue_command()
+                    if i == 1 and v.retraction:
+                        purgetower.unretract(v.current_tool)
                 # set the flag to update the post-session retraction move section
                 v.retract_move = True
                 v.retract_x = purgetower.last_brim_x
