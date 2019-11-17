@@ -123,6 +123,10 @@ def check_config_parameters(line):
         v.bigbrain3d_purge_enabled = True
         gui.log_warning("BIGBRAIN3D Will only work with installed hardware on a Prusa Printer")
 
+    if "BIGBRAIN3D_SMARTFAN" in line:
+        v.bigbrain3d_smartfan = True
+
+
     if "MINSPLICE" in line:
         v.min_splice_length = floatparameter(line)
         if v.min_splice_length < 70:

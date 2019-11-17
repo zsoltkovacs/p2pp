@@ -206,10 +206,13 @@ def _purge_generate_tower_brim(x, y, w, h):
         brimlayer.append(gcode.GCodeCommand("G1 X{:.3f} Y{:.3f}  E{:.4f}".format(x, y, calculate_purge(h))))
 
 
-def retract(tool):
+def retract(tool, speed=-1):
     if not v.use_firmware_retraction:
         length = v.retract_length[tool]
-        v.processed_gcode.append("G1 E-{:.2f}\n".format(v.retract_length[tool]))
+        if speed > 0:
+            v.processed_gcode.append("G1 E-{:.2f} F{:.0f}\n".format(v.retract_length[tool], speed))
+        else:
+            v.processed_gcode.append("G1 E-{:.2f}\n".format(v.retract_length[tool]))
         v.total_material_extruded -= length
         v.material_extruded_per_color[v.current_tool] -= length
         v.retraction -= length
@@ -218,10 +221,13 @@ def retract(tool):
         v.retraction -= 1
 
 
-def unretract(tool):
+def unretract(tool, speed=-1):
     if not v.use_firmware_retraction:
         length = max(-v.retraction, v.retract_length[tool])
-        v.processed_gcode.append("G1 E{:.2f}\n".format(length))
+        if speed > 0:
+            v.processed_gcode.append("G1 E{:.2f} F{:.0f}\n".format(length, speed))
+        else:
+            v.processed_gcode.append("G1 E{:.2f}\n".format(length))
         v.total_material_extruded += length
         v.material_extruded_per_color[v.current_tool] += length
     else:

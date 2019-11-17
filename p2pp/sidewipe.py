@@ -31,14 +31,24 @@ def generate_blob(length, count):
     v.processed_gcode.append("\n;---- BIGBRAIN3D SIDEWIPE BLOB {} -- purge {:.3f}mm\n".format(count + 1, length))
     # v.processed_gcode.append("M907 X{} ; set motor power\n".format(int(v.purgemotorpower)))
 
-    v.processed_gcode.append("G1 X249.500 F3000   ; go near the edge of the print\n")
+    v.processed_gcode.append(
+        "G1 X{:.3f} F3000   ; go near the edge of the print\n".format(v.bigbrain3d_x_position - 10))
     v.processed_gcode.append(
         "G1 X{:.3f} F1000   ; go to the actual wiping position\n".format(v.bigbrain3d_x_position))  # takes 2.5 seconds
     setfanspeed(0)
     if v.retraction < 0:
-        purgetower.unretract(v.current_tool)
-    v.processed_gcode.append("G1 E{:6.3f}          ; UNRETRACT/PURGE/RETRACT \n".format(length))
-    purgetower.retract(v.current_tool)
+        purgetower.unretract(v.current_tool, 1200)
+    if v.bigbrain3d_smartfan:
+        v.processed_gcode.append("G1 E{:6.3f} F200     ; Purge FAN OFF \n".format(length / 4))
+        setfanspeed(64)
+        v.processed_gcode.append("G1 E{:6.3f} F200     ; Purge FAN 25% \n".format(length / 4))
+        setfanspeed(128)
+        v.processed_gcode.append("G1 E{:6.3f} F200     ; Purge FAN 50% \n".format(length / 4))
+        setfanspeed(192)
+        v.processed_gcode.append("G1 E{:6.3f} F200     ; Purge FAN 75% \n".format(length / 4))
+    else:
+        v.processed_gcode.append("G1 E{:6.3f} F200     ; UNRETRACT/PURGE/RETRACT \n".format(length))
+    purgetower.retract(v.current_tool, 1200)
     setfanspeed(255)
     v.processed_gcode.append(
         "G4 S{0:.0f}              ; blob {0}s cooling time\n".format(v.bigbrain3d_blob_cooling_time))
@@ -53,15 +63,16 @@ def create_sidewipe_BigBrain3D():
     purgeleft = v.side_wipe_length % v.bigbrain3d_blob_size
     purgeblobs = int(v.side_wipe_length / v.bigbrain3d_blob_size)
 
-    v.processed_gcode.append(";-------------------------------\n")
-    v.processed_gcode.append("; P2PP BB3DBLOBS: {:.0f} BLOBS\n".format(purgeblobs))
-    v.processed_gcode.append(";-------------------------------\n")
-
     if purgeleft > 1:
         purgeblobs += 1
         correction = v.bigbrain3d_blob_size - purgeleft
     else:
         correction = -purgeleft
+
+    v.processed_gcode.append(";-------------------------------\n")
+    v.processed_gcode.append("; P2PP BB3DBLOBS: {:.0f} BLOBS\n".format(purgeblobs))
+    v.processed_gcode.append(";-------------------------------\n")
+
 
     v.processed_gcode.append(
         "; Req={:.2f}mm  Act={:.2f}mm\n".format(v.side_wipe_length, v.side_wipe_length + correction))
@@ -76,10 +87,11 @@ def create_sidewipe_BigBrain3D():
         purgetower.retract(v.current_tool)
 
     if (v.current_position_z < 25):
-        v.processed_gcode.append("\nG1 Z25.000 F8640   ; Increase Z to prevent collission with bed\n")
+        v.processed_gcode.append("\nG1 Z25.000 F8640    ; Increase Z to prevent collission with bed\n")
 
-    v.processed_gcode.append("\nG1 X200.000 F10800  ; go near the edge of the print\n")
+    v.processed_gcode.append("G1 X{:.3f} F10800  ; go near edge of bed\n".format(v.bigbrain3d_x_position - 30))
     v.processed_gcode.append("G4 S0               ; wait for the print buffer to clear\n")
+    v.processed_gcode.append("M907 X850           ; increase motor power\n")
     for i in range(purgeblobs):
         generate_blob(v.bigbrain3d_blob_size, i)
 
@@ -88,6 +100,7 @@ def create_sidewipe_BigBrain3D():
     #     v.processed_gcode.append("\nG1 Z{:.4f} F8640    ; Reset correct Z height to continue print\n".format(v.current_position_z))
 
     resetfanspeed()
+    v.processed_gcode.append("\nM907 X550           ; reset motor power\n")
     v.processed_gcode.append("\n;-------------------------------\n\n")
 
     v.side_wipe_length = 0
