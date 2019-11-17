@@ -18,7 +18,7 @@ import p2pp.purgetower as purgetower
 import p2pp.variables as v
 from p2pp.gcodeparser import get_gcode_parameter, parse_slic3r_config
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
-from p2pp.sidewipe import create_side_wipe
+from p2pp.sidewipe import create_side_wipe, create_sidewipe_BigBrain3D
 
 
 def remove_previous_move_in_tower():
@@ -679,7 +679,10 @@ def gcode_parseline(index):
             g.move_to_comment("side wipe/full purge")
 
     if v.side_wipe and block_class == CLS_NORMAL and classupdate:
-        create_side_wipe()
+        if v.bigbrain3d_purge_enabled:
+            create_sidewipe_BigBrain3D()
+        else:
+            create_side_wipe()
 
     # check here issue with unretract
     #################################
