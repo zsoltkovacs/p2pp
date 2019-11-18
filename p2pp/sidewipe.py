@@ -59,6 +59,8 @@ def generate_blob(length, count):
     v.processed_gcode.append("G1 X{:.3f} F1000   ; final position for whack and......\n".format(
         v.bigbrain3d_x_position))  # takes 2.5 seconds
     v.processed_gcode.append("G1 X{:.3f} F10800  ; WHACKAAAAA!!!!\n".format(v.bigbrain3d_x_position - 20))
+
+
 def create_sidewipe_BigBrain3D():
     if not v.side_wipe or v.side_wipe_length == 0:
         return

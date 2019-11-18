@@ -524,9 +524,6 @@ def gcode_parseline(index):
                 _w = v.wipe_tower_info['maxx'] - v.wipe_tower_info['minx'] - 8 * v.extrusion_width
                 _h = v.wipe_tower_info['maxy'] - v.wipe_tower_info['miny'] - 8 * v.extrusion_width
 
-                # purgetower.purge_create_layers(v.wipetower_posx, v.wipetower_posy,
-                #                                purgetower.purge_width - 2 * v.extrusion_width,
-                #                                purgetower.purge_height - 2 * v.extrusion_width)
                 purgetower.purge_create_layers(_x, _y, _w, _h)
                 # generate og items for the new purge tower
                 gui.create_logitem(
@@ -804,10 +801,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         gcode_parseline(process_line_count)
         gui.progress_string(50 + 50 * process_line_count // total_line_count)
 
-    if abs(v.min_tower_delta) >= min(v.retract_lift) + v.layer_height:
-        gui.log_warning("Increase retraction Z hop, {:2f}mm needed to print correctly".v.retract_lift[v.current_tool])
-        if abs(v.min_tower_delta) > min(v.retract_lift) + v.layer_height:
-            gui.log_warning("THIS FILE WILL NOT PRINT CORRECTLY")
     v.processtime = time.time() - starttime
 
     gcode_process_toolchange(-1, v.total_material_extruded, 0)

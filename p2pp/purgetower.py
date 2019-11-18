@@ -167,7 +167,7 @@ def _purge_update_sequence_index():
 
     current_purge_index = (current_purge_index + 1) % _purge_number_of_gcodelines()
     if current_purge_index == 0:
-        if (v.purgelayer + 1) * v.layer_height < v.current_position_z:
+        if (v.purgelayer + 1) * v.layer_height < v.current_position_z - 5:
             current_purge_form = PURGE_EMPTY
         else:
             current_purge_form = PURGE_SOLID
@@ -293,7 +293,8 @@ def purge_generate_sequence():
     v.processed_gcode.append("; -------------------------------------\n")
     if v.retraction == 0:
         retract(v.current_tool)
-    v.processed_gcode.append("G1 Z{:.2f} F10800\n".format(v.current_position_z))
+    v.processed_gcode.append(
+        "G1 Z{:.2f} F10800\n".format(max(v.current_position_z + 0.6, (v.purgelayer + 1) * v.layer_height) + 0.6))
     v.processed_gcode.append("; --- P2PP WIPE SEQUENCE END DONE\n")
     v.processed_gcode.append("; -------------------------------------\n")
 
