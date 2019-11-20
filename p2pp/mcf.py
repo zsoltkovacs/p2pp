@@ -8,6 +8,7 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 import os
+
 import time
 
 import p2pp.gcode as gcode
@@ -190,9 +191,11 @@ def update_class(gcode_line):
     if gcode_line.startswith("; CP"):
         if "TOOLCHANGE START" in gcode_line:
             v.block_classification = CLS_TOOL_START
+            v.backpassed = False
 
         if "TOOLCHANGE UNLOAD" in gcode_line:
             v.block_classification = CLS_TOOL_UNLOAD
+            v.backpassed = False
 
         if "TOOLCHANGE WIPE" in gcode_line:
             v.block_classification = CLS_TOOL_PURGE
@@ -205,6 +208,7 @@ def update_class(gcode_line):
 
         if "WIPE TOWER FIRST LAYER BRIM START" in gcode_line:
             v.block_classification = CLS_BRIM
+            v.backpassed = False
 
         if "WIPE TOWER FIRST LAYER BRIM END" in gcode_line:
             if v.full_purge_reduction or v.tower_delta:
@@ -214,6 +218,7 @@ def update_class(gcode_line):
 
         if "EMPTY GRID START" in gcode_line:
             v.block_classification = CLS_EMPTY
+            v.backpassed = False
 
         if "EMPTY GRID END" in gcode_line:
             v.block_classification = CLS_ENDGRID
@@ -232,11 +237,14 @@ def flagset(value, mask):
     return (value & mask) == mask
 
 
+
 def backpass(currentclass):
     idx = len(v.parsedgcode) - 2
-    end_search = max(1, v.lasthopup)
+    end_search = idx - 10
+
     while idx > end_search:
         tmp = v.parsedgcode[idx]
+
         # retract can be either a firmware retrct of a manually programmed unretract
         if (tmp.fullcommand == "G1" and tmp.E and tmp.has_parameter("F")) or (tmp.fullcommand == "G11"):
             v.gcodeclass[idx] = currentclass
@@ -245,15 +253,18 @@ def backpass(currentclass):
             else:
                 v.retraction -= tmp.E
             tmp = v.parsedgcode[idx - 1]
+
             if tmp.fullcommand == "G1" and tmp.has_Z():
                 v.gcodeclass[idx - 1] = currentclass
                 tmp = v.parsedgcode[idx - 2]
+
             if tmp.fullcommand == "G1" and tmp.X and tmp.Y and not tmp.E:
                 v.parsedgcode[idx - 2].Comment = "Part of next block"
                 v.gcodeclass[idx - 2] = currentclass
-
             break
         idx = idx - 1
+
+    v.backpassed = True
 
 
 def parse_gcode():
@@ -367,8 +378,8 @@ def parse_gcode():
         ## Extend block backwards towards last hop up
         #############################################
 
-        if v.block_classification in [CLS_TOOL_START, CLS_TOOL_UNLOAD, CLS_EMPTY,
-                                      CLS_BRIM]:  # and not v.full_purge_reduction:
+        if not v.backpassed and v.block_classification in [CLS_TOOL_START, CLS_TOOL_UNLOAD, CLS_EMPTY,
+                                                           CLS_BRIM]:  # and not v.full_purge_reduction:
             backpass(v.block_classification)
 
         if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
@@ -377,8 +388,9 @@ def parse_gcode():
                     specifier |= SPEC_INTOWER
 
         if CLS_ENDGRID:
-            if v.parsedgcode[-1].fullcommand == "G1" and v.parsedgcode[-1].Z:
+            if v.parsedgcode[-1].fullcommand == "G1" and v.parsedgcode[-1].Z or v.parsedgcode[-1].is_retract_command():
                 v.block_classification = CLS_NORMAL
+
 
         else:
             if flagset(specifier, SPEC_RETRACTS):
