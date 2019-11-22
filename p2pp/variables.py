@@ -31,6 +31,7 @@ filament_color_code = ["-",
 filament_short = [0, 0, 0, 0]
 
 retraction = 0.0
+filament_list = False
 retract_lift = [0.6, 0.6, 0.6, 0.6]
 retract_length = [0.8, 0.8, 0.8, 0.8]
 filament_diameter = [1.75, 1.75, 1.75, 1.75]
@@ -204,6 +205,8 @@ ignore_warnings = False
 
 purge_sequence_x = 0
 purge_sequence_y = 0
+
+backpassed = False
 
 # prusa side wipe contraption
 bigbrain3d_x_position = 256.5

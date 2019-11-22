@@ -200,8 +200,14 @@ class GCodeCommand:
         return self.Command == "G" and self.Command_value in ['0', '1', '2', '3', '5', '10', '11']
 
     def is_retract_command(self):
-        return (self.is_movement_command() and self.E < 0) or (self.Command == "G" and self.Command_value == '10')
+        if self.has_E():
+            return (self.is_movement_command() and self.E < 0)
+        else:
+            return self.fullcommand == "G10"
+
 
     def is_unretract_command(self):
-        return (self.is_movement_command() and self.E > 0 and self.X is None and self.Y is None and self.Z is None) or (
-                    self.Command == "G" and self.Command_value == '11')
+        if self.has_E():
+            return (self.is_movement_command() and self.E > 0 and self.X is None and self.Y is None and self.Z is None)
+        else:
+            return self.fullcommand == "G11"

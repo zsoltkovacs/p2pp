@@ -85,6 +85,8 @@ from  https://www.python.org/downloads/windows/
 Make sure to keep track where you installed python as you will need this information in further steps.
 
 
+Avoid using special characters and spaces in folder names and file names/filamen names/... as they might throw off encoding and crash the programme
+
 ## WINDOWS INSTALLATION 
 
 
@@ -95,9 +97,9 @@ Make sure to keep track where you installed python as you will need this informa
 2. Download and Install Python. P2PP is currently compatible with both Python 2.7 and 3.7. https://www.python.org/downloads/windows/
 3. In the .bat file change the following.
 - Change "c:\python27\python.exe" to your python.exe path
-- Change "c:\p2pp\p2pp.py" to the the path of p2pp.py (which you downloaded earlier)
+
 ``` 
-c:\python27\python.exe c:\p2pp\p2pp.py -i %1
+c:\python27\python.exe %MYPATH%\p2pp.py -i %1
 ``` 
 
 

@@ -120,6 +120,8 @@ def parse_slic3r_config():
             continue
 
         if gcode_line.startswith("; retract_lift = "):
+            if v.filament_list:
+                continue
             lift_error = False
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
