@@ -8,6 +8,7 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 import os
+
 import time
 
 import p2pp.gcode as gcode
@@ -205,8 +206,10 @@ def update_class(gcode_line):
 
         if "WIPE TOWER FIRST LAYER BRIM START" in gcode_line:
             v.block_classification = CLS_BRIM
+            v.tower_measure = True
 
         if "WIPE TOWER FIRST LAYER BRIM END" in gcode_line:
+            v.tower_measure = False
             if v.full_purge_reduction or v.tower_delta:
                 v.block_classification = CLS_BRIM_END
             else:
@@ -363,6 +366,15 @@ def parse_gcode():
             cur_tool = int(v.parsedgcode[-1].Command_value)
             retract = v.retract_lift[cur_tool]
             specifier |= SPEC_TOOLCHANGE
+
+        if v.tower_measure:
+            if v.parsedgcode[-1].is_movement_command():
+                if v.parsedgcode[-1].X is not None:
+                    v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], v.parsedgcode[-1].X)
+                    v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], v.parsedgcode[-1].X)
+                if v.parsedgcode[-1].Y is not None:
+                    v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], v.parsedgcode[-1].Y)
+                    v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], v.parsedgcode[-1].Y)
 
         ## Extend block backwards towards last hop up
         #############################################
@@ -658,11 +670,6 @@ def gcode_parseline(index):
         v.current_position_z = g.get_parameter("Z", v.current_position_z)
 
         if block_class == CLS_BRIM:
-            v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], v.current_position_x - 1)
-            v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], v.current_position_y - 1)
-            v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], v.current_position_x + 1)
-            v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], v.current_position_y + 1)
-
             if v.full_purge_reduction:
                 g.move_to_comment("replaced by P2PP brim code")
                 g.remove_parameter("E")

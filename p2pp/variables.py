@@ -213,3 +213,5 @@ bigbrain3d_purge_enabled = False
 bigbrain3d_smartfan = False
 bigbrain3d_motorpower_high = 850
 bigbrain3d_motorpower_normal = 550
+
+tower_measure = False
