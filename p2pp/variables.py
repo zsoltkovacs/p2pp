@@ -218,3 +218,4 @@ bigbrain3d_motorpower_high = 850
 bigbrain3d_motorpower_normal = 550
 
 tower_measure = False
+expect_retract = False

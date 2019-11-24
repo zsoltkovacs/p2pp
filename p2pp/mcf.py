@@ -8,7 +8,6 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 import os
-
 import time
 
 import p2pp.gcode as gcode
@@ -248,12 +247,13 @@ def backpass(currentclass):
             else:
                 v.retraction -= tmp.E
             tmp = v.parsedgcode[idx - 1]
-            if tmp.fullcommand == "G1" and tmp.has_Z():
-                v.gcodeclass[idx - 1] = currentclass
-                tmp = v.parsedgcode[idx - 2]
-            if tmp.fullcommand == "G1" and tmp.X and tmp.Y and not tmp.E:
-                v.parsedgcode[idx - 2].Comment = "Part of next block"
-                v.gcodeclass[idx - 2] = currentclass
+            if tmp.is_movement_command():
+                if tmp.has_Z():
+                    v.gcodeclass[idx - 1] = currentclass
+                    tmp = v.parsedgcode[idx - 2]
+                if tmp.has_X() and tmp.has_Y() and not tmp.has_E():
+                    v.parsedgcode[idx - 2].Comment = "Part of next block"
+                    v.gcodeclass[idx - 2] = currentclass
 
             break
         idx = idx - 1
@@ -277,7 +277,9 @@ def parse_gcode():
         gui.progress_string(4 + 46 * index // total_line_count)
 
         specifier = 0
-        v.parsedgcode.append(gcode.GCodeCommand(line))
+        code = gcode.GCodeCommand(line)
+        v.parsedgcode.append(code)
+
 
         classupdate = False
 
@@ -291,8 +293,6 @@ def parse_gcode():
             if line.startswith(";P2PP MATERIAL_"):
                 algorithm_process_material_configuration(line[15:])
 
-            # if line.startswith(";P2PP WIPERATE_"):
-            #     wiperate_process(line[15:])
 
             ## LAYER DISCRIMINATION COMMANDS
             ########################################################
@@ -333,9 +333,9 @@ def parse_gcode():
 
         ## Z-HOPS detection
         ###################
-        if v.parsedgcode[-1].has_E() and v.parsedgcode[-1].is_movement_command():
+        if code.has_E() and code.is_movement_command():
 
-            to_z = v.parsedgcode[-1].get_parameter("Z", 0)
+            to_z = code.get_parameter("Z", 0)
             delta = (to_z - cur_z)
 
             if abs(delta - retract) < 0.0001:
@@ -352,29 +352,24 @@ def parse_gcode():
 
         ## retract detections
         #####################
-        if not v.use_firmware_retraction:
-            if v.parsedgcode[-1].is_movement_command() and v.parsedgcode[-1].has_E():
-                if v.parsedgcode[-1].get_parameter("E", 0) < 0:
-                    specifier |= SPEC_RETRACTS
-        else:
-            if v.parsedgcode[-1].Command == 'G' and v.parsedgcode[-1].Command_value == '10':
-                specifier |= SPEC_RETRACTS
+        if code.is_retract_command():
+            specifier |= SPEC_RETRACTS
 
         ## tool change detection
         ########################
-        if v.parsedgcode[-1].Command == 'T':
-            cur_tool = int(v.parsedgcode[-1].Command_value)
+        if code.Command == 'T':
+            cur_tool = int(code.Command_value)
             retract = v.retract_lift[cur_tool]
             specifier |= SPEC_TOOLCHANGE
 
         if v.tower_measure:
-            if v.parsedgcode[-1].is_movement_command():
-                if v.parsedgcode[-1].X is not None:
-                    v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], v.parsedgcode[-1].X)
-                    v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], v.parsedgcode[-1].X)
-                if v.parsedgcode[-1].Y is not None:
-                    v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], v.parsedgcode[-1].Y)
-                    v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], v.parsedgcode[-1].Y)
+            if code.is_movement_command():
+                if code.X is not None:
+                    v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], code.X)
+                    v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], code.X)
+                if code.Y is not None:
+                    v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], code.Y)
+                    v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], code.Y)
 
         ## Extend block backwards towards last hop up
         #############################################
@@ -384,14 +379,17 @@ def parse_gcode():
             backpass(v.block_classification)
 
         if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
-            if v.parsedgcode[-1].fullcommand == "G1":
-                if v.parsedgcode[-1].X and v.parsedgcode[-1].Y:
+            if code.fullcommand == "G1":
+                if code.has_X() and code.has_Y():
                     specifier |= SPEC_INTOWER
 
         if CLS_ENDGRID:
-            if v.parsedgcode[-1].fullcommand == "G1" and v.parsedgcode[-1].Z:
-                v.block_classification = CLS_NORMAL
-
+            code = v.parsedgcode[-1]
+            if code.has_X and code.has_Y():
+                if not coordinate_in_tower(code.X, code.Y):
+                    v.block_classification = CLS_NORMAL
+            # if v.parsedgcode[-1].fullcommand == "G1" and v.parsedgcode[-1].Z:
+            #     v.block_classification = CLS_NORMAL
         else:
             if flagset(specifier, SPEC_RETRACTS):
                 v.block_classification = CLS_NORMAL
@@ -653,6 +651,13 @@ def gcode_parseline(index):
 
     if g.is_movement_command():
 
+        if v.expect_retract and g.has_X() or g.has_Y():
+            if not v.retraction < 0:
+                if not g.has_E and g.E < 0:
+                    purgetower.retract(v.current_tool)
+            v.expect_retract = False
+
+
         if v.retract_move and g.is_retract_command():
             # This is going to break stuff, G10 cannot take X and Y, what to do?
             if v.retract_x:
@@ -669,11 +674,10 @@ def gcode_parseline(index):
         v.current_position_y = g.get_parameter("Y", v.current_position_y)
         v.current_position_z = g.get_parameter("Z", v.current_position_z)
 
-        if block_class == CLS_BRIM:
-            if v.full_purge_reduction:
-                g.move_to_comment("replaced by P2PP brim code")
-                g.remove_parameter("E")
-                g.E = 0
+        if block_class == CLS_BRIM and v.full_purge_reduction:
+            g.move_to_comment("replaced by P2PP brim code")
+            g.remove_parameter("E")
+            g.E = 0
 
         update_extrusion(g.E * v.extrusion_multiplier * v.extrusion_multiplier_correction)
 

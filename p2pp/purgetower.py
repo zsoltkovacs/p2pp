@@ -222,6 +222,8 @@ def retract(tool, speed=-1):
 
 
 def unretract(tool, speed=-1):
+    if v.retraction == 0:
+        return
     if not v.use_firmware_retraction:
         length = max(-v.retraction, v.retract_length[tool])
         if speed > 0:
@@ -273,6 +275,7 @@ def purge_generate_sequence():
     v.min_tower_delta = min(v.min_tower_delta, v.current_position_z - (v.purgelayer + 1) * v.layer_height)
 
     if last_posx and last_posy:
+        v.processed_gcode.append("retraction {}".format(v.retraction))
         if v.retraction == 0:
             retract(v.current_tool)
         v.processed_gcode.append("G1 X{} Y{} F8640 \n".format(last_posx, last_posy))
@@ -290,11 +293,11 @@ def purge_generate_sequence():
         _purge_update_sequence_index()
 
     # return to print height
-    v.processed_gcode.append("; -------------------------------------\n")
     if v.retraction == 0:
-        retract(v.current_tool)
+        v.expect_retract = True
     v.processed_gcode.append(
         "G1 Z{:.2f} F10800\n".format(max(v.current_position_z + 0.6, (v.purgelayer + 1) * v.layer_height) + 0.6))
+    v.processed_gcode.append("; -------------------------------------\n")
     v.processed_gcode.append("; --- P2PP WIPE SEQUENCE END DONE\n")
     v.processed_gcode.append("; -------------------------------------\n")
 
@@ -306,3 +309,4 @@ def purge_generate_sequence():
     v.side_wipe_length = 0
     v.retract_x = last_posx
     v.retract_y = last_posy
+    v.expect_retrct = True
