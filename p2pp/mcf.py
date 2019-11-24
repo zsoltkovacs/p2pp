@@ -508,7 +508,6 @@ def gcode_parseline(index):
 
         if flagset(v.parsecomment[index], SPEC_INTOWER):
             if coordinate_in_tower(g.X, g.Y):
-                g.Comment = "removed parms X{:.3f} and Y{:.3f}".format(g.X, g.Y)
                 g.remove_parameter("X")
                 g.remove_parameter("Y")
 
