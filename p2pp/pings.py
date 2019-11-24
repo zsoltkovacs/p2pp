@@ -7,6 +7,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
+import p2pp.gcode as gcode
 import p2pp.variables as v
 from p2pp.formatnumbers import hexify_float
 
@@ -25,21 +26,21 @@ def check_connected_ping():
         v.last_ping_extruder_position = v.total_material_extruded
         v.ping_extruder_position.append(v.last_ping_extruder_position)
 
-        v.processed_gcode.append(
+        gcode.issue_code(
             "; --- P2PP - Added Sequence - INITIATE PING -  START COMMAND after {:-10.4f}mm of extrusion \n".format(
                 v.last_ping_extruder_position))
-        v.processed_gcode.append("G4 S0 \n")
-        v.processed_gcode.append("O31 {}\n".format(hexify_float(v.last_ping_extruder_position)))
-        v.processed_gcode.append("; --- P2PP - Added Sequence - INITIATE PING  -  END\n")
+        gcode.issue_code("G4 S0 \n")
+        gcode.issue_code("O31 {}\n".format(hexify_float(v.last_ping_extruder_position)))
+        gcode.issue_code("; --- P2PP - Added Sequence - INITIATE PING  -  END\n")
 
 
 def check_accessorymode_first():
     if v.accessory_mode and check_first_ping_condition():
         v.acc_ping_left = 20
-        v.processed_gcode.append("; ------------------------------------\n")
-        v.processed_gcode.append("; --- P2PP - ACCESSORY MODE PING PART 1\n")
-        v.processed_gcode.append(acc_first_pause)
-        v.processed_gcode.append("; -------------------------------------\n")
+        gcode.issue_code("; ------------------------------------\n")
+        gcode.issue_code("; --- P2PP - ACCESSORY MODE PING PART 1\n")
+        gcode.issue_code(acc_first_pause)
+        gcode.issue_code("; -------------------------------------\n")
 
 
 def interpollate(_from, _to, _part):
@@ -61,16 +62,16 @@ def check_accessorymode_second(e):
             int_x = interpollate(v.previous_position_x, v.current_position_x, proc)
             int_y = interpollate(v.previous_position_y, v.current_position_y, proc)
             to_z = v.current_position_z
-            v.processed_gcode.append("G1 X{:.4f} Y{:.4f} Z{:.4f} E{:.4f}\n".format(int_x, int_y, to_z, v.acc_ping_left))
+            gcode.issue_code("G1 X{:.4f} Y{:.4f} Z{:.4f} E{:.4f}\n".format(int_x, int_y, to_z, v.acc_ping_left))
             e -= v.acc_ping_left
             v.acc_ping_left = 0
             nextline = "G1 X{:.4f} Y{:.4f} E{:.4f}\n".format(v.current_position_x, v.current_position_y, e)
 
         if v.acc_ping_left <= 0.1:
-            v.processed_gcode.append("; -------------------------------------\n")
-            v.processed_gcode.append("; --- P2PP - ACCESSORY MODE PING PART 2\n")
-            v.processed_gcode.append(acc_second_pause)
-            v.processed_gcode.append("; -------------------------------------\n")
+            gcode.issue_code("; -------------------------------------\n")
+            gcode.issue_code("; --- P2PP - ACCESSORY MODE PING PART 2\n")
+            gcode.issue_code(acc_second_pause)
+            gcode.issue_code("; -------------------------------------\n")
             v.ping_interval = v.ping_interval * v.ping_length_multiplier
             v.ping_interval = min(v.max_ping_interval, v.ping_interval)
             v.last_ping_extruder_position = v.total_material_extruded
@@ -79,4 +80,4 @@ def check_accessorymode_second(e):
             v.acc_ping_left = 0
 
             if nextline:
-                v.processed_gcode.append(nextline)
+                gcode.issue_code(nextline)

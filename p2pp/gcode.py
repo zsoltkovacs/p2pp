@@ -180,11 +180,22 @@ class GCodeCommand:
         return defaultvalue
 
     def issue_command(self):
+        if self.E is not None and self.is_movement_command():
+            v.total_material_extruded += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
+            v.material_extruded_per_color[
+                v.current_tool] += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
+
         v.processed_gcode.append(str(self))
+
 
     def issue_command_speed(self, speed):
         s = str(self)
         s = s.replace("%SPEED%", "{:0.0f}".format(speed))
+        if self.E is not None and self.is_movement_command():
+            v.total_material_extruded += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
+            v.material_extruded_per_color[
+                v.current_tool] += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
+
         v.processed_gcode.append(s)
 
     def add_comment(self, text):
@@ -211,3 +222,7 @@ class GCodeCommand:
             return (self.is_movement_command() and self.E > 0 and self.X is None and self.Y is None and self.Z is None)
         else:
             return self.fullcommand == "G11"
+
+
+def issue_code(s):
+    GCodeCommand(s).issue_command()

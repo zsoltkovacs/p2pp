@@ -173,7 +173,7 @@ def _purge_update_sequence_index():
             current_purge_form = PURGE_SOLID
         v.purgelayer += 1
         if v.side_wipe_length > 0:
-            v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
+            gcode.issue_code("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
 
 def _purge_get_nextcommand_in_sequence():
     if current_purge_form == PURGE_SOLID:
@@ -210,14 +210,11 @@ def retract(tool, speed=-1):
     if not v.use_firmware_retraction:
         length = v.retract_length[tool]
         if speed > 0:
-            v.processed_gcode.append("G1 E-{:.2f} F{:.0f}\n".format(v.retract_length[tool], speed))
+            gcode.issue_code("G1 E-{:.2f} F{:.0f}\n".format(v.retract_length[tool], speed))
         else:
-            v.processed_gcode.append("G1 E-{:.2f}\n".format(v.retract_length[tool]))
-        v.total_material_extruded -= length
-        v.material_extruded_per_color[v.current_tool] -= length
-        v.retraction -= length
+            gcode.issue_code("G1 E-{:.2f}\n".format(v.retract_length[tool]))
     else:
-        v.processed_gcode.append("G10\n")
+        gcode.issue_code("G10\n")
         v.retraction -= 1
 
 
@@ -227,13 +224,11 @@ def unretract(tool, speed=-1):
     if not v.use_firmware_retraction:
         length = max(-v.retraction, v.retract_length[tool])
         if speed > 0:
-            v.processed_gcode.append("G1 E{:.2f} F{:.0f}\n".format(length, speed))
+            gcode.issue_code("G1 E{:.2f} F{:.0f}\n".format(length, speed))
         else:
-            v.processed_gcode.append("G1 E{:.2f}\n".format(length))
-        v.total_material_extruded += length
-        v.material_extruded_per_color[v.current_tool] += length
+            gcode.issue_code("G1 E{:.2f}\n".format(length))
     else:
-        v.processed_gcode.append("G11\n")
+        gcode.issue_code("G11\n")
     v.retraction = 0
 
 
@@ -257,29 +252,29 @@ def purge_generate_sequence():
     actual = 0
     expected = v.side_wipe_length
 
-    v.processed_gcode.append("; --------------------------------------------------\n")
-    v.processed_gcode.append("; --- P2PP WIPE SEQUENCE START  FOR {:5.2f}mm\n".format(v.side_wipe_length))
-    v.processed_gcode.append(
+    gcode.issue_code("; --------------------------------------------------\n")
+    gcode.issue_code("; --- P2PP WIPE SEQUENCE START  FOR {:5.2f}mm\n".format(v.side_wipe_length))
+    gcode.issue_code(
         "; --- DELTA = {:.2f}\n".format(v.current_position_z - (v.purgelayer + 1) * v.layer_height))
 
     if v.previous_tool != -1:
         index = v.previous_tool * 4 + v.current_tool
         if v.side_wipe_length > v.wiping_info[index]:
             v.side_wipe_length = v.wiping_info[index]
-            v.processed_gcode.append(
+            gcode.issue_code(
                 "; --- CORRECTED PURGE TO TRANSITION LENGTH {:.2f}mm\n".format(v.wiping_info[index]))
-    v.processed_gcode.append("; --------------------------------------------------\n")
+    gcode.issue_code("; --------------------------------------------------\n")
 
 
     v.max_tower_delta = max(v.max_tower_delta, v.current_position_z - (v.purgelayer + 1) * v.layer_height)
     v.min_tower_delta = min(v.min_tower_delta, v.current_position_z - (v.purgelayer + 1) * v.layer_height)
 
     if last_posx and last_posy:
-        v.processed_gcode.append("retraction {}".format(v.retraction))
+        gcode.issue_code("retraction {}".format(v.retraction))
         if v.retraction == 0:
             retract(v.current_tool)
-        v.processed_gcode.append("G1 X{} Y{} F8640 \n".format(last_posx, last_posy))
-    v.processed_gcode.append("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
+        gcode.issue_code("G1 X{} Y{} F8640 \n".format(last_posx, last_posy))
+    gcode.issue_code("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
     unretract(v.current_tool)
     # generate wipe code
     while v.side_wipe_length > 0:
@@ -295,17 +290,14 @@ def purge_generate_sequence():
     # return to print height
     if v.retraction == 0:
         v.expect_retract = True
-    v.processed_gcode.append(
+    gcode.issue_code(
         "G1 Z{:.2f} F10800\n".format(max(v.current_position_z + 0.6, (v.purgelayer + 1) * v.layer_height) + 0.6))
-    v.processed_gcode.append("; -------------------------------------\n")
-    v.processed_gcode.append("; --- P2PP WIPE SEQUENCE END DONE\n")
-    v.processed_gcode.append("; -------------------------------------\n")
+    gcode.issue_code("; -------------------------------------\n")
+    gcode.issue_code("; --- P2PP WIPE SEQUENCE END DONE\n")
+    gcode.issue_code("; -------------------------------------\n")
 
     # if we extruded more we need to account for that in the total count
 
-    correction = (actual - expected) * v.extrusion_multiplier * v.extrusion_multiplier_correction
-    v.total_material_extruded += correction
-    v.material_extruded_per_color[v.current_tool] += correction
     v.side_wipe_length = 0
     v.retract_x = last_posx
     v.retract_y = last_posy

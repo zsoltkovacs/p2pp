@@ -29,6 +29,9 @@ def remove_previous_move_in_tower():
         tmp = gcode.GCodeCommand(line)
         if tmp.X and tmp.Y:
             if coordinate_in_tower(tmp.X, tmp.Y):
+                if tmp.is_movement_command() and tmp.has_E():
+                    v.total_material_extruded -= tmp.E
+                    v.material_extruded_per_color[v.current_tool] -= tmp.E
                 tmp.move_to_comment("tower skipped")
                 v.processed_gcode[idx] = tmp.__str__()
         idx = idx + 1
@@ -144,21 +147,21 @@ def entertower(layer_hght):
     if v.cur_tower_z_delta > 0:
         purgeheight = layer_hght - v.cur_tower_z_delta
         v.max_tower_delta = max(v.cur_tower_z_delta, v.max_tower_delta)
-        v.processed_gcode.append(";------------------------------\n")
-        v.processed_gcode.append(";  P2PP DELTA >> TOWER {:.2f}mm\n".format(
+        gcode.issue_code(";------------------------------\n")
+        gcode.issue_code(";  P2PP DELTA >> TOWER {:.2f}mm\n".format(
             purgeheight))
         purgetower.retract(v.current_tool)
 
-        v.processed_gcode.append(
+        gcode.issue_code(
             "G1 Z{:.2f} F10810\n".format(purgeheight))
 
         purgetower.unretract(v.current_tool)
 
-        v.processed_gcode.append(";------------------------------\n")
+        gcode.issue_code(";------------------------------\n")
         if purgeheight <= 0.21:
-            v.processed_gcode.append("G1 F{}\n".format(min(1200, v.wipe_feedrate)))
+            gcode.issue_code("G1 F{}\n".format(min(1200, v.wipe_feedrate)))
         else:
-            v.processed_gcode.append("G1 F{}\n".format(v.wipe_feedrate))
+            gcode.issue_code("G1 F{}\n".format(v.wipe_feedrate))
 
 
 CLS_UNDEFINED = 0
@@ -408,11 +411,6 @@ def parse_gcode():
             v.block_classification = CLS_NORMAL
 
 
-def update_extrusion(length):
-    v.total_material_extruded += length
-    v.material_extruded_per_color[v.current_tool] += length
-
-
 def gcode_parseline(index):
     g = v.parsedgcode[index]
     block_class = v.gcodeclass[index]
@@ -551,8 +549,7 @@ def gcode_parseline(index):
                 v.retract_x = purgetower.last_brim_x
                 v.retract_y = purgetower.last_brim_y
                 # correct the amount of extrusion for the brim
-                update_extrusion(
-                    purgetower.sequence_length_brim * v.extrusion_multiplier * v.extrusion_multiplier_correction)
+
 
         # sepcific for SIDEWIPE
         if v.side_wipe:
@@ -572,7 +569,7 @@ def gcode_parseline(index):
 
                 if block_class == CLS_TOOL_PURGE:
                     g.issue_command()
-                    v.processed_gcode.append("G1 X{} Y{} ;\n".format(v.keep_x, v.keep_y))
+                    gcode.issue_code("G1 X{} Y{} ;\n".format(v.keep_x, v.keep_y))
                     v.current_position_x = v.keep_x
                     v.current_position_x = v.keep_y
                     entertower(g.Layer * v.layer_height)
@@ -587,9 +584,9 @@ def gcode_parseline(index):
                 remove_previous_move_in_tower()
                 if v.tower_delta:
                     v.cur_tower_z_delta += v.layer_height
-                    v.processed_gcode.append(";-------------------------------------\n")
-                    v.processed_gcode.append(";  GRID SKIP --TOWER DELTA {:6.2f}mm\n".format(v.cur_tower_z_delta))
-                    v.processed_gcode.append(";-------------------------------------\n")
+                    gcode.issue_code(";-------------------------------------\n")
+                    gcode.issue_code(";  GRID SKIP --TOWER DELTA {:6.2f}mm\n".format(v.cur_tower_z_delta))
+                    gcode.issue_coded(";-------------------------------------\n")
 
         # changing from EMPTY to NORMAL
         ###############################
@@ -622,7 +619,7 @@ def gcode_parseline(index):
                 _x = v.purge_keep_x
                 _y = v.purge_keep_y
 
-            v.processed_gcode.append(
+            gcode.issue_code(
                 "G1 X{:.3f} Y{:.3f}; P2PP Inserted to realign\n".format(v.purge_keep_x, v.purge_keep_y))
             v.current_position_x = _x
             v.current_position_x = _y
@@ -677,9 +674,7 @@ def gcode_parseline(index):
         if block_class == CLS_BRIM and v.full_purge_reduction:
             g.move_to_comment("replaced by P2PP brim code")
             g.remove_parameter("E")
-            g.E = 0
 
-        update_extrusion(g.E * v.extrusion_multiplier * v.extrusion_multiplier_correction)
 
     if v.side_wipe or v.full_purge_reduction:
         if block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE, CLS_EMPTY, CLS_FIRST_EMPTY]:
@@ -710,7 +705,7 @@ def gcode_parseline(index):
             v.retraction = 0
 
     if (g.has_X() or g.has_Y()) and (g.has_E() and g.E > 0) and v.retraction < 0 and abs(v.retraction) > 0.01:
-        v.processed_gcode.append(";fixup retracts\n")
+        gcode.issue_code(";fixup retracts\n")
         purgetower.unretract(v.current_tool)
         # v.retracted = False
 

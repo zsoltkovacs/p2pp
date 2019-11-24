@@ -9,6 +9,7 @@ __email__ = 'P2PP@pandora.be'
 
 import p2pp.purgetower as purgetower
 import p2pp.variables as v
+from p2pp.gcode import issue_code
 
 
 #
@@ -18,9 +19,9 @@ import p2pp.variables as v
 
 def setfanspeed(n):
     if n == 0:
-        v.processed_gcode.append("M107                ; Turn FAN OFF\n")
+        issue_code("M107                ; Turn FAN OFF\n")
     else:
-        v.processed_gcode.append("M106 S{}           ; Set FAN Power\n".format(n))
+        issue_code("M106 S{}           ; Set FAN Power\n".format(n))
 
 
 def resetfanspeed():
@@ -28,37 +29,37 @@ def resetfanspeed():
 
 
 def generate_blob(length, count):
-    v.processed_gcode.append("\n;---- BIGBRAIN3D SIDEWIPE BLOB {} -- purge {:.3f}mm\n".format(count + 1, length))
-    # v.processed_gcode.append("M907 X{} ; set motor power\n".format(int(v.purgemotorpower)))
+    issue_code("\n;---- BIGBRAIN3D SIDEWIPE BLOB {} -- purge {:.3f}mm\n".format(count + 1, length))
+    # issue_code("M907 X{} ; set motor power\n".format(int(v.purgemotorpower)))
 
-    v.processed_gcode.append(
+    issue_code(
         "G1 X{:.3f} F3000   ; go near the edge of the print\n".format(v.bigbrain3d_x_position - 10))
-    v.processed_gcode.append(
+    issue_code(
         "G1 X{:.3f} F1000   ; go to the actual wiping position\n".format(v.bigbrain3d_x_position))  # takes 2.5 seconds
     setfanspeed(0)
     if v.retraction < 0:
         purgetower.unretract(v.current_tool, 1200)
     if v.bigbrain3d_smartfan:
-        v.processed_gcode.append("G1 E{:6.3f} F200     ; Purge FAN OFF \n".format(length / 4))
+        issue_code("G1 E{:6.3f} F200     ; Purge FAN OFF \n".format(length / 4))
         setfanspeed(64)
-        v.processed_gcode.append("G1 E{:6.3f} F200     ; Purge FAN 25% \n".format(length / 4))
+        issue_code("G1 E{:6.3f} F200     ; Purge FAN 25% \n".format(length / 4))
         setfanspeed(128)
-        v.processed_gcode.append("G1 E{:6.3f} F200     ; Purge FAN 50% \n".format(length / 4))
+        issue_code("G1 E{:6.3f} F200     ; Purge FAN 50% \n".format(length / 4))
         setfanspeed(192)
-        v.processed_gcode.append("G1 E{:6.3f} F200     ; Purge FAN 75% \n".format(length / 4))
+        issue_code("G1 E{:6.3f} F200     ; Purge FAN 75% \n".format(length / 4))
     else:
-        v.processed_gcode.append("G1 E{:6.3f} F200     ; UNRETRACT/PURGE/RETRACT \n".format(length))
+        issue_code("G1 E{:6.3f} F200     ; UNRETRACT/PURGE/RETRACT \n".format(length))
     purgetower.retract(v.current_tool, 1200)
     setfanspeed(255)
-    v.processed_gcode.append(
+    issue_code(
         "G4 S{0:.0f}              ; blob {0}s cooling time\n".format(v.bigbrain3d_blob_cooling_time))
-    v.processed_gcode.append("G1 X{:.3f} F10800  ; activate flicker\n".format(v.bigbrain3d_x_position - 20))
-    v.processed_gcode.append(
+    issue_code("G1 X{:.3f} F10800  ; activate flicker\n".format(v.bigbrain3d_x_position - 20))
+    issue_code(
         "G4 S1               ; Mentally prep for second whack\n".format(v.bigbrain3d_x_position - 20))
-    v.processed_gcode.append("G1 X{:.3f} F3000   ; approach for second whach\n".format(v.bigbrain3d_x_position - 10))
-    v.processed_gcode.append("G1 X{:.3f} F1000   ; final position for whack and......\n".format(
+    issue_code("G1 X{:.3f} F3000   ; approach for second whach\n".format(v.bigbrain3d_x_position - 10))
+    issue_code("G1 X{:.3f} F1000   ; final position for whack and......\n".format(
         v.bigbrain3d_x_position))  # takes 2.5 seconds
-    v.processed_gcode.append("G1 X{:.3f} F10800  ; WHACKAAAAA!!!!\n".format(v.bigbrain3d_x_position - 20))
+    issue_code("G1 X{:.3f} F10800  ; WHACKAAAAA!!!!\n".format(v.bigbrain3d_x_position - 20))
 
 
 def create_sidewipe_BigBrain3D():
@@ -75,15 +76,14 @@ def create_sidewipe_BigBrain3D():
     else:
         correction = -purgeleft
 
-    v.processed_gcode.append(";-------------------------------\n")
-    v.processed_gcode.append("; P2PP BB3DBLOBS: {:.0f} BLOBS\n".format(purgeblobs))
-    v.processed_gcode.append(";-------------------------------\n")
+    issue_code(";-------------------------------\n")
+    issue_code("; P2PP BB3DBLOBS: {:.0f} BLOBS\n".format(purgeblobs))
+    issue_code(";-------------------------------\n")
 
-
-    v.processed_gcode.append(
+    issue_code(
         "; Req={:.2f}mm  Act={:.2f}mm\n".format(v.side_wipe_length, v.side_wipe_length + correction))
-    v.processed_gcode.append("; Purge difference {:.2f}mm\n".format(correction))
-    v.processed_gcode.append(";-------------------------------\n")
+    issue_code("; Purge difference {:.2f}mm\n".format(correction))
+    issue_code(";-------------------------------\n")
 
     v.total_material_extruded += correction * v.extrusion_multiplier * v.extrusion_multiplier_correction
     v.material_extruded_per_color[
@@ -93,21 +93,21 @@ def create_sidewipe_BigBrain3D():
         purgetower.retract(v.current_tool)
 
     if (v.current_position_z < 25):
-        v.processed_gcode.append("\nG1 Z25.000 F8640    ; Increase Z to prevent collission with bed\n")
+        issue_code("\nG1 Z25.000 F8640    ; Increase Z to prevent collission with bed\n")
 
-    v.processed_gcode.append("G1 X{:.3f} F10800  ; go near edge of bed\n".format(v.bigbrain3d_x_position - 30))
-    v.processed_gcode.append("G4 S0               ; wait for the print buffer to clear\n")
-    v.processed_gcode.append("M907 X{}           ; increase motor power\n".format(v.bigbrain3d_motorpower_high))
+    issue_code("G1 X{:.3f} F10800  ; go near edge of bed\n".format(v.bigbrain3d_x_position - 30))
+    issue_code("G4 S0               ; wait for the print buffer to clear\n")
+    issue_code("M907 X{}           ; increase motor power\n".format(v.bigbrain3d_motorpower_high))
     for i in range(purgeblobs):
         generate_blob(v.bigbrain3d_blob_size, i)
 
     # NOT NEEDED
     # if (v.current_position_z < 25):
-    #     v.processed_gcode.append("\nG1 Z{:.4f} F8640    ; Reset correct Z height to continue print\n".format(v.current_position_z))
+    #     issue_code("\nG1 Z{:.4f} F8640    ; Reset correct Z height to continue print\n".format(v.current_position_z))
 
     resetfanspeed()
-    v.processed_gcode.append("\nM907 X{}           ; reset motor power\n".format(v.bigbrain3d_motorpower_normal))
-    v.processed_gcode.append("\n;-------------------------------\n\n")
+    issue_code("\nM907 X{}           ; reset motor power\n".format(v.bigbrain3d_motorpower_normal))
+    issue_code("\n;-------------------------------\n\n")
 
     v.side_wipe_length = 0
 
@@ -118,17 +118,17 @@ def create_side_wipe():
     if not v.side_wipe or v.side_wipe_length == 0:
         return
 
-    v.processed_gcode.append(";---------------------------\n")
-    v.processed_gcode.append(";  P2PP SIDE WIPE: {:7.3f}mm\n".format(v.side_wipe_length))
+    issue_code(";---------------------------\n")
+    issue_code(";  P2PP SIDE WIPE: {:7.3f}mm\n".format(v.side_wipe_length))
 
     for line in v.before_sidewipe_gcode:
-        v.processed_gcode.append(line + "\n")
+        issue_code(line + "\n")
 
     if v.retraction == 0:
         purgetower.retract(v.current_tool)
 
-    v.processed_gcode.append("G1 F8640\n")
-    v.processed_gcode.append("G0 {} Y{}\n".format(v.side_wipe_loc, v.sidewipe_miny))
+    issue_code("G1 F8640\n")
+    issue_code("G0 {} Y{}\n".format(v.side_wipe_loc, v.sidewipe_miny))
 
     sweep_base_speed = v.wipe_feedrate * 20 * abs(v.sidewipe_maxy - v.sidewipe_miny) / 150
     sweep_length = 20
@@ -144,16 +144,16 @@ def create_side_wipe():
         v.side_wipe_length -= sweep_length
         wipe_speed = min(5000, int(sweep_base_speed / sweep))
 
-        v.processed_gcode.append(
+        issue_code(
             "G1 {} Y{} E{:.5f} F{}\n".format(v.side_wipe_loc, moveto, sweep * v.sidewipe_correction, wipe_speed))
 
         rangeidx += 1
         moveto = yrange[rangeidx % 2]
 
     for line in v.after_sidewipe_gcode:
-        v.processed_gcode.append(line + "\n")
+        issue_code(line + "\n")
 
     purgetower.retract(v.current_tool)
-    v.processed_gcode.append(";---------------------------\n")
+    issue_code(";---------------------------\n")
 
     v.side_wipe_length = 0
