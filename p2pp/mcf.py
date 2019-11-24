@@ -586,7 +586,7 @@ def gcode_parseline(index):
                     v.cur_tower_z_delta += v.layer_height
                     gcode.issue_code(";-------------------------------------\n")
                     gcode.issue_code(";  GRID SKIP --TOWER DELTA {:6.2f}mm\n".format(v.cur_tower_z_delta))
-                    gcode.issue_coded(";-------------------------------------\n")
+                    gcode.issue_code(";-------------------------------------\n")
 
         # changing from EMPTY to NORMAL
         ###############################
