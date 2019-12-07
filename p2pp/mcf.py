@@ -59,6 +59,10 @@ def convert_to_absolute():
     for i in range(len(v.processed_gcode)):
         line = v.processed_gcode[i]
 
+        if absolute > 15000.0:
+            v.processed_gcode.insert(i, "G92 E0.000     ;Extruder counter reset ")
+            absolute = 0.00
+
         if line.startswith("G1") or line.startswith("G0"):
 
             if "E" in line:
@@ -581,7 +585,7 @@ def gcode_parseline(index):
                 v.towerskipped = True
                 # print("Skipped: {:.3f} now at delta {:.3f}".format(v.current_position_z- v.retract_lift[v.current_tool]+v.layer_height,v.cur_tower_z_delta+v.layer_height))
                 remove_previous_move_in_tower()
-                if v.tower_delta:
+                if v.tower_delta and "CP EMPTY GRID START" in g.Comment:
                     v.cur_tower_z_delta += v.layer_height
                     gcode.issue_code(";-------------------------------------\n")
                     gcode.issue_code(";  GRID SKIP --TOWER DELTA {:6.2f}mm\n".format(v.cur_tower_z_delta))
