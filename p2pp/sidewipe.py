@@ -154,6 +154,7 @@ def create_side_wipe():
         issue_code(line + "\n")
 
     purgetower.retract(v.current_tool)
+    issue_code("G1 F8640\n")
     issue_code(";---------------------------\n")
 
     v.side_wipe_length = 0
