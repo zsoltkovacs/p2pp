@@ -681,8 +681,11 @@ def gcode_parseline(index):
 
     if v.side_wipe or v.full_purge_reduction:
         if block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE, CLS_EMPTY, CLS_FIRST_EMPTY]:
-            v.side_wipe_length += g.E
-            g.move_to_comment("side wipe/full purge")
+            if v.previous_tool == -1:
+                g.move_to_comment("Initial purge base W/O toolchange")
+            else:
+                v.side_wipe_length += g.E
+                g.move_to_comment("side wipe/full purge")
 
     if v.side_wipe and block_class == CLS_NORMAL and classupdate:
         if v.bigbrain3d_purge_enabled:
