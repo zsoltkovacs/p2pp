@@ -47,7 +47,7 @@ def optimize_tower_skip(skipmax, layersize):
             skipped = skipped + layersize
             skipped_num += 1
 
-    if skipped > 0:
+    if v.tower_delta and skipped > 0:
         gui.log_warning("Warning: Purge Tower delta in effect: {} Layers or {:-6.2f}mm".format(skipped_num, skipped))
     else:
         gui.create_logitem("Tower Purge Delta could not be applied to this print")
@@ -681,8 +681,8 @@ def gcode_parseline(index):
 
     if v.side_wipe or v.full_purge_reduction:
         if block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE, CLS_EMPTY, CLS_FIRST_EMPTY]:
-            if v.previous_tool == -1:
-                g.move_to_comment("Initial purge base W/O toolchange")
+            if v.skippable_layer[g.Layer]:
+                g.move_to_comment("skipped purge")
             else:
                 v.side_wipe_length += g.E
                 g.move_to_comment("side wipe/full purge")
@@ -804,6 +804,9 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     if v.tower_delta:
         optimize_tower_skip(v.max_tower_z_delta, v.layer_height)
+
+    if v.side_wipe:
+        optimize_tower_skip(999, v.layer_height)
 
     gui.create_logitem("Generate processed GCode")
 
