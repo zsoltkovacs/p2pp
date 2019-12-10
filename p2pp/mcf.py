@@ -320,8 +320,6 @@ def parse_gcode():
                 v.parsedlayer = layer
                 if layer > 0:
                     v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
-                else:
-                    v.skippable_layer.append(False)
                 toolchange = 0
                 emptygrid = 0
 
@@ -683,9 +681,9 @@ def gcode_parseline(index):
 
     if v.side_wipe or v.full_purge_reduction:
         if block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE, CLS_EMPTY, CLS_FIRST_EMPTY]:
-            if v.skippable_layer[v.layernumber[index]]:
-                g.move_to_comment("skipped purge")
-            else:
+            # if v.skippable_layer[v.layernumber[index]-1]:
+            #     g.move_to_comment("skipped purge")
+            # else:
                 v.side_wipe_length += g.E
                 g.move_to_comment("side wipe/full purge")
 
