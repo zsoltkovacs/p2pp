@@ -213,6 +213,7 @@ def retract(tool, speed=-1):
             gcode.issue_code("G1 E-{:.2f} F{:.0f}\n".format(v.retract_length[tool], speed))
         else:
             gcode.issue_code("G1 E-{:.2f}\n".format(v.retract_length[tool]))
+        v.retraction -= length
     else:
         gcode.issue_code("G10\n")
         v.retraction -= 1
@@ -288,8 +289,10 @@ def purge_generate_sequence():
         _purge_update_sequence_index()
 
     # return to print height
+    retract(v.current_tool)
     if v.retraction == 0:
         v.expect_retract = True
+
     gcode.issue_code(
         "G1 Z{:.2f} F10800\n".format(max(v.current_position_z + 0.6, (v.purgelayer + 1) * v.layer_height) + 0.6))
     gcode.issue_code("; -------------------------------------\n")
