@@ -268,14 +268,26 @@ def backpass(currentclass):
                 v.retraction = 0
             else:
                 v.retraction -= tmp.E
-            tmp = v.parsedgcode[idx - 1]
+
+            idxadj = 1
+            tmp = v.parsedgcode[idx - idxadj]
+
             if tmp.is_movement_command():
                 if tmp.has_Z():
-                    v.gcodeclass[idx - 1] = currentclass
-                    # tmp = v.parsedgcode[idx - 2]
-                # if tmp.has_X() and tmp.has_Y() and not tmp.has_E():
-                #     v.parsedgcode[idx - 2].Comment = "Part of next block"
-                #     v.gcodeclass[idx - 2] = currentclass
+                    v.gcodeclass[idx - idxadj] = currentclass
+                    idxadj = 2
+                tmp = v.parsedgcode[idx - idxadj]
+
+                if tmp.has_X() and tmp.has_Y() and not tmp.has_E():
+                    v.parsedgcode[idx - idxadj].Comment = "Part of next block"
+                    v.gcodeclass[idx - idxadj] = currentclass
+                    idxadj += 1
+                tmp = v.parsedgcode[idx - idxadj]
+
+                if not tmp.has_X() and not tmp.has_Y() and tmp.has_E():
+                    tmp.update_parameter("E", -v.retract_length[v.current_tool])
+
+
 
             break
         idx = idx - 1
