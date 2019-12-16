@@ -284,8 +284,9 @@ def backpass(currentclass):
                     idxadj += 1
                 tmp = v.parsedgcode[idx - idxadj]
 
-                if not tmp.has_X() and not tmp.has_Y() and tmp.has_E():
-                    tmp.update_parameter("E", -v.retract_length[v.current_tool])
+                if not tmp.has_X() and not tmp.has_Y() and tmp.has_E() and tmp.E < 0:
+                    v.gcodeclass[idx - idxadj] = currentclass
+                    # v.parsedgcode[idx - idxadj].update_parameter("E", -v.retract_length[v.current_tool])
 
 
 
@@ -660,8 +661,11 @@ def gcode_parseline(index):
                 _x = v.purge_keep_x
                 _y = v.purge_keep_y
 
+            if v.retraction == 0:
+                purgetower.retract(v.current_tool, 3000)
+
             gcode.issue_code(
-                "G1 X{:.3f} Y{:.3f}; P2PP Inserted to realign\n".format(v.purge_keep_x, v.purge_keep_y))
+                "G1 X{:.3f} Y{:.3f} F8640; P2PP Inserted to realign\n".format(v.purge_keep_x, v.purge_keep_y))
             v.current_position_x = _x
             v.current_position_x = _y
 
