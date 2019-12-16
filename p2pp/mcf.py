@@ -152,8 +152,11 @@ def entertower(layer_hght):
         purgeheight = layer_hght - v.cur_tower_z_delta
         v.max_tower_delta = max(v.cur_tower_z_delta, v.max_tower_delta)
         gcode.issue_code(";------------------------------\n")
-        gcode.issue_code(";  P2PP DELTA >> TOWER {:.2f}mm\n".format(
-            purgeheight))
+        gcode.issue_code(";  P2PP DELTA ENTER\n")
+        gcode.issue_code(
+            ";Current Z-Height = {:.2f};  Tower height = {:.2f}; delta = {:.2f}".format(v.current_position_z,
+                                                                                        purgeheight,
+                                                                                        v.current_position_z - purgeheight))
         purgetower.retract(v.current_tool)
 
         gcode.issue_code(
@@ -167,6 +170,18 @@ def entertower(layer_hght):
         else:
             gcode.issue_code("G1 F{}\n".format(v.wipe_feedrate))
 
+
+def leavetower(layer_hght):
+    return
+    # this function is for test only !!!!!
+    if v.cur_tower_z_delta > 0:
+        gcode.issue_code(";------------------------------\n")
+        gcode.issue_code(";  P2PP DELTA LEAVE\n")
+        gcode.issue_code(
+            "; Returning to Current Z-Height = {:.2f}; ".format(v.current_position_z))
+        gcode.issue_code(
+            "G1 Z{:.2f} F10810\n".format(v.current_position_z))
+        gcode.issue_code(";------------------------------\n")
 
 CLS_UNDEFINED = 0
 CLS_NORMAL = 1
@@ -257,10 +272,10 @@ def backpass(currentclass):
             if tmp.is_movement_command():
                 if tmp.has_Z():
                     v.gcodeclass[idx - 1] = currentclass
-                    tmp = v.parsedgcode[idx - 2]
-                if tmp.has_X() and tmp.has_Y() and not tmp.has_E():
-                    v.parsedgcode[idx - 2].Comment = "Part of next block"
-                    v.gcodeclass[idx - 2] = currentclass
+                    # tmp = v.parsedgcode[idx - 2]
+                # if tmp.has_X() and tmp.has_Y() and not tmp.has_E():
+                #     v.parsedgcode[idx - 2].Comment = "Part of next block"
+                #     v.gcodeclass[idx - 2] = currentclass
 
             break
         idx = idx - 1
@@ -568,15 +583,17 @@ def gcode_parseline(index):
         ########################################
         if v.tower_delta:
 
-            if classupdate:
+            if classupdate and block_class == CLS_TOOL_PURGE:
+                g.issue_command()
+                gcode.issue_code("G1 X{} Y{} ;\n".format(v.keep_x, v.keep_y))
+                v.current_position_x = v.keep_x
+                v.current_position_x = v.keep_y
+                entertower(g.Layer * v.layer_height)
+                return
 
-                if block_class == CLS_TOOL_PURGE:
-                    g.issue_command()
-                    gcode.issue_code("G1 X{} Y{} ;\n".format(v.keep_x, v.keep_y))
-                    v.current_position_x = v.keep_x
-                    v.current_position_x = v.keep_y
-                    entertower(g.Layer * v.layer_height)
-                    return
+            if classupdate and previous_block_class == CLS_TOOL_PURGE:
+                leavetower(g.Layer * v.layer_height)
+
 
         # going into an empty grid -- check if it should be consolidated
         ################################################################
