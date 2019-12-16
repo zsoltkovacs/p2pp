@@ -535,22 +535,28 @@ In order to make use of the device:
 ```   
  
 > **;P2PP BIGBRAIN3D_BLOBSIZE=40 **  *[ALPHA]*
+
   Length of filament that will be purged in a single blob.  ALL BLOBS ARE THE SAME SIZE
 
 > **;P2PP BIGBRAIN3D_COOLINGTIME **  *[ALPHA]*
+
   Number of seconds the blob is left to cool before the kick initiates
   
 > **BIGBRAIN3D_PURGEPOSITION=250.1 **  *[ALPHA]*
+
   Position of the X-Carriage when the device is fully depliyed.   You should get this infor during setup of the device
   Note that moving the device too far right will result in losing steps and subsequent layer shift...  
   
 > **;P2PP BIGBRAIN3D_MOTORPOWER_HIGH=850 **  *[ALPHA]*
+
   Sets the value for high motor power during the engagement of the device, value taken from the BB3D site
   
 > **;P2PP BIGBRAIN3D_MOTORPOWER_NORMAL=550 **  *[ALPHA]*
+
   Value for normal printing motor power (default taken from BB3D site)
   
 > **;P2PP BIGBRAIN3D_ENABLE **  *[ALPHA]*
+
   This command makes the szitch from normal side wipe to BB3D side wipe. 
   
   
