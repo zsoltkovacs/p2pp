@@ -510,12 +510,12 @@ For all future prints using **Chroma** or **Canvas**, make sure to keep the same
 **One big exception:**  Extrusion multiplication settings in *Octoprint* or on the *Printer control panel* should be left at 100% AT ALL TIMES.   P2 and the printer have  filament lengths defined during the GCode-processing.  After the GCode is generated, all actions that affect the amount of filament used will make the printer wander off from its set path.... P2 will try to correct for the error and it may succeed but it puts yout print at risk....
 
 
-## Setting Up BigBrain3d sidewipe device in P2PP
+## Setting Up BigBrain3d sidewipe device in P2PP *[ALPHA}*
 
 BigBrain3d has developed a very nice piece of addon hardware that does away with the stringing, spaghetti like purge extrusioen linked to the side wiping.
 The device performs the side wipe in a special sliding "bucket" that neatly created a small disc of plastic that is ejected in a container underneath.
 
-P2PP has alpha support for this feature.   P2PP will ak care of
+P2PP has alpha support for this feature.   P2PP will take care of
 
     - collecting all side wipe information and consolidating the wipe extrusions 
     - raise and lower the Z-axis prios to going to the device to prevent it from hitting the build plate (raise will be 2.5cm)
@@ -532,9 +532,28 @@ In order to make use of the device:
      ;P2PP BIGBRAIN3D_MOTORPOWER_HIGH=850
      ;P2PP BIGBRAIN3D_MOTORPOWER_NORMAL=550
      ;P2PP BIGBRAIN3D_ENABLE
-```    
+```   
+ 
+> **;P2PP BIGBRAIN3D_BLOBSIZE=40 **  *[ALPHA]*
+  Length of filament that will be purged in a single blob.  ALL BLOBS ARE THE SAME SIZE
 
-    
+> **;P2PP BIGBRAIN3D_COOLINGTIME **  *[ALPHA]*
+  Number of seconds the blob is left to cool before the kick initiates
+  
+> **BIGBRAIN3D_PURGEPOSITION=250.1 **  *[ALPHA]*
+  Position of the X-Carriage when the device is fully depliyed.   You should get this infor during setup of the device
+  Note that moving the device too far right will result in losing steps and subsequent layer shift...  
+  
+> **;P2PP BIGBRAIN3D_MOTORPOWER_HIGH=850 **  *[ALPHA]*
+  Sets the value for high motor power during the engagement of the device, value taken from the BB3D site
+  
+> **;P2PP BIGBRAIN3D_MOTORPOWER_NORMAL=550 **  *[ALPHA]*
+  Value for normal printing motor power (default taken from BB3D site)
+  
+> **;P2PP BIGBRAIN3D_ENABLE **  *[ALPHA]*
+  This command makes the szitch from normal side wipe to BB3D side wipe. 
+  
+  
 
 ## Acknowledgements
 
