@@ -161,6 +161,10 @@ def check_config_parameters(line):
         v.side_wipe_loc = stringparameter(line)
         return
 
+    if "PURGETOPSPEED" in line:
+        v.purgetopspeed = int(floatparameter(line))
+        gui.create_logitem("Purge Max speed set to {:.0f}mm/min ({}mm/s)".format(v.purgetopspeed, v.purgetopspeed / 60))
+
     if "WIPEFEEDRATE" in line:
         v.wipe_feedrate = floatparameter(line)
         return

@@ -526,6 +526,14 @@ def gcode_parseline(index):
     elif not x_on_bed(g.X):
         g.remove_parameter("X")
 
+    if not v.full_purge_reduction and not v.side_wipe and g.is_movement_command() and g.has_E() and g.has_parameter(
+            "F"):
+        f = int(g.get_parameter("F", 0))
+
+        if f > v.purgetopspeed:
+            g.update_parameter("F", v.purgetopspeed)
+            g.add_comment(" prugespeed topped")
+
     ## SIDEWIPE / FULLPURGEREDUCTION / TOWER DELTA
     ###############################################
     if v.pathprocessing:
@@ -632,6 +640,7 @@ def gcode_parseline(index):
             return
     else:
         if classupdate and block_class in [CLS_TOOL_PURGE, CLS_EMPTY]:
+
             if v.acc_ping_left <= 0:
                 pings.check_accessorymode_first()
             v.enterpurge = True

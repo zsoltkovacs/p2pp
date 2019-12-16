@@ -219,3 +219,5 @@ bigbrain3d_motorpower_normal = 550
 
 tower_measure = False
 expect_retract = False
+
+purgetopspeed = 99999
