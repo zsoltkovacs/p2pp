@@ -510,6 +510,32 @@ For all future prints using **Chroma** or **Canvas**, make sure to keep the same
 **One big exception:**  Extrusion multiplication settings in *Octoprint* or on the *Printer control panel* should be left at 100% AT ALL TIMES.   P2 and the printer have  filament lengths defined during the GCode-processing.  After the GCode is generated, all actions that affect the amount of filament used will make the printer wander off from its set path.... P2 will try to correct for the error and it may succeed but it puts yout print at risk....
 
 
+## Setting Up BigBrain3d sidewipe device in P2PP
+
+BigBrain3d has developed a very nice piece of addon hardware that does away with the stringing, spaghetti like purge extrusioen linked to the side wiping.
+The device performs the side wipe in a special sliding "bucket" that neatly created a small disc of plastic that is ejected in a container underneath.
+
+P2PP has alpha support for this feature.   P2PP will ak care of
+
+    - collecting all side wipe information and consolidating the wipe extrusions 
+    - raise and lower the Z-axis prios to going to the device to prevent it from hitting the build plate (raise will be 2.5cm)
+    
+In order to make use of the device:
+
+    - Put the purge tower OUTSIDE of the print field as you would for normal side wipe
+    - in the Printer Startup GCode add the following commands:
+    
+```
+     ;P2PP BIGBRAIN3D_BLOBSIZE=40   
+     ;P2PP BIGBRAIN3D_COOLINGTIME=20
+     ;P2PP BIGBRAIN3D_PURGEPOSITION=250.1   [ replace this with the value for your printer ]
+     ;P2PP BIGBRAIN3D_MOTORPOWER_HIGH=850
+     ;P2PP BIGBRAIN3D_MOTORPOWER_NORMAL=550
+     ;P2PP BIGBRAIN3D_ENABLE
+```    
+
+    
+
 ## Acknowledgements
 
 Thanks to.....
