@@ -59,20 +59,24 @@ def convert_to_absolute():
     for i in range(len(v.processed_gcode)):
         line = v.processed_gcode[i]
 
-        if absolute > 15000.0:
+        if absolute > 3000.0:
             v.processed_gcode.insert(i, "G92 E0.000     ;Extruder counter reset ")
             absolute = 0.00
 
         if line.startswith("G1") or line.startswith("G0"):
 
+
             if "E" in line:
-                fields = line.split()
+                splitcomment = line.split(";")
+                command = splitcomment[0]
+                fields = command.split()
                 for j in range(1, len(fields)):
                     if fields[j][0] == "E":
                         to_e = float(fields[j][1:])
                         absolute += to_e
                         fields[j] = "E{:.5f}".format(absolute)
-                line = " ".join(fields) + "\n"
+                splitcomment[0] = " ".join(fields)
+                line = ";".join(splitcomment) + "\n"
                 v.processed_gcode[i] = line
             continue
 
