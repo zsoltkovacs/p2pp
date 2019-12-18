@@ -72,6 +72,7 @@ def create_sidewipe_BigBrain3D():
     if purgeleft > 1:
         purgeblobs += 1
 
+    keepe = v.total_material_extruded
     correction = v.bigbrain3d_blob_size * purgeblobs - v.side_wipe_length
 
     issue_code(";-------------------------------\n")
@@ -82,10 +83,6 @@ def create_sidewipe_BigBrain3D():
         "; Req={:.2f}mm  Act={:.2f}mm\n".format(v.side_wipe_length, v.side_wipe_length + correction))
     issue_code("; Purge difference {:.2f}mm\n".format(correction))
     issue_code(";-------------------------------\n")
-
-    v.total_material_extruded += correction * v.extrusion_multiplier * v.extrusion_multiplier_correction
-    v.material_extruded_per_color[
-        v.current_tool] += correction * v.extrusion_multiplier * v.extrusion_multiplier_correction
 
     if v.retraction == 0:
         purgetower.retract(v.current_tool)
@@ -105,6 +102,10 @@ def create_sidewipe_BigBrain3D():
         generate_blob(v.bigbrain3d_blob_size, i)
 
     if (v.current_position_z < 20):
+
+        if v.retraction != 0:
+            purgetower.retract(v.current_tool)
+
         issue_code("\nG1 X{:.3f} Y{:.3f} F8640".format(keep_xpos, keep_ypos))
         issue_code("\nG1 Z{:.4f} F8640    ; Reset correct Z height to continue print\n".format(v.current_position_z))
 
