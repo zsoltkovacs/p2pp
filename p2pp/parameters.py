@@ -125,6 +125,8 @@ def check_config_parameters(line):
     if "BIGBRAIN3D_MOTORPOWER_NORMAL" in line:
         v.bigbrain3d_motorpower_normal = int(floatparameter(line))
 
+    if "BIGBRAIN3D_NUMBER_OF_WHACKS" in line:
+        v.bigbrain3d_whacks = int(floatparameter(line))
 
     if "BIGBRAIN3D_ENABLE" in line:
         v.bigbrain3d_purge_enabled = True

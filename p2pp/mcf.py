@@ -204,11 +204,28 @@ SPEC_INTOWER = 16
 SPEC_RETRACTS = 4
 SPEC_TOOLCHANGE = 8
 
+classes = {
+    0: "Undefined     ",
+    1: "Normal GCode  ",
+    2: "TChange START ",
+    3: "TCHange UNLOAD",
+    4: "TChange PURGE ",
+    5: "Empty Grid    ",
+    6: "First Empty   ",
+    7: "BRIM          ",
+    8: "BRIM END      ",
+    9: "END GRID      ",
+    10: "COMMENT ONLY  ",
+    11: "END PURGE     ",
+    12: "TOOL COMMAND  ",
+    99: "RETURN TO NORM"
+
+}
 
 def update_class(gcode_line):
     v.previous_block_classification = v.block_classification
     if gcode_line[0] == "T":
-        v.block_classification = CLS_TOOLCOMMAND
+        v.block_classification = CLS_TOOL_PURGE
     if gcode_line.startswith("; CP"):
         if "TOOLCHANGE START" in gcode_line:
             v.block_classification = CLS_TOOL_START
@@ -258,7 +275,7 @@ def flagset(value, mask):
 
 def backpass(currentclass):
     idx = len(v.parsedgcode) - 2
-    end_search = max(1, v.lasthopup)
+    end_search = idx - 10
     while idx > end_search:
         tmp = v.parsedgcode[idx]
         # retract can be either a firmware retrct of a manually programmed unretract
@@ -286,11 +303,9 @@ def backpass(currentclass):
 
                 if not tmp.has_X() and not tmp.has_Y() and tmp.has_E() and tmp.E < 0:
                     v.gcodeclass[idx - idxadj] = currentclass
-                    # v.parsedgcode[idx - idxadj].update_parameter("E", -v.retract_length[v.current_tool])
 
-
-
-            break
+            # print("Backpass returned {} steps".format(len(v.parsedgcode) - 2-idx))
+            return
         idx = idx - 1
 
 

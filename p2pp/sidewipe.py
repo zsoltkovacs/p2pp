@@ -53,12 +53,15 @@ def generate_blob(length, count):
     issue_code(
         "G4 S{0:.0f}              ; blob {0}s cooling time\n".format(v.bigbrain3d_blob_cooling_time))
     issue_code("G1 X{:.3f} F10800  ; activate flicker\n".format(v.bigbrain3d_x_position - 20))
-    issue_code(
-        "G4 S1               ; Mentally prep for second whack\n".format(v.bigbrain3d_x_position - 20))
-    issue_code("G1 X{:.3f} F3000   ; approach for second whach\n".format(v.bigbrain3d_x_position - 10))
-    issue_code("G1 X{:.3f} F1000   ; final position for whack and......\n".format(
-        v.bigbrain3d_x_position))  # takes 2.5 seconds
-    issue_code("G1 X{:.3f} F10800  ; WHACKAAAAA!!!!\n".format(v.bigbrain3d_x_position - 20))
+
+    for i in range(len(v.bigbrain3d_whacks)):
+        issue_code(
+            "G4 S1               ; Mentally prep for second whack\n".format(v.bigbrain3d_x_position - 20))
+        issue_code("G1 X{:.3f} F3000   ; approach for second whach\n".format(v.bigbrain3d_x_position - 10))
+        issue_code("G1 X{:.3f} F1000   ; final position for whack and......\n".format(
+            v.bigbrain3d_x_position))  # takes 2.5 seconds
+        issue_code("G1 X{:.3f} F10800  ; WHACKAAAAA!!!!\n".format(v.bigbrain3d_x_position - 20))
+
 
 
 def create_sidewipe_BigBrain3D():
