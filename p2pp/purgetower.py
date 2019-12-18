@@ -257,14 +257,14 @@ def purge_generate_sequence():
     gcode.issue_code("; --- P2PP WIPE SEQUENCE START  FOR {:5.2f}mm\n".format(v.side_wipe_length))
     gcode.issue_code(
         "; --- DELTA = {:.2f}\n".format(v.current_position_z - (v.purgelayer + 1) * v.layer_height))
-
-    if v.previous_tool != -1:
-        index = v.previous_tool * 4 + v.current_tool
-        if v.side_wipe_length > v.wiping_info[index]:
-            v.side_wipe_length = v.wiping_info[index]
-            gcode.issue_code(
-                "; --- CORRECTED PURGE TO TRANSITION LENGTH {:.2f}mm\n".format(v.wiping_info[index]))
-    gcode.issue_code("; --------------------------------------------------\n")
+    #
+    # if v.previous_tool != -1:
+    #     index = v.previous_tool * 4 + v.current_tool
+    #     if v.side_wipe_length > v.wiping_info[index]:
+    #         v.side_wipe_length = v.wiping_info[index]
+    #         gcode.issue_code(
+    #             "; --- CORRECTED PURGE TO TRANSITION LENGTH {:.2f}mm\n".format(v.wiping_info[index]))
+    # gcode.issue_code("; --------------------------------------------------\n")
 
 
     v.max_tower_delta = max(v.max_tower_delta, v.current_position_z - (v.purgelayer + 1) * v.layer_height)

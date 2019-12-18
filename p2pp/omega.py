@@ -238,9 +238,9 @@ def generatesummary():
         else:
             pos = v.splice_extruder_position[i-1]
 
-        summary.append(";{:04}   Tool: {}  Location: {:-8.2f}mm   length {:-8.2f}mm  ({})\n"
+        summary.append(";{:04}   Input: {}  Location: {:-8.2f}mm   length {:-8.2f}mm  ({})\n"
                        .format(i + 1,
-                               v.splice_used_tool[i],
+                               v.splice_used_tool[i] + 1,
                                pos,
                                v.splice_length[i],
                                hexify_float(pos)

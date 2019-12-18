@@ -90,6 +90,9 @@ def check_config_parameters(line):
         v.after_sidewipe_gcode.append(stringparameter(line))
         return
 
+    if "AUTOADDPURGE" in line:
+        v.autoaddsplice = True
+
     if "MINSTARTSPLICE" in line:
         v.min_start_splice_length = floatparameter(line)
         if v.min_start_splice_length < 100:

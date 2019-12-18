@@ -102,25 +102,39 @@ def gcode_process_toolchange(new_tool, location, current_layer):
     length = location - v.previous_toolchange_location
 
     if v.current_tool != -1:
+
         v.splice_extruder_position.append(location)
         v.splice_length.append(length)
         v.splice_used_tool.append(v.current_tool)
 
+        v.autoadded_purge = 0
+
         if len(v.splice_extruder_position) == 1:
             if v.splice_length[0] < v.min_start_splice_length:
-                gui.log_warning("Warning : Short first splice (<{}mm) Length:{:-3.2f}".format(length,
+                if v.autoaddsplice and (v.full_purge_reduction or v.side_wipe):
+                    v.autoadded_purge = v.min_start_splice_length - length
+                else:
+                    gui.log_warning("Warning : Short first splice (<{}mm) Length:{:-3.2f}".format(length,
                                                                                               v.min_start_splice_length))
 
-                filamentshortage = v.min_start_splice_length - v.splice_length[0]
-                v.filament_short[new_tool] = max(v.filament_short[new_tool], filamentshortage)
+                    filamentshortage = v.min_start_splice_length - v.splice_length[0]
+                    v.filament_short[new_tool] = max(v.filament_short[new_tool], filamentshortage)
         else:
             if v.splice_length[-1] < v.min_splice_length:
-                gui.log_warning("Warning: Short splice (<{}mm) Length:{:-3.2f} Layer:{} Input:{}".
-                                format(v.min_splice_length, length, current_layer, v.current_tool))
-                filamentshortage = v.min_splice_length - v.splice_length[-1]
-                v.filament_short[new_tool] = max(v.filament_short[new_tool], filamentshortage)
+                if v.autoaddsplice and (v.full_purge_reduction or v.side_wipe):
+                    v.autoadded_purge = v.min_splice_length - v.splice_length[-1]
+                else:
+                    gui.log_warning("Warning: Short splice (<{}mm) Length:{:-3.2f} Layer:{} Input:{}".
+                                    format(v.min_splice_length, length, current_layer, v.current_tool + 1))
+                    filamentshortage = v.min_splice_length - v.splice_length[-1]
+                    v.filament_short[new_tool] = max(v.filament_short[new_tool], filamentshortage)
 
-        v.previous_toolchange_location = location
+        v.side_wipe_length += v.autoadded_purge
+        v.splice_extruder_position[-1] += v.autoadded_purge
+        v.splice_length[-1] += v.autoadded_purge
+
+        v.previous_toolchange_location = v.splice_extruder_position[-1]
+
     v.previous_tool = v.current_tool
     v.current_tool = new_tool
 
@@ -859,63 +873,67 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     v.pathprocessing = (v.tower_delta or v.full_purge_reduction or v.side_wipe)
 
-    if v.tower_delta:
-        optimize_tower_skip(v.max_tower_z_delta, v.layer_height)
+    if (len(v.skippable_layer) == 0) and v.tower_delta or v.full_purge_reduction or v.side_wipe:
+        gui.log_warning("LAYER configuration is missing... no output generated.")
+    else:
 
-    if v.side_wipe:
-        optimize_tower_skip(999, v.layer_height)
+        if v.tower_delta:
+            optimize_tower_skip(v.max_tower_z_delta, v.layer_height)
 
-    gui.create_logitem("Generate processed GCode")
+        if v.side_wipe:
+            optimize_tower_skip(999, v.layer_height)
 
-    total_line_count = len(v.input_gcode)
-    v.retraction = 0
-    for process_line_count in range(total_line_count):
-        gcode_parseline(process_line_count)
-        gui.progress_string(50 + 50 * process_line_count // total_line_count)
+        gui.create_logitem("Generate processed GCode")
 
-    v.processtime = time.time() - starttime
+        total_line_count = len(v.input_gcode)
+        v.retraction = 0
+        for process_line_count in range(total_line_count):
+            gcode_parseline(process_line_count)
+            gui.progress_string(50 + 50 * process_line_count // total_line_count)
 
-    gcode_process_toolchange(-1, v.total_material_extruded, 0)
-    omega_result = header_generate_omega(_taskName)
-    header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
+        v.processtime = time.time() - starttime
 
-    if v.absolute_extruder and v.gcode_has_relative_e:
-        gui.create_logitem("Converting to absolute extrusion")
-        convert_to_absolute()
+        gcode_process_toolchange(-1, v.total_material_extruded, 0)
+        omega_result = header_generate_omega(_taskName)
+        header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
 
-    # write the output file
-    ######################
+        if v.absolute_extruder and v.gcode_has_relative_e:
+            gui.create_logitem("Converting to absolute extrusion")
+            convert_to_absolute()
 
-    if not output_file:
-        output_file = input_file
-    gui.create_logitem("Generating GCODE file: " + output_file)
-    opf = open(output_file, "w")
-    if not v.accessory_mode:
-        opf.writelines(header)
-        opf.write("\n\n;--------- START PROCESSED GCODE ----------\n\n")
-    if v.accessory_mode:
-        opf.write("M0\n")
-        opf.write("T0\n")
+        # write the output file
+        ######################
 
-    if v.splice_offset == 0:
-        gui.log_warning("SPLICE_OFFSET not defined")
-    opf.writelines(v.processed_gcode)
-    opf.close()
+        if not output_file:
+            output_file = input_file
+        gui.create_logitem("Generating GCODE file: " + output_file)
+        opf = open(output_file, "w")
+        if not v.accessory_mode:
+            opf.writelines(header)
+            opf.write("\n\n;--------- START PROCESSED GCODE ----------\n\n")
+        if v.accessory_mode:
+            opf.write("M0\n")
+            opf.write("T0\n")
 
-    if v.accessory_mode:
+        if v.splice_offset == 0:
+            gui.log_warning("SPLICE_OFFSET not defined")
+        opf.writelines(v.processed_gcode)
+        opf.close()
 
-        pre, ext = os.path.splitext(output_file)
-        if v.palette_plus:
-            maffile = pre + ".msf"
-        else:
-            maffile = pre + ".maf"
-        gui.create_logitem("Generating PALETTE MAF/MSF file: " + maffile)
-        opf = open(maffile, "w")
-        for i in range(len(header)):
-            if not header[i].startswith(";"):
-                opf.write(header[i])
+        if v.accessory_mode:
 
-    gui.print_summary(omega_result['summary'])
+            pre, ext = os.path.splitext(output_file)
+            if v.palette_plus:
+                maffile = pre + ".msf"
+            else:
+                maffile = pre + ".maf"
+            gui.create_logitem("Generating PALETTE MAF/MSF file: " + maffile)
+            opf = open(maffile, "w")
+            for i in range(len(header)):
+                if not header[i].startswith(";"):
+                    opf.write(header[i])
+
+        gui.print_summary(omega_result['summary'])
 
     gui.progress_string(100)
     if (len(v.process_warnings) > 0 and not v.ignore_warnings) or v.consolewait:

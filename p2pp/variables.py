@@ -138,6 +138,8 @@ max_ping_interval = 3000  # type: float
 ping_length_multiplier = 1.03  # type: float
 sidewipe_correction = 1.0  # type: float
 volumetric_e = False  # type: bool
+autoaddsplice = False  # type: bool
+autoadded_purge = 0.0  # type: float
 
 use_firmware_retraction = False
 gcode_has_relative_e = False

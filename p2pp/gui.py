@@ -48,7 +48,7 @@ def print_summary(summary):
 
     for i in range(len(v.palette_inputs_used)):
         if v.palette_inputs_used[i]:
-            create_colordefinition(i, v.filament_type[i], v.filament_color_code[i],
+            create_colordefinition(i + 1, v.filament_type[i], v.filament_color_code[i],
                                    v.material_extruded_per_color[i])
 
     create_emptyline()
