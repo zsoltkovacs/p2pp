@@ -33,6 +33,9 @@ earlier versions may generate different code patterns and may not work correctly
 -  25/10/2019 - Added support for Firmware retractions (G10/G11)
 -  24/11/2019 - Added support for BigBrain3d sidewipe purge
 -  24/11/2019 - Improved extrusion calculator for better ping tracking
+-  18/12/2019 - corrected the back pass processing, limit to 10 gcode instructions
+-  18/12/2019 - ALPHA feature to autocorrect short splices  (AUTOADDPURGE parameter) (FULLPURGE/SIDEWIPE only)
+-  18/12/2-19 - Added a comment on missing LiftZ in the printer parameters.
 
    
 
