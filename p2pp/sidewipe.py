@@ -16,7 +16,6 @@ from p2pp.gcode import issue_code
 # to be implemented - Big Brain 3D purge mechanism support
 #
 
-
 def setfanspeed(n):
     if n == 0:
         issue_code("M107                ; Turn FAN OFF\n")
@@ -72,9 +71,8 @@ def create_sidewipe_BigBrain3D():
 
     if purgeleft > 1:
         purgeblobs += 1
-        correction = v.bigbrain3d_blob_size - purgeleft
-    else:
-        correction = -purgeleft
+
+    correction = v.bigbrain3d_blob_size * purgeblobs - v.side_wipe_length
 
     issue_code(";-------------------------------\n")
     issue_code("; P2PP BB3DBLOBS: {:.0f} BLOBS\n".format(purgeblobs))
@@ -92,18 +90,23 @@ def create_sidewipe_BigBrain3D():
     if v.retraction == 0:
         purgetower.retract(v.current_tool)
 
-    if (v.current_position_z < 25):
-        issue_code("\nG1 Z25.000 F8640    ; Increase Z to prevent collission with bed\n")
+    keep_xpos = v.current_position_x
+    keep_ypos = v.current_position_y
+
+    if (v.current_position_z < 20):
+        issue_code("\nG1 Z20.000 F8640    ; Increase Z to prevent collission with bed\n")
 
     issue_code("G1 X{:.3f} F10800  ; go near edge of bed\n".format(v.bigbrain3d_x_position - 30))
     issue_code("G4 S0               ; wait for the print buffer to clear\n")
     issue_code("M907 X{}           ; increase motor power\n".format(v.bigbrain3d_motorpower_high))
+    issue_code("; Generating {} blobs for {}mm of purge".format(purgeblobs, v.side_wipe_length))
+
     for i in range(purgeblobs):
         generate_blob(v.bigbrain3d_blob_size, i)
 
-    # NOT NEEDED
-    # if (v.current_position_z < 25):
-    #     issue_code("\nG1 Z{:.4f} F8640    ; Reset correct Z height to continue print\n".format(v.current_position_z))
+    if (v.current_position_z < 20):
+        issue_code("\nG1 X{:.3f} Y{:.3f} F8640".format(keep_xpos, keep_ypos))
+        issue_code("\nG1 Z{:.4f} F8640    ; Reset correct Z height to continue print\n".format(v.current_position_z))
 
     resetfanspeed()
     issue_code("\nM907 X{}           ; reset motor power\n".format(v.bigbrain3d_motorpower_normal))
