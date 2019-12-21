@@ -225,3 +225,7 @@ expect_retract = False
 
 purgetopspeed = 99999
 
+tubelength = -1
+autoslowdown = False
+
+debug_leaveToolCommands = False

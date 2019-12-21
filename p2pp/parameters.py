@@ -230,3 +230,6 @@ def check_config_parameters(line):
     if "ABSOLUTEEXTRUDER" in line:
         v.absolute_extruder = True
         gui.create_logitem("Convert to absolute extrusion parameters")
+
+    if "DEBUGTCOMMAND" in line:
+        v.debug_leaveToolCommands = True

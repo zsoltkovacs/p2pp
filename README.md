@@ -51,6 +51,8 @@ Allow Palette 2 users to exploit all features and functionality of the palette 2
 - configurable tower print speeds
 - added support for other hardware like the BifBrain3d side wipe device
 
+**BEFORE YOU START:**
+
 
 **IMPORTANT:**
 > P2PP currently is optimized for devices in a connected setup.  It is possible to generate files or the Plette+ and P2 in connected mode.  

@@ -16,7 +16,7 @@ import p2pp.parameters as parameters
 import p2pp.pings as pings
 import p2pp.purgetower as purgetower
 import p2pp.variables as v
-from p2pp.gcodeparser import get_gcode_parameter, parse_slic3r_config
+from p2pp.gcodeparser import parse_slic3r_config
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
 from p2pp.sidewipe import create_side_wipe, create_sidewipe_BigBrain3D
 
@@ -64,8 +64,7 @@ def convert_to_absolute():
             absolute = 0.00
 
         if line.startswith("G1") or line.startswith("G0"):
-
-
+            info = ""
             if "E" in line:
                 splitcomment = line.split(";")
                 command = splitcomment[0]
@@ -74,6 +73,7 @@ def convert_to_absolute():
                     if fields[j][0] == "E":
                         to_e = float(fields[j][1:])
                         absolute += to_e
+                        info = to_e
                         fields[j] = "E{:.5f}".format(absolute)
                 splitcomment[0] = " ".join(fields)
                 line = ";".join(splitcomment) + "\n"
@@ -83,8 +83,8 @@ def convert_to_absolute():
         if line.startswith("M83"):
             v.processed_gcode[i] = "M82\n"
 
-        if line.startswith("G92 E"):
-            absolute = get_gcode_parameter(line, "E")
+        # if line.startswith("G92 E"):
+        #     absolute = get_gcode_parameter(line, "E")
 
 
 # ################### GCODE PROCESSING ###########################
@@ -484,7 +484,8 @@ def gcode_parseline(index):
 
     if g.Command == 'T':
         gcode_process_toolchange(int(g.Command_value), v.total_material_extruded, g.Layer)
-        g.move_to_comment("Color Change")
+        if not v.debug_leaveToolCommands:
+            g.move_to_comment("Color Change")
         g.issue_command()
         return
 
