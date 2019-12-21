@@ -51,8 +51,10 @@ Allow Palette 2 users to exploit all features and functionality of the palette 2
 - configurable tower print speeds
 - added support for other hardware like the BifBrain3d side wipe device
 
+
 **BEFORE YOU START:**
 
+p2pp is an independently developed post processing script designed to allow Palette+/2/pro/s users the abiltiy to use Prusaslicer's advanced features nativlely directly from Prusaslicer. We test features before releasing but please understand you use this script at your own risk. We are not responsible for any damage caused.
 
 **IMPORTANT:**
 > P2PP currently is optimized for devices in a connected setup.  It is possible to generate files or the Plette+ and P2 in connected mode.  
