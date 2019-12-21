@@ -233,3 +233,4 @@ def check_config_parameters(line):
 
     if "DEBUGTCOMMAND" in line:
         v.debug_leaveToolCommands = True
+        gui.log_warning("DEBUGTCOMMAND ACTIVE - File will not print correctly!!")
