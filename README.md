@@ -2,7 +2,7 @@
 
 p2pp is an independently developed post processing script designed to allow Palette+/2/pro/s users the abiltiy to use Prusaslicer's     advanced features nativlely directly from Prusaslicer. We test features before releasing but please understand you use this script at   your own risk. We are not responsible for any damage caused.
 
-**Tested with version PrusaSlicer 2.1.0, PrusaSlicer 2.0.0, Slic3r PE 1.41.2 and 1.42.0 Beta 1**
+**Tested with version PrusaSlicer 2.1.0 **
 earlier versions may generate different code patterns and may not work correctly
 
 ## Changelog
