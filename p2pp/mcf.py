@@ -83,8 +83,8 @@ def convert_to_absolute():
         if line.startswith("M83"):
             v.processed_gcode[i] = "M82\n"
 
-        # if line.startswith("G92 E"):
-        #     absolute = get_gcode_parameter(line, "E")
+        if line.startswith("G92 E"):
+            absolute = gcode.GCodeCommand("E").E
 
 
 # ################### GCODE PROCESSING ###########################
