@@ -64,7 +64,7 @@ def convert_to_absolute():
             absolute = 0.00
 
         if line.startswith("G1") or line.startswith("G0"):
-            info = ""
+
             if "E" in line:
                 splitcomment = line.split(";")
                 command = splitcomment[0]
@@ -73,7 +73,6 @@ def convert_to_absolute():
                     if fields[j][0] == "E":
                         to_e = float(fields[j][1:])
                         absolute += to_e
-                        info = to_e
                         fields[j] = "E{:.5f}".format(absolute)
                 splitcomment[0] = " ".join(fields)
                 line = ";".join(splitcomment) + "\n"
@@ -84,7 +83,7 @@ def convert_to_absolute():
             v.processed_gcode[i] = "M82\n"
 
         if line.startswith("G92 E"):
-            absolute = get_gcode_parameter(line, "E")
+            absolute = gcode.GCodeCommand("E").E
 
 
 # ################### GCODE PROCESSING ###########################
