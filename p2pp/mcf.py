@@ -59,7 +59,7 @@ def convert_to_absolute():
     for i in range(len(v.processed_gcode)):
 
         if absolute > 3000.0:
-            v.processed_gcode.insert(i, "G92 E0.000     ;Extruder counter reset ")
+            v.processed_gcode.insert(i, "G92 E0.000    ;Extruder counter reset ")
             absolute = 0.00
 
         line = gcode.GCodeCommand(v.processed_gcode[i])
