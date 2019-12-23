@@ -706,10 +706,13 @@ def gcode_parseline(index):
     # g.Comment = " ; - {}".format(v.total_material_extruded)
 
     if g.is_retract_command():
-        if g.has_E():
-            v.retraction += g.E
+        if v.retraction <= - (v.retract_length[v.current_tool] - 0.02):
+            g.move_to_comment("Double Retract")
         else:
-            v.retraction -= 1
+            if g.has_E():
+                v.retraction += g.E
+            else:
+                v.retraction -= 1
 
     if g.is_unretract_command():
         if g.has_E():
