@@ -228,4 +228,6 @@ purgetopspeed = 99999
 tubelength = -1
 autoslowdown = False
 
+ps_version = "No version info detected"
+
 debug_leaveToolCommands = False

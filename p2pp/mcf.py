@@ -83,8 +83,8 @@ def convert_to_absolute():
         if line.startswith("M83"):
             v.processed_gcode[i] = "M82\n"
 
-        # if line.startswith("G92 E"):
-        #     absolute = get_gcode_parameter(line, "E")
+        if line.startswith("G92 E"):
+            absolute = get_gcode_parameter(line, "E")
 
 
 # ################### GCODE PROCESSING ###########################
@@ -242,6 +242,7 @@ classes = {
 
 def update_class(gcode_line):
     v.previous_block_classification = v.block_classification
+
     if gcode_line[0] == "T":
         v.block_classification = CLS_TOOL_PURGE
     if gcode_line.startswith("; CP"):
@@ -322,7 +323,6 @@ def backpass(currentclass):
                 if not tmp.has_X() and not tmp.has_Y() and tmp.has_E() and tmp.E < 0:
                     v.gcodeclass[idx - idxadj] = currentclass
 
-            # print("Backpass returned {} steps".format(len(v.parsedgcode) - 2-idx))
             return
         idx = idx - 1
 
@@ -387,9 +387,6 @@ def parse_gcode():
             ## Update block class from comments information
             #########################################################
             classupdate = update_class(line)
-        #
-        # if line.startswith('T'):
-        #     classupdate = update_class(line)
 
         if classupdate:
 

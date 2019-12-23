@@ -226,3 +226,4 @@ class GCodeCommand:
 
 def issue_code(s):
     GCodeCommand(s).issue_command()
+
