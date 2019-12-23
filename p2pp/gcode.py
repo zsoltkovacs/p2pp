@@ -40,7 +40,7 @@ class GCodeCommand:
         self.Command_value = None
         self.Parameters = {}
         self.Comment = None
-        self.Layer = v.parsedlayer + 1
+        self.Layer = v.parsedlayer
         gcode_line = gcode_line.strip()
         pos = gcode_line.find(";")
 
@@ -174,6 +174,12 @@ class GCodeCommand:
     def has_Z(self):
         return self.Z is not None
 
+    def get_comment(self):
+        if not self.Comment:
+            return ""
+        else:
+            return self.Comment
+
     def has_parameter(self, parametername):
         return parametername in self.Parameters
 
@@ -189,7 +195,7 @@ class GCodeCommand:
                 v.current_tool] += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
 
         v.processed_gcode.append(str(self))
-
+        # v.processed_gcode.append(  "[{}]  {} ".format(v.classes[self.Class],str(self)))
 
     def issue_command_speed(self, speed):
         s = str(self)
