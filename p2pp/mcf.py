@@ -57,32 +57,23 @@ def convert_to_absolute():
     absolute = 0.0
 
     for i in range(len(v.processed_gcode)):
-        line = v.processed_gcode[i]
 
         if absolute > 3000.0:
             v.processed_gcode.insert(i, "G92 E0.000     ;Extruder counter reset ")
             absolute = 0.00
 
-        if line.startswith("G1") or line.startswith("G0"):
+        line = gcode.GCodeCommand(v.processed_gcode[i])
 
-            if "E" in line:
-                splitcomment = line.split(";")
-                command = splitcomment[0]
-                fields = command.split()
-                for j in range(1, len(fields)):
-                    if fields[j][0] == "E":
-                        to_e = float(fields[j][1:])
-                        absolute += to_e
-                        fields[j] = "E{:.5f}".format(absolute)
-                splitcomment[0] = " ".join(fields)
-                line = ";".join(splitcomment) + "\n"
-                v.processed_gcode[i] = line
-            continue
+        if line.is_movement_command():
+            if line.has_E():
+                absolute += line.E
+                line.update_parameter("E", absolute)
+                v.processed_gcode[i] = line.__str__()
 
-        if line.startswith("M83"):
+        if line.Command == "M83":
             v.processed_gcode[i] = "M82\n"
 
-        if line.startswith("G92 E"):
+        if line.Command == "G92":
             absolute = gcode.GCodeCommand("E").E
 
 
