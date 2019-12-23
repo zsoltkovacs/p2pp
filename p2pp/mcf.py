@@ -1,5 +1,5 @@
 __author__ = 'Tom Van den Eede'
-__copyright__ = 'Copyright 2018-2019, Palette2 Splicer Post Processing Project'
+__copyright__ = 'Copyright 2018-2020, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
@@ -206,35 +206,18 @@ CLS_ENDPURGE = 11
 CLS_TONORMAL = 99
 CLS_TOOLCOMMAND = 12
 
-SPEC_HOPUP = 1
-SPEC_HOPDOWN = 2
 SPEC_INTOWER = 16
-SPEC_RETRACTS = 4
-SPEC_TOOLCHANGE = 8
 
-classes = {
-    0: "Undefined     ",
-    1: "Normal GCode  ",
-    2: "TChange START ",
-    3: "TCHange UNLOAD",
-    4: "TChange PURGE ",
-    5: "Empty Grid    ",
-    6: "First Empty   ",
-    7: "BRIM          ",
-    8: "BRIM END      ",
-    9: "END GRID      ",
-    10: "COMMENT ONLY  ",
-    11: "END PURGE     ",
-    12: "TOOL COMMAND  ",
-    99: "RETURN TO NORM"
 
-}
+
 
 def update_class(gcode_line):
+
     v.previous_block_classification = v.block_classification
 
     if gcode_line[0] == "T":
         v.block_classification = CLS_TOOL_PURGE
+
     if gcode_line.startswith("; CP"):
         if "TOOLCHANGE START" in gcode_line:
             v.block_classification = CLS_TOOL_START
@@ -275,7 +258,7 @@ def update_class(gcode_line):
             v.block_classification = CLS_FIRST_EMPTY
             v.purge_first_empty = False
 
-    return v.block_classification == v.previous_block_classification
+    return
 
 
 def flagset(value, mask):
@@ -284,44 +267,28 @@ def flagset(value, mask):
 
 def backpass(currentclass):
     idx = len(v.parsedgcode) - 2
+
     end_search = idx - 10
     while idx > end_search:
-        tmp = v.parsedgcode[idx]
-        # retract can be either a firmware retrct of a manually programmed unretract
-        if (tmp.fullcommand == "G1" and tmp.E and tmp.has_parameter("F")) or (tmp.fullcommand == "G11"):
-            v.gcodeclass[idx] = currentclass
-            if (tmp.fullcommand == "G11"):
+        if v.parsedgcode[idx].Class != CLS_NORMAL:
+            return
+
+        v.parsedgcode[idx].Class = currentclass
+
+        if v.parsedgcode[idx].is_unretract_command():
+            if (v.parsedgcode[idx].fullcommand == "G11"):
                 v.retraction = 0
             else:
-                v.retraction -= tmp.E
+                v.retraction -= v.parsedgcode[idx].E
 
-            idxadj = 1
-            tmp = v.parsedgcode[idx - idxadj]
-
-            if tmp.is_movement_command():
-                if tmp.has_Z():
-                    v.gcodeclass[idx - idxadj] = currentclass
-                    idxadj = 2
-                tmp = v.parsedgcode[idx - idxadj]
-
-                if tmp.has_X() and tmp.has_Y() and not tmp.has_E():
-                    v.parsedgcode[idx - idxadj].Comment = "Part of next block"
-                    v.gcodeclass[idx - idxadj] = currentclass
-                    idxadj += 1
-                tmp = v.parsedgcode[idx - idxadj]
-
-                if not tmp.has_X() and not tmp.has_Y() and tmp.has_E() and tmp.E < 0:
-                    v.gcodeclass[idx - idxadj] = currentclass
-
+        if v.parsedgcode[idx].is_xy_positioning():
             return
+
         idx = idx - 1
 
 
 def parse_gcode():
-    cur_z = -999
     cur_tool = 0
-    retract = 0.6
-    layer = -1
     toolchange = 0
     emptygrid = 0
 
@@ -343,17 +310,11 @@ def parse_gcode():
 
         if line.startswith(';'):
 
-            ## P2PP SPECIFIC SETP COMMANDS
-            ########################################################
             if line.startswith(";P2PP"):
                 parameters.check_config_parameters(line)
 
             if line.startswith(";P2PP MATERIAL_"):
                 algorithm_process_material_configuration(line[15:])
-
-
-            ## LAYER DISCRIMINATION COMMANDS
-            ########################################################
 
             if line.startswith(";LAYER"):
                 layer = 0
@@ -369,16 +330,15 @@ def parse_gcode():
                             pass
 
                 v.parsedlayer = layer
+
                 if layer > 0:
                     v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
                 toolchange = 0
                 emptygrid = 0
 
-            ## Update block class from comments information
-            #########################################################
-            classupdate = update_class(line)
+            update_class(line)
 
-        if classupdate:
+        if v.block_classification != v.previous_block_classification:
 
             if v.block_classification == CLS_TOOL_START:
                 toolchange += 1
@@ -386,36 +346,11 @@ def parse_gcode():
             if v.block_classification == CLS_EMPTY:
                 emptygrid += 1
 
-        ## Z-HOPS detection
-        ###################
-        if code.has_E() and code.is_movement_command():
+            if v.block_classification == CLS_BRIM or v.block_classification == CLS_TOOL_START or v.block_classification == CLS_TOOL_UNLOAD or v.block_classification == CLS_EMPTY or v.block_classification == CLS_FIRST_EMPTY:
+                backpass(v.block_classification)
 
-            to_z = code.get_parameter("Z", 0)
-            delta = (to_z - cur_z)
-
-            if abs(delta - retract) < 0.0001:
-                specifier |= SPEC_HOPUP
-
-                if v.block_classification == CLS_TONORMAL:
-                    v.previous_block_classification = v.block_classification = CLS_NORMAL
-
-            if abs(- delta - retract) < 0.0001:
-                specifier |= SPEC_HOPDOWN
-
-            cur_z = to_z
-
-
-        ## retract detections
-        #####################
-        if code.is_retract_command():
-            specifier |= SPEC_RETRACTS
-
-        ## tool change detection
-        ########################
         if code.Command == 'T':
             cur_tool = int(code.Command_value)
-            retract = v.retract_lift[cur_tool]
-            specifier |= SPEC_TOOLCHANGE
 
         if v.tower_measure:
             if code.is_movement_command():
@@ -426,12 +361,6 @@ def parse_gcode():
                     v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], code.Y)
                     v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], code.Y)
 
-        ## Extend block backwards towards last hop up
-        #############################################
-
-        if v.block_classification in [CLS_TOOL_START, CLS_TOOL_UNLOAD, CLS_EMPTY,
-                                      CLS_BRIM]:  # and not v.full_purge_reduction:
-            backpass(v.block_classification)
 
         if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
             if code.fullcommand == "G1":
@@ -443,19 +372,11 @@ def parse_gcode():
             if code.has_X and code.has_Y():
                 if not coordinate_in_tower(code.X, code.Y):
                     v.block_classification = CLS_NORMAL
-            # if v.parsedgcode[-1].fullcommand == "G1" and v.parsedgcode[-1].Z:
-            #     v.block_classification = CLS_NORMAL
-        else:
-            if flagset(specifier, SPEC_RETRACTS):
-                v.block_classification = CLS_NORMAL
 
-        ## Put obtained values in global variables
-        ##########################################
-        v.gcodeclass.append(v.block_classification)
-        v.layernumber.append(layer)
-        v.linetool.append(cur_tool)
-        v.parsecomment.append(specifier)
-        v.classupdates.append(v.block_classification != v.previous_block_classification)
+        v.parsedgcode[-1].Class = v.block_classification
+        v.parsedgcode[-1].Tool = cur_tool
+        v.parsedgcode[-1].Specifier = specifier
+
         v.previous_block_classification = v.block_classification
         index = index + 1
 
@@ -465,8 +386,10 @@ def parse_gcode():
 
 def gcode_parseline(index):
     g = v.parsedgcode[index]
-    block_class = v.gcodeclass[index]
-    previous_block_class = v.gcodeclass[max(0, index - 1)]
+
+    block_class = g.Class
+    previous_block_class = v.parsedgcode[max(0, index - 1)].Class
+
     classupdate = block_class != previous_block_class
 
     if g.Command == 'T':
@@ -567,7 +490,7 @@ def gcode_parseline(index):
             g.issue_command()
             return
 
-        if flagset(v.parsecomment[index], SPEC_INTOWER):
+        if flagset(g.Specifier, SPEC_INTOWER):
             if coordinate_in_tower(g.X, g.Y):
                 g.remove_parameter("X")
                 g.remove_parameter("Y")
@@ -640,7 +563,7 @@ def gcode_parseline(index):
         # going into an empty grid -- check if it should be consolidated
         ################################################################
         if classupdate and block_class in [CLS_FIRST_EMPTY, CLS_EMPTY]:
-            if v.skippable_layer[v.layernumber[index]]:
+            if v.skippable_layer[g.Layer]:
                 v.towerskipped = True
                 # print("Skipped: {:.3f} now at delta {:.3f}".format(v.current_position_z- v.retract_lift[v.current_tool]+v.layer_height,v.cur_tower_z_delta+v.layer_height))
                 remove_previous_move_in_tower()

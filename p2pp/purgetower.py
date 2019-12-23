@@ -1,5 +1,5 @@
 __author__ = 'Tom Van den Eede'
-__copyright__ = 'Copyright 2018-2019, Palette2 Splicer Post Processing Project'
+__copyright__ = 'Copyright 2018-2020, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
@@ -191,6 +191,7 @@ def _purge_generate_tower_brim(x, y, w, h):
     w += ew
     h += 2 * ew
 
+    brimlayer.append(gcode.GCodeCommand("; P2PP - BRIM CODE"))
     brimlayer.append(gcode.GCodeCommand("G0 X{:.3f} Y{:.3f} F8640".format(x, y)))
     brimlayer.append(gcode.GCodeCommand("G0 Z{:.3f}".format(v.layer_height)))
 

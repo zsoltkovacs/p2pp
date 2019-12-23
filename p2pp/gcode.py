@@ -1,5 +1,5 @@
 __author__ = 'Tom Van den Eede'
-__copyright__ = 'Copyright 2018-2019, Palette2 Splicer Post Processing Project'
+__copyright__ = 'Copyright 2018-2020, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
@@ -24,8 +24,11 @@ class GCodeCommand:
     fullcommand = None
     Command_value = None
     Parameters = {}
+    Class = 0
     Comment = None
     Layer = None
+    Tool = None
+    Specifier = 0
     X = None
     Y = None
     Z = None
@@ -209,6 +212,12 @@ class GCodeCommand:
 
     def is_movement_command(self):
         return self.Command == "G" and self.Command_value in ['0', '1', '2', '3', '5', '10', '11']
+
+    def is_z_positioning(self):
+        return self.is_movement_command() and self.has_Z()
+
+    def is_xy_positioning(self):
+        return self.is_movement_command() and self.has_X() and self.has_Y() and not self.has_E()
 
     def is_retract_command(self):
         if self.has_E():

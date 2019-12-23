@@ -1,5 +1,5 @@
 __author__ = 'Tom Van den Eede'
-__copyright__ = 'Copyright 2018-2019, Palette2 Splicer Post Processing Project'
+__copyright__ = 'Copyright 2018-2020, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
@@ -10,9 +10,9 @@ __status__ = 'BETA'
 
 
 # general version info
-MajorVersion = 3
-MinorVersion = 6
-Build = 17
+MajorVersion = 4
+MinorVersion = 0
+Build = 0
 
 
 latest_stable_version = ""

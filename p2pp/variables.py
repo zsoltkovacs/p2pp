@@ -1,6 +1,6 @@
 
 __author__ = 'Tom Van den Eede'
-__copyright__ = 'Copyright 2018-2019, Palette2 Splicer Post Processing Project'
+__copyright__ = 'Copyright 2018-2020, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
@@ -173,12 +173,11 @@ purge_first_empty = True
 purgelayer = 0
 
 parsedgcode = []
-gcodeclass = []
-linetool = []
-parsecomment = []
-layernumber = []
+_obsolete_gcodeclass = []
+_obsolete_linetool = []
+_obsolete_parsecomment = []
+_obsolete_layernumber = []
 lasthopup = 0
-classupdates = []
 create_tower_entry = False
 acc_ping_left = 0.0
 infill_speed = 0.0
@@ -231,3 +230,21 @@ autoslowdown = False
 ps_version = "No version info detected"
 
 debug_leaveToolCommands = False
+
+classes = {
+    0: "Undefined     ",
+    1: "Normal GCode  ",
+    2: "TChange START ",
+    3: "TCHange UNLOAD",
+    4: "TChange PURGE ",
+    5: "Empty Grid    ",
+    6: "First Empty   ",
+    7: "BRIM          ",
+    8: "BRIM END      ",
+    9: "END GRID      ",
+    10: "COMMENT ONLY  ",
+    11: "END PURGE     ",
+    12: "TOOL COMMAND  ",
+    99: "RETURN TO NORM"
+
+}
