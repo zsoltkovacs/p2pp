@@ -134,11 +134,13 @@ def gcode_process_toolchange(new_tool, location, current_layer):
 
 
 def inrange(number, low, high):
-    if not number:
+    if number is None:
         return True
-    if number < low or number > high:
-        return False
-    return True
+    return low <= number <= high
+
+
+def y_on_bed(y):
+    return inrange(y, v.bed_origin_y, v.bed_origin_y + v.bed_size_y)
 
 
 def x_on_bed(x):
@@ -146,14 +148,23 @@ def x_on_bed(x):
 
 
 def coordinate_on_bed(x, y):
-    return inrange(x, v.bed_origin_x, v.bed_origin_x + v.bed_size_x) and \
-           inrange(y, v.bed_origin_y, v.bed_origin_y + v.bed_size_y)
+    return x_on_bed(x) and y_on_bed(y)
+
+
+def x_coordinate_in_tower(x):
+    if x == None:
+        return False
+    return inrange(x, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx'])
+
+
+def y_coordinate_in_tower(y):
+    if y == None:
+        return False
+    return inrange(y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy'])
 
 
 def coordinate_in_tower(x, y):
-    return inrange(x, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']) and \
-           inrange(y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy'])
-
+    return x_coordinate_in_tower(x) and y_coordinate_in_tower(y)
 
 def entertower(layer_hght):
     if v.cur_tower_z_delta > 0:
@@ -179,9 +190,7 @@ def entertower(layer_hght):
             gcode.issue_code("G1 F{}\n".format(v.wipe_feedrate))
 
 
-def leavetower(layer_hght):
-    return
-    # this function is for test only !!!!!
+def leavetower():
     if v.cur_tower_z_delta > 0:
         gcode.issue_code(";------------------------------\n")
         gcode.issue_code(";  P2PP DELTA LEAVE\n")
@@ -306,8 +315,6 @@ def parse_gcode():
         v.parsedgcode.append(code)
 
 
-        classupdate = False
-
         if line.startswith(';'):
 
             if line.startswith(";P2PP"):
@@ -385,12 +392,8 @@ def parse_gcode():
 
 
 def gcode_parseline(index):
+
     g = v.parsedgcode[index]
-
-    block_class = g.Class
-    previous_block_class = v.parsedgcode[max(0, index - 1)].Class
-
-    classupdate = block_class != previous_block_class
 
     if g.Command == 'T':
         gcode_process_toolchange(int(g.Command_value), v.total_material_extruded, g.Layer)
@@ -415,18 +418,18 @@ def gcode_parseline(index):
         v.saved_fanspeed = g.get_parameter("S", v.saved_fanspeed)
         return
 
-    if block_class == CLS_TOOL_UNLOAD and g.fullcommand in ["M900"] and g.get_parameter("K", 0) == 0:
-        g.move_to_comment("tool unload")
-
-    if g.fullcommand in ["M220"]:
-        g.move_to_comment("Flow Rate Adjustments are removed")
-        g.issue_command()
-        return
-
+    # flow rate changes have an effect on the filament consumption.  The effect is taken into account for ping generation
     if g.fullcommand == "M221":
         v.extrusion_multiplier = float(g.get_parameter("S", v.extrusion_multiplier * 100)) / 100
         g.issue_command()
         return
+
+    # feed rate changes in the code are removed as they may interfere with the Palette P2 settings
+    if g.fullcommand in ["M220"]:
+        g.move_to_comment("Feed Rate Adjustments are removed")
+        g.issue_command()
+        return
+
 
     if g.is_movement_command():
         if g.has_X():
@@ -436,45 +439,59 @@ def gcode_parseline(index):
             v.previous_purge_keep_y = v.purge_keep_y
             v.purge_keep_y = g.Y
 
+    block_class = g.Class
+    previous_block_class = v.parsedgcode[max(0, index - 1)].Class
+    classupdate = block_class != previous_block_class
+
+    # remove M900 K0 commands during unload
+    if block_class == CLS_TOOL_UNLOAD and g.fullcommand in ["M900"] and g.get_parameter("K", 0) == 0:
+        g.move_to_comment("tool unload")
+
     ## ALL SITUATIONS
     ##############################################
     if block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
 
-        if g.fullcommand == "G4":
-            g.move_to_comment("tool unload")
         if g.is_movement_command():
-            if g.has_Z():
-                g.remove_parameter("X")
-                g.remove_parameter("Y")
-                g.remove_parameter("F")
-                g.remove_parameter("E")
-            else:
+            if v.side_wipe or v.tower_delta or v.full_purge_reduction:
                 g.move_to_comment("tool unload")
 
-        g.issue_command()
-        return
+            else:
+                if g.has_Z():
+                    g.remove_parameter("X")
+                    g.remove_parameter("Y")
+                    g.remove_parameter("F")
+                    g.remove_parameter("E")
+                else:
+                    g.move_to_comment("tool unload")
+
+            g.issue_command()
+            return
+
+
 
     if block_class == CLS_TOOL_PURGE and not (v.side_wipe or v.full_purge_reduction):
-        if g.is_movement_command():
+        if g.is_movement_command() and g.has_E:
             _x = g.get_parameter("X", v.current_position_x)
             _y = g.get_parameter("Y", v.current_position_y)
-            if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y)):
+            # removepositive extrusions while moving into the tower
+            if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y)) and g.E > 0:
                 g.remove_parameter("E")
 
+
     if not v.side_wipe:
-        if g.has_X():
-            if v.wipe_tower_info['minx'] <= g.X <= v.wipe_tower_info['maxx']:
-                v.keep_x = g.X
-        if g.has_Y():
-            if v.wipe_tower_info['miny'] <= g.Y <= v.wipe_tower_info['maxy']:
-                v.keep_y = g.Y
+
+        if x_coordinate_in_tower(g.X):
+            v.keep_x = g.X
+        if y_coordinate_in_tower(g.Y):
+            v.keep_y = g.Y
+
     elif not x_on_bed(g.X):
         g.remove_parameter("X")
 
+    # top off the purge speed in the tower during tower delta or during no tower processing
     if not v.full_purge_reduction and not v.side_wipe and g.is_movement_command() and g.has_E() and g.has_parameter(
             "F"):
         f = int(g.get_parameter("F", 0))
-
         if f > v.purgetopspeed:
             g.update_parameter("F", v.purgetopspeed)
             g.add_comment(" prugespeed topped")
@@ -557,7 +574,7 @@ def gcode_parseline(index):
                 return
 
             if classupdate and previous_block_class == CLS_TOOL_PURGE:
-                leavetower(g.Layer * v.layer_height)
+                leavetower()
 
 
         # going into an empty grid -- check if it should be consolidated

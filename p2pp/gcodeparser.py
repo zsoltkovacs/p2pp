@@ -61,8 +61,18 @@ def parse_slic3r_config():
                 s2 = s1[0].split(" ")
                 v.ps_version = s2[-1]
                 gui.create_logitem("File was created with PS version:{}".format(v.ps_version))
+                if v.ps_version < "2.2":
+                    gui.log_warning("This version of P2PP is optimized to work with PS2.2!")
             except:
                 pass
+
+        if gcode_line.startswith("; wipe_tower_no_sparse_layers"):
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                try:
+                    v.wipe_remove_sparse_layers = (int(gcode_line[parameter_start + 1:].strip()) == 1)
+                except:
+                    pass
 
 
         if gcode_line.startswith("; wipe_tower_x"):

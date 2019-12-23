@@ -223,9 +223,7 @@ tower_measure = False
 expect_retract = False
 
 purgetopspeed = 99999
-
-tubelength = -1
-autoslowdown = False
+wipe_remove_sparse_layers = False
 
 ps_version = "No version info detected"
 
