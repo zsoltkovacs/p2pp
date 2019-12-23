@@ -70,11 +70,11 @@ def convert_to_absolute():
                 line.update_parameter("E", absolute)
                 v.processed_gcode[i] = line.__str__()
 
-        if line.Command == "M83":
+        if line.fullcommand == "M83":
             v.processed_gcode[i] = "M82\n"
 
-        if line.Command == "G92":
-            absolute = gcode.GCodeCommand("E").E
+        if line.fullcommand == "G92":
+            absolute = line.E
 
 
 # ################### GCODE PROCESSING ###########################
