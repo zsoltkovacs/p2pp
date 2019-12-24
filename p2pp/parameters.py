@@ -132,8 +132,11 @@ def check_config_parameters(line):
         v.bigbrain3d_whacks = int(floatparameter(line))
 
     if "BIGBRAIN3D_ENABLE" in line:
-        v.bigbrain3d_purge_enabled = True
-        gui.log_warning("BIGBRAIN3D Will only work with installed hardware on a Prusa Printer")
+        if not v.wipe_remove_sparse_layers:
+            v.bigbrain3d_purge_enabled = True
+            gui.log_warning("BIGBRAIN3D Will only work with installed hardware on a Prusa Printer")
+        else:
+            gui.log_warning("BIGBRAIN3D mode not compatible with sparse wipe tower in PS")
 
     if "BIGBRAIN3D_SMARTFAN" in line:
         v.bigbrain3d_smartfan = True
@@ -189,13 +192,26 @@ def check_config_parameters(line):
         return
 
     if "PURGETOWERDELTA" in line:
-        if abs(floatparameter(line)) != abs(float(0)):
-            v.max_tower_z_delta = abs(floatparameter(line))
-            gui.create_logitem("Max Purge Tower Delta set to {:-2.2f}mm".format(v.max_tower_z_delta))
+        parm = abs(floatparameter(line))
+        if parm > 0.001 and v.wipe_remove_sparse_layers:
+            gui.log_warning("TOWER DELTA feature mode not compatible with sparse wipe tower in PS")
+            v.max_tower_delta = 0.0
+        else:
+            if parm != float(0):
+                v.max_tower_z_delta = abs(floatparameter(line))
+                gui.create_logitem("Max Purge Tower Delta set to {:-2.2f}mm".format(v.max_tower_z_delta))
+
+
         return
+
     if "FULLPURGEREDUCTION" in line:
-        gui.create_logitem("Full purge reduction configured")
-        v.full_purge_reduction = True
+        if not v.wipe_remove_sparse_layers:
+            gui.create_logitem("Full purge reduction configured")
+            v.full_purge_reduction = True
+        else:
+            gui.log_warning("FULL PURGE TOWER REDUCTION feature mode not compatible with sparse wipe tower in PS")
+            v.full_purge_reduction = False
+        return
 
     if line.endswith("CHECKVERSION"):
         import p2pp.checkversion as cv
