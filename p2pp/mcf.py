@@ -182,7 +182,7 @@ def entertower(layer_hght):
         gcode.issue_code(
             "G1 Z{:.2f} F10810\n".format(purgeheight))
 
-        purgetower.unretract(v.current_tool)
+        # purgetower.unretract(v.current_tool)
 
         gcode.issue_code(";------------------------------\n")
         if purgeheight <= 0.21:
@@ -276,6 +276,9 @@ def flagset(value, mask):
 
 
 def backpass(currentclass):
+    if v.wipe_remove_sparse_layers:
+        return
+
     idx = len(v.parsedgcode) - 2
 
     end_search = idx - 10
