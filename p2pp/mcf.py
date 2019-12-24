@@ -276,6 +276,7 @@ def flagset(value, mask):
 
 
 def backpass(currentclass):
+
     if v.wipe_remove_sparse_layers:
         return
 
@@ -346,12 +347,13 @@ def parse_gcode():
             update_class(line)
 
         specifier = 0
+
+        code = gcode.GCodeCommand(line)
+
         if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
             if code.fullcommand == "G1":
                 if code.has_X() and code.has_Y():
                     specifier = SPEC_INTOWER
-
-        code = gcode.GCodeCommand(line)
 
         if code.Command == 'T':
             cur_tool = int(code.Command_value)
