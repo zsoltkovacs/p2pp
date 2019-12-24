@@ -800,7 +800,12 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
     v.tower_delta = v.max_tower_z_delta > 0
 
+
     if v.side_wipe:
+        if v.wipe_remove_sparse_layers:
+            gui.log_warning("SIDE WIPE mode not compatible with sparse wipe tower in PS")
+            gui.log_warning("THIS FILE WILL NOT PRINT CORRECTLY")
+
         gui.create_logitem("Side wipe activated", "blue")
         if v.full_purge_reduction:
             gui.log_warning("Full Purge Reduction is not compatible with Side Wipe, performing Side Wipe")
