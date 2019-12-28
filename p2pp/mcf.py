@@ -54,7 +54,7 @@ def optimize_tower_skip(skipmax, layersize):
 
 
 def convert_to_absolute():
-    absolute = 0.0
+    absolute = -9999
 
     for i in range(len(v.processed_gcode)):
 
@@ -66,6 +66,14 @@ def convert_to_absolute():
 
         if line.is_movement_command():
             if line.has_E():
+
+                # if there is no filament reset code, make sure one is inserted before first extrusion
+                # this should not be needed
+                if absolute == -9999:
+                    v.processed_gcode.insert(i, "G92 E0.00")
+                    absolute = 0.0
+                    i += 1
+
                 absolute += line.E
                 line.update_parameter("E", absolute)
                 v.processed_gcode[i] = line.__str__()
@@ -173,12 +181,11 @@ def entertower(layer_hght):
         gcode.issue_code(";------------------------------\n")
         gcode.issue_code(";  P2PP DELTA ENTER\n")
         gcode.issue_code(
-            ";Current Z-Height = {:.2f};  Tower height = {:.2f}; delta = {:.2f}".format(v.current_position_z,
-                                                                                        purgeheight,
-                                                                                        v.current_position_z - purgeheight))
+            ";  Current Z-Height = {:.2f};  Tower height = {:.2f}; delta = {:.2f}".format(v.current_position_z,
+                                                                                          purgeheight,
+                                                                                          v.current_position_z - purgeheight))
         if v.retraction >= 0:
             purgetower.retract(v.current_tool)
-
         gcode.issue_code(
             "G1 Z{:.2f} F10810\n".format(purgeheight))
 
@@ -196,7 +203,7 @@ def leavetower():
         gcode.issue_code(";------------------------------\n")
         gcode.issue_code(";  P2PP DELTA LEAVE\n")
         gcode.issue_code(
-            "; Returning to Current Z-Height = {:.2f}; ".format(v.current_position_z))
+            ";  Returning to Current Z-Height = {:.2f}; ".format(v.current_position_z))
         gcode.issue_code(
             "G1 Z{:.2f} F10810\n".format(v.current_position_z))
         gcode.issue_code(";------------------------------\n")
@@ -271,34 +278,55 @@ def update_class(gcode_line):
     return
 
 
-def flagset(value, mask):
-    return (value & mask) == mask
-
-
 def backpass(currentclass):
 
     if v.wipe_remove_sparse_layers:
         return
 
-    idx = len(v.parsedgcode) - 2
+    idx = len(v.parsed_gcode) - 2
 
     end_search = idx - 10
     while idx > end_search:
-        if v.parsedgcode[idx].Class != CLS_NORMAL:
+        if v.parsed_gcode[idx].Class != CLS_NORMAL:
             return
 
-        v.parsedgcode[idx].Class = currentclass
+        v.parsed_gcode[idx].Class = currentclass
 
-        if v.parsedgcode[idx].is_unretract_command():
-            if (v.parsedgcode[idx].fullcommand == "G11"):
+        if v.parsed_gcode[idx].is_unretract_command():
+            if (v.parsed_gcode[idx].fullcommand == "G11"):
                 v.retraction = 0
             else:
-                v.retraction -= v.parsedgcode[idx].E
+                v.retraction -= v.parsed_gcode[idx].E
 
-        if v.parsedgcode[idx].is_xy_positioning():
+        if v.parsed_gcode[idx].is_xy_positioning():
             return
 
         idx = idx - 1
+
+
+def calculate_tower(x, y):
+    if x is not None:
+        v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], x - 4 * v.extrusion_width)
+        v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], x + 4 * v.extrusion_width)
+    if y is not None:
+        v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], y - 8 * v.extrusion_width)
+        v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], y + 8 * v.extrusion_width)
+
+
+def create_tower_gcode():
+    # generate a purge tower alternative
+    _x = v.wipe_tower_info['minx']
+    _y = v.wipe_tower_info['miny']
+    _w = v.wipe_tower_info['maxx'] - v.wipe_tower_info['minx']
+    _h = v.wipe_tower_info['maxy'] - v.wipe_tower_info['miny']
+
+    purgetower.purge_create_layers(_x, _y, _w, _h)
+    # generate og items for the new purge tower
+    gui.create_logitem(
+        " Purge Tower :Loc X{:.2f} Y{:.2f}  W{:.2f} H{:.2f}".format(_x, _y, _w, _h))
+    gui.create_logitem(
+        " Layer Length Solid={:.2f}mm   Sparse={:.2f}mm".format(purgetower.sequence_length_solid,
+                                                                purgetower.sequence_length_empty))
 
 
 def parse_gcode():
@@ -318,11 +346,14 @@ def parse_gcode():
 
         if line.startswith(';'):
 
-            if line.startswith(";P2PP"):
-                parameters.check_config_parameters(line)
+            m = v.regex_p2pp.match(line)
+            if m:
+                parameters.check_config_parameters(m.group(1), m.group(2))
+
 
             if line.startswith(";P2PP MATERIAL_"):
                 algorithm_process_material_configuration(line[15:])
+
 
             if line.startswith(";LAYER"):
                 layer = 0
@@ -346,24 +377,17 @@ def parse_gcode():
 
             update_class(line)
 
-        specifier = 0
-
         code = gcode.GCodeCommand(line)
-
-        if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
-            if code.fullcommand == "G1":
-                if code.has_X() and code.has_Y():
-                    specifier = SPEC_INTOWER
 
         if code.Command == 'T':
             cur_tool = int(code.Command_value)
 
         code.Tool = cur_tool
         code.Class = v.block_classification
-        code.Specifier = specifier
+
 
         # code.add_comment("[{}]".format(v.classes[v.block_classification]))
-        v.parsedgcode.append(code)
+        v.parsed_gcode.append(code)
 
         if v.block_classification != v.previous_block_classification:
 
@@ -377,30 +401,23 @@ def parse_gcode():
                 backpass(v.block_classification)
 
         if v.tower_measure:
-            if code.is_movement_command():
-                if code.X is not None:
-                    v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], code.X)
-                    v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], code.X)
-                if code.Y is not None:
-                    v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], code.Y)
-                    v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], code.Y)
+            calculate_tower(code.X, code.Y)
 
         if v.block_classification == CLS_ENDGRID or v.block_classification == CLS_ENDPURGE:
             if code.has_X() and code.has_Y():
                 if not coordinate_in_tower(code.X, code.Y):
-                    v.parsedgcode[-1].Class = CLS_NORMAL
+                    v.parsed_gcode[-1].Class = CLS_NORMAL
                     v.block_classification = CLS_NORMAL
 
         if v.block_classification == CLS_BRIM_END:
             v.block_classification = CLS_NORMAL
 
-        index = index + 1
+        index += 1
 
 
 
 def gcode_parseline(index):
-
-    g = v.parsedgcode[index]
+    g = v.parsed_gcode[index]
 
     if g.Command == 'T':
         gcode_process_toolchange(int(g.Command_value), v.total_material_extruded, g.Layer)
@@ -437,17 +454,18 @@ def gcode_parseline(index):
         g.issue_command()
         return
 
-
     if g.is_movement_command():
         if g.has_X():
             v.previous_purge_keep_x = v.purge_keep_x
             v.purge_keep_x = g.X
+
         if g.has_Y():
             v.previous_purge_keep_y = v.purge_keep_y
             v.purge_keep_y = g.Y
 
+        v.keep_speed = g.get_parameter("F", v.keep_speed)
 
-    previous_block_class = v.parsedgcode[max(0, index - 1)].Class
+    previous_block_class = v.parsed_gcode[max(0, index - 1)].Class
     classupdate = g.Class != previous_block_class
 
     # remove M900 K0 commands during unload
@@ -483,14 +501,11 @@ def gcode_parseline(index):
             if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y)) and g.E > 0:
                 g.remove_parameter("E")
 
-
     if not v.side_wipe:
-
         if x_coordinate_in_tower(g.X):
             v.keep_x = g.X
         if y_coordinate_in_tower(g.Y):
             v.keep_y = g.Y
-
     elif not x_on_bed(g.X):
         g.remove_parameter("X")
 
@@ -507,57 +522,32 @@ def gcode_parseline(index):
     if v.pathprocessing:
 
         if g.Class == CLS_TONORMAL:
-
             if not g.is_comment():
                 g.move_to_comment("post block processing")
             g.issue_command()
             return
 
-        if flagset(g.Specifier, SPEC_INTOWER):
+        # remove any commands that are part of the purge tower and still perofrm actions WITHIN the tower
+
+        if g.is_movement_command() and g.Class in [CLS_ENDPURGE, CLS_ENDGRID] and g.has_X() and g.has_Y():
             if coordinate_in_tower(g.X, g.Y):
                 g.remove_parameter("X")
                 g.remove_parameter("Y")
 
+        ###################################
         # sepcific for FULL_PURGE_REDUCTION
+        ###################################
+
         if v.full_purge_reduction:
 
-            # get information about the purge tower dimensions
-            if g.Class == CLS_BRIM and not (g.has_X() and g.has_Y()):
-                if g.has_X():
-                    purgetower.purge_width = min(purgetower.purge_width,
-                                                 abs(g.X - v.previous_position_x))
-                if g.has_Y():
-                    purgetower.purge_height = min(purgetower.purge_height,
-                                                  abs(g.Y - v.previous_position_y))
-
             if g.Class == CLS_BRIM_END:
-                # generate a purge tower alternative
+                create_tower_gcode()
+                purgetower.purge_generate_brim()
 
-                _x = v.wipe_tower_info['minx'] + 4 * v.extrusion_width
-                _y = v.wipe_tower_info['miny'] + 4 * v.extrusion_width
-                _w = v.wipe_tower_info['maxx'] - v.wipe_tower_info['minx'] - 8 * v.extrusion_width
-                _h = v.wipe_tower_info['maxy'] - v.wipe_tower_info['miny'] - 8 * v.extrusion_width
-
-                purgetower.purge_create_layers(_x, _y, _w, _h)
-                # generate og items for the new purge tower
-                gui.create_logitem(
-                    " Purge Tower :Loc X{:.2f} Y{:.2f}  W{:.2f} H{:.2f}".format(_x, _y, _w, _h))
-                gui.create_logitem(
-                    " Layer Length Solid={:.2f}mm   Sparse={:.2f}mm".format(purgetower.sequence_length_solid,
-                                                                            purgetower.sequence_length_empty))
-                # issue the new purge tower
-                for i in range(len(purgetower.brimlayer)):
-                    purgetower.brimlayer[i].issue_command()
-                    if i == 1 and v.retraction:
-                        purgetower.unretract(v.current_tool)
-                # set the flag to update the post-session retraction move section
-                v.retract_move = True
-                v.retract_x = purgetower.last_brim_x
-                v.retract_y = purgetower.last_brim_y
-                # correct the amount of extrusion for the brim
-
-
+        ###################################
         # sepcific for SIDEWIPE
+        ###################################
+
         if v.side_wipe:
 
             # side wipe does not need a brim
@@ -567,9 +557,12 @@ def gcode_parseline(index):
                 g.issue_command()
                 return
 
-        # entering the purge tower with a delta
-        ########################################
+        #######################################
+        # specific for TOWER DELTA
+        #######################################
+
         if v.tower_delta:
+
             if classupdate and g.Class == CLS_TOOL_PURGE:
                 g.issue_command()
                 gcode.issue_code("G1 X{} Y{} ;\n".format(v.keep_x, v.keep_y))
@@ -581,13 +574,12 @@ def gcode_parseline(index):
             if classupdate and previous_block_class == CLS_TOOL_PURGE:
                 leavetower()
 
-
-        # going into an empty grid -- check if it should be consolidated
+        ################################################################
+        # EMPTY GRID SKIPPING CHECK FOR SIDE WIPE/TOWER DELTA/FULLPURGE
         ################################################################
         if classupdate and g.Class in [CLS_FIRST_EMPTY, CLS_EMPTY]:
             if v.skippable_layer[g.Layer]:
                 v.towerskipped = True
-                # print("Skipped: {:.3f} now at delta {:.3f}".format(v.current_position_z- v.retract_lift[v.current_tool]+v.layer_height,v.cur_tower_z_delta+v.layer_height))
                 remove_previous_move_in_tower()
                 if v.tower_delta:
                     v.cur_tower_z_delta += v.layer_height
@@ -617,11 +609,14 @@ def gcode_parseline(index):
             v.enterpurge = True
 
         if v.enterpurge and g.is_movement_command():
+
             v.enterpurge = False
+
             if g.has_X():
                 _x = v.previous_purge_keep_x
             else:
                 _x = v.purge_keep_x
+
             if g.has_Y():
                 _y = v.previous_purge_keep_y
             else:

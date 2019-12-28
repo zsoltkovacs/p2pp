@@ -8,6 +8,8 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
+import re
+
 #########################################
 # Variable default values
 #########################################
@@ -172,7 +174,7 @@ full_purge_reduction = False
 purge_first_empty = True
 purgelayer = 0
 
-parsedgcode = []
+parsed_gcode = []
 _obsolete_gcodeclass = []
 _obsolete_linetool = []
 _obsolete_parsecomment = []
@@ -222,6 +224,8 @@ bigbrain3d_whacks = 1
 tower_measure = False
 expect_retract = False
 
+keep_speed = 0
+
 purgetopspeed = 99999
 wipe_remove_sparse_layers = False
 
@@ -246,3 +250,5 @@ classes = {
     99: "RETURN TO NORM"
 
 }
+
+regex_p2pp = re.compile("^;\s*P2PP\s+([^=]+)=?(.*)$")

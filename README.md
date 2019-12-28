@@ -36,6 +36,8 @@ earlier versions may generate different code patterns and may not work correctly
 -  18/12/2019 - corrected the back pass processing, limit to 10 gcode instructions
 -  18/12/2019 - ALPHA feature to autocorrect short splices  (AUTOADDPURGE parameter) (FULLPURGE/SIDEWIPE only)
 -  18/12/2-19 - Added a comment on missing LiftZ in the printer parameters.
+-  26/12/2019 - Initial version for PS2.2 support [BETA]
+
 
    
 

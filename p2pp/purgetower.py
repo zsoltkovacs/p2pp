@@ -21,8 +21,6 @@ PURGE_EMPTY = 2
 
 current_purge_form = PURGE_SOLID
 current_purge_index = 0
-purge_width = 999
-purge_height = 999
 
 sequence_length_solid = 0
 sequence_length_empty = 0
@@ -235,6 +233,19 @@ def getwipespeed():
         return min(1200, v.wipe_feedrate)
     else:
         return v.wipe_feedrate
+
+
+def purge_generate_brim():
+    for i in range(len(brimlayer)):
+        brimlayer[i].issue_command()
+        if i == 1 and v.retraction:
+            unretract(v.current_tool)
+
+    # set the flag to update the post-session retraction move section
+    v.retract_move = True
+    v.retract_x = last_brim_x
+    v.retract_y = last_brim_y
+    # correct the amount of extrusion for the brim
 
 def purge_generate_sequence():
     global last_posx, last_posy
