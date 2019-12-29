@@ -105,6 +105,30 @@ def parse_slic3r_config():
             if parameter_start != -1:
                 v.layer_height = float(gcode_line[parameter_start + 1:].strip())
 
+        if gcode_line.startswith("; first_layer_height"):
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                v.first_layer_height = float(gcode_line[parameter_start + 1:].strip())
+
+        if gcode_line.startswith("; support_material_synchronize_layers"):
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                tmp = float(gcode_line[parameter_start + 1:].strip())
+                if tmp == 0:
+                    v.synced_support = False
+                else:
+                    v.synced_support = True
+
+        if gcode_line.startswith("; support_material "):
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                tmp = float(gcode_line[parameter_start + 1:].strip())
+                if tmp == 0:
+                    v.support_material = False
+                else:
+                    v.support_material = True
+
+
         if gcode_line.startswith("; extruder_colour") or gcode_line.startswith("; filament_colour"):
             filament_colour = ''
             parameter_start = gcode_line.find("=")

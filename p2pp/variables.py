@@ -59,6 +59,7 @@ tower_delta = False
 max_tower_z_delta = 0.0  # type float
 cur_tower_z_delta = 0.0  # type float
 layer_height = 0.2  # type float
+first_layer_height = 0.2  # type float
 towerskipped = False  # type bool
 
 printer_profile_string = ''
@@ -185,7 +186,7 @@ acc_ping_left = 0.0
 infill_speed = 0.0
 keep_hopspec = 0
 keep_hopcorrection = 0
-parsedlayer = 0
+parsedlayer = -1
 
 block_classification = 0
 previous_block_classification = 0
@@ -232,6 +233,9 @@ wipe_remove_sparse_layers = False
 ps_version = "No version info detected"
 
 debug_leaveToolCommands = False
+
+synced_support = True
+prints_support = False
 
 classes = {
     0: "Undefined     ",

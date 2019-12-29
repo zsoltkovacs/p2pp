@@ -354,24 +354,36 @@ def parse_gcode():
             if line.startswith(";P2PP MATERIAL_"):
                 algorithm_process_material_configuration(line[15:])
 
+            layer = -1
+            # if not supports are printed or layers are synced, there is no need to look at the layerheight,
+            # otherwise look at the layerheight to determine the layer progress
+            if v.synced_support or not v.prints_support:
+                if line.startswith(";LAYER"):
+                    try:
+                        layer = int(line[7:])
+                    except ValueError:
+                        fields = line[7:].split(" ")
+                        for field in fields:
+                            try:
+                                layer = int(field)
+                                break
+                            except ValueError:
+                                pass
+            else:
+                if line.startswith(";LAYERHEIGHT"):
+                    try:
+                        tmp1 = float(line[12:])
+                        tmp = tmp1
+                        layer = int((tmp - v.first_layer_height + 0.005) / v.layer_height)
+                    except ValueError:
+                        pass
 
-            if line.startswith(";LAYER"):
-                layer = 0
-                try:
-                    layer = int(line[7:])
-                except ValueError:
-                    fields = line[7:].split(" ")
-                    for field in fields:
-                        try:
-                            layer = int(field)
-                            break
-                        except ValueError:
-                            pass
+            if layer == v.parsedlayer:
+                layer = -1
 
+            if layer >= 0:
                 v.parsedlayer = layer
-
-                if layer > 0:
-                    v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
+                v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
                 toolchange = 0
                 emptygrid = 0
 
@@ -568,7 +580,7 @@ def gcode_parseline(index):
                 gcode.issue_code("G1 X{} Y{} ;\n".format(v.keep_x, v.keep_y))
                 v.current_position_x = v.keep_x
                 v.current_position_x = v.keep_y
-                entertower((g.Layer + 1) * v.layer_height)
+                entertower(g.Layer * v.layer_height + v.first_layer_height)
                 return
 
             if classupdate and previous_block_class == CLS_TOOL_PURGE:
@@ -577,7 +589,7 @@ def gcode_parseline(index):
         ################################################################
         # EMPTY GRID SKIPPING CHECK FOR SIDE WIPE/TOWER DELTA/FULLPURGE
         ################################################################
-        if classupdate and g.Class in [CLS_FIRST_EMPTY, CLS_EMPTY]:
+        if g.Class in [CLS_FIRST_EMPTY, CLS_EMPTY] and "EMPTY GRID START" in g.get_comment():
             if v.skippable_layer[g.Layer]:
                 v.towerskipped = True
                 remove_previous_move_in_tower()
@@ -586,9 +598,9 @@ def gcode_parseline(index):
                     gcode.issue_code(";-------------------------------------\n")
                     gcode.issue_code(";  GRID SKIP --TOWER DELTA {:6.2f}mm\n".format(v.cur_tower_z_delta))
                     gcode.issue_code(";-------------------------------------\n")
-                else:
-                    if "EMPTY GRID START" in g.get_comment():
-                        entertower((g.Layer + 1) * v.layer_height)
+            else:
+                if "EMPTY GRID START" in g.get_comment():
+                    entertower(g.Layer * v.layer_height + v.first_layer_height)
 
 
         # changing from EMPTY to NORMAL
@@ -822,6 +834,9 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     if (len(v.skippable_layer) == 0) and v.pathprocessing:
         gui.log_warning("LAYER configuration is missing... no output generated.")
+        gui.log_warning("Put these lines in your AFTER_LAYER_CHANGE G-code under PRINTER settings in PrusaSlicer")
+        gui.log_warning(";LAYER [layer_num]")
+        gui.log_warning(";LAYERHEIGHT [layer_z]")
     else:
 
         if v.tower_delta:
