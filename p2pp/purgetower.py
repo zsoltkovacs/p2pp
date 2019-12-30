@@ -214,6 +214,14 @@ def retract(tool, speed=-1):
         v.retraction -= 1
 
 
+def largeretract():
+    if not v.use_firmware_retraction:
+        gcode.issue_code("G1 E-{:.2f}\n".format(3))
+        v.retraction -= 3
+    else:
+        gcode.issue_code("G10\n")
+        v.retraction -= 1
+
 def unretract(tool, speed=-1):
     if v.retraction == 0:
         return
