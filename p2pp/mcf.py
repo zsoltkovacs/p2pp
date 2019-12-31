@@ -486,6 +486,10 @@ def gcode_parseline(index):
     previous_block_class = v.parsed_gcode[max(0, index - 1)].Class
     classupdate = g.Class != previous_block_class
 
+    if classupdate and g.Class == CLS_BRIM and v.side_wipe and v.bigbrain3d_purge_enabled:
+        v.side_wipe_length = v.bigbrain3d_prime * v.bigbrain3d_blob_size
+        create_sidewipe_BigBrain3D()
+
     # remove M900 K0 commands during unload
     if g.Class == CLS_TOOL_UNLOAD and (
             g.fullcommand == "G4" or (g.fullcommand in ["M900"] and g.get_parameter("K", 0) == 0)):
@@ -512,6 +516,7 @@ def gcode_parseline(index):
             return
 
     if g.Class == CLS_TOOL_PURGE and not (v.side_wipe or v.full_purge_reduction):
+
         if g.is_movement_command() and g.has_E:
             _x = g.get_parameter("X", v.current_position_x)
             _y = g.get_parameter("Y", v.current_position_y)
@@ -520,11 +525,14 @@ def gcode_parseline(index):
                 g.remove_parameter("E")
 
     if not v.side_wipe:
+
         if x_coordinate_in_tower(g.X):
             v.keep_x = g.X
         if y_coordinate_in_tower(g.Y):
             v.keep_y = g.Y
+
     else:
+
         _x = g.get_parameter("X", v.current_position_x)
         _y = g.get_parameter("Y", v.current_position_y)
         if not coordinate_on_bed(_x, _y):
