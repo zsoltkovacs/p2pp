@@ -259,7 +259,7 @@ def generatesummary():
                                                             )
         summary.append( pingtext )
 
-    if v.side_wipe and v.side_wipe_loc == "":
+    if v.side_wipe and v.side_wipe_loc == "" and not v.bigbrain3d_purge_enabled:
         gui.log_warning("Using sidewipe with undefined SIDEWIPELOC!!!")
 
 

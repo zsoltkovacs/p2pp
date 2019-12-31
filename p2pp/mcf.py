@@ -47,10 +47,12 @@ def optimize_tower_skip(skipmax, layersize):
             skipped = skipped + layersize
             skipped_num += 1
 
-    if v.tower_delta and skipped > 0:
-        gui.log_warning("Warning: Purge Tower delta in effect: {} Layers or {:-6.2f}mm".format(skipped_num, skipped))
-    else:
-        gui.create_logitem("Tower Purge Delta could not be applied to this print")
+    if v.tower_delta:
+        if skipped > 0:
+            gui.log_warning(
+                "Warning: Purge Tower delta in effect: {} Layers or {:-6.2f}mm".format(skipped_num, skipped))
+        else:
+            gui.create_logitem("Tower Purge Delta could not be applied to this print")
 
 
 def convert_to_absolute():
