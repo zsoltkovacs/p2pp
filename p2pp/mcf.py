@@ -38,9 +38,15 @@ def remove_previous_move_in_tower():
 
 
 def optimize_tower_skip(skipmax, layersize):
+
     skipped = 0.0
     skipped_num = 0
-    for idx in range(len(v.skippable_layer) - 1, 0, -1):
+    if v.side_wipe or v.bigbrain3d_purge_enabled:
+        base = -1
+    else:
+        base = 0
+
+    for idx in range(len(v.skippable_layer) - 1, base, -1):
         if skipped + 0.005 >= skipmax:
             v.skippable_layer[idx] = False
         elif v.skippable_layer[idx]:
@@ -53,6 +59,9 @@ def optimize_tower_skip(skipmax, layersize):
                 "Warning: Purge Tower delta in effect: {} Layers or {:-6.2f}mm".format(skipped_num, skipped))
         else:
             gui.create_logitem("Tower Purge Delta could not be applied to this print")
+
+    if not v.side_wipe and not v.bigbrain3d_purge_enabled:
+        v.skippable_layer[0] = False
 
 
 def convert_to_absolute():
@@ -216,7 +225,6 @@ CLS_TOOL_START = 2
 CLS_TOOL_UNLOAD = 3
 CLS_TOOL_PURGE = 4
 CLS_EMPTY = 5
-CLS_FIRST_EMPTY = 6
 CLS_BRIM = 7
 CLS_BRIM_END = 8
 CLS_ENDGRID = 9
@@ -259,10 +267,8 @@ def update_class(gcode_line):
 
         if "WIPE TOWER FIRST LAYER BRIM END" in gcode_line:
             v.tower_measure = False
-            if v.full_purge_reduction or v.tower_delta:
-                v.block_classification = CLS_BRIM_END
-            else:
-                v.block_classification = CLS_TONORMAL
+            v.block_classification = CLS_BRIM_END
+
 
         if "EMPTY GRID START" in gcode_line:
             v.block_classification = CLS_EMPTY
@@ -272,10 +278,6 @@ def update_class(gcode_line):
 
         if v.block_classification == CLS_TONORMAL and v.previous_block_classification == CLS_TOOL_PURGE:
             v.block_classification = CLS_ENDPURGE
-
-        if v.block_classification == CLS_EMPTY and v.purge_first_empty:
-            v.block_classification = CLS_FIRST_EMPTY
-            v.purge_first_empty = False
 
     return
 
@@ -385,6 +387,8 @@ def parse_gcode():
 
             if layer >= 0:
                 v.parsedlayer = layer
+
+            if layer > 0:
                 v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
                 toolchange = 0
                 emptygrid = 0
@@ -411,7 +415,7 @@ def parse_gcode():
             if v.block_classification == CLS_EMPTY:
                 emptygrid += 1
 
-            if v.block_classification == CLS_BRIM or v.block_classification == CLS_TOOL_START or v.block_classification == CLS_TOOL_UNLOAD or v.block_classification == CLS_EMPTY or v.block_classification == CLS_FIRST_EMPTY:
+            if v.block_classification == CLS_BRIM or v.block_classification == CLS_TOOL_START or v.block_classification == CLS_TOOL_UNLOAD or v.block_classification == CLS_EMPTY:
                 backpass(v.block_classification)
 
         if v.tower_measure:
@@ -520,8 +524,12 @@ def gcode_parseline(index):
             v.keep_x = g.X
         if y_coordinate_in_tower(g.Y):
             v.keep_y = g.Y
-    elif not x_on_bed(g.X):
-        g.remove_parameter("X")
+    else:
+        _x = g.get_parameter("X", v.current_position_x)
+        _y = g.get_parameter("Y", v.current_position_y)
+        if not coordinate_on_bed(_x, _y):
+            g.remove_parameter("X")
+            g.remove_parameter("Y")
 
     # top off the purge speed in the tower during tower delta or during no tower processing
     if not v.full_purge_reduction and not v.side_wipe and g.is_movement_command() and g.has_E() and g.has_parameter(
@@ -566,8 +574,7 @@ def gcode_parseline(index):
 
             # side wipe does not need a brim
             if g.Class == CLS_BRIM:
-                if not g.is_comment():
-                    g.move_to_comment("side wipe - removed")
+                g.move_to_comment("side wipe - removed")
                 g.issue_command()
                 return
 
@@ -591,7 +598,7 @@ def gcode_parseline(index):
         ################################################################
         # EMPTY GRID SKIPPING CHECK FOR SIDE WIPE/TOWER DELTA/FULLPURGE
         ################################################################
-        if g.Class in [CLS_FIRST_EMPTY, CLS_EMPTY] and "EMPTY GRID START" in g.get_comment():
+        if g.Class == CLS_EMPTY and "EMPTY GRID START" in g.get_comment():
             if v.skippable_layer[g.Layer]:
                 v.towerskipped = True
                 remove_previous_move_in_tower()
@@ -701,10 +708,10 @@ def gcode_parseline(index):
 
 
     if v.side_wipe or v.full_purge_reduction:
-        if g.Class in [CLS_TOOL_PURGE, CLS_ENDPURGE, CLS_EMPTY, CLS_FIRST_EMPTY]:
-            # if v.skippable_layer[v.layernumber[index]-1]:
-            #     g.move_to_comment("skipped purge")
-            # else:
+        if g.Class in [CLS_TOOL_PURGE, CLS_ENDPURGE, CLS_EMPTY]:
+            if v.skippable_layer[g.Layer]:
+                g.move_to_comment("skipped purge")
+            else:
                 v.side_wipe_length += g.E
                 g.move_to_comment("side wipe/full purge")
 
@@ -813,6 +820,11 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
 
     if v.side_wipe:
+
+        if v.skirts and v.ps_version > "2.2":
+            gui.log_warning("SIDEWIPE and SKIRTS are NOT compatible in PS2.2 or later")
+            gui.log_warning("THIS FILE WILL NOT PRINT CORRECTLY")
+
         if v.wipe_remove_sparse_layers:
             gui.log_warning("SIDE WIPE mode not compatible with sparse wipe tower in PS")
             gui.log_warning("THIS FILE WILL NOT PRINT CORRECTLY")

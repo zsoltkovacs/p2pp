@@ -80,6 +80,17 @@ def parse_slic3r_config():
             if parameter_start != -1:
                 v.wipetower_posx = float(gcode_line[parameter_start + 1:].strip())
 
+        if gcode_line.startswith("; min_skirt_length"):
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                v.skirtsize = float(gcode_line[parameter_start + 1:].strip())
+
+        if gcode_line.startswith("; skirts"):
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                v.skirts = float(gcode_line[parameter_start + 1:].strip())
+
+
         if gcode_line.startswith("; wipe_tower_width"):
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:

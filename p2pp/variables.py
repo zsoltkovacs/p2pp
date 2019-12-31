@@ -237,6 +237,9 @@ debug_leaveToolCommands = False
 synced_support = True
 prints_support = False
 
+skirtsize = 0
+skirts = 0
+
 classes = {
     0: "Undefined     ",
     1: "Normal GCode  ",
