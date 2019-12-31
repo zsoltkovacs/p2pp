@@ -54,7 +54,7 @@ def generate_blob(length, count):
         "G4 S{0:.0f}              ; blob {0}s cooling time\n".format(v.bigbrain3d_blob_cooling_time))
     issue_code("G1 X{:.3f} F10800  ; activate flicker\n".format(v.bigbrain3d_x_position - 20))
 
-    for i in range(len(v.bigbrain3d_whacks)):
+    for i in range(v.bigbrain3d_whacks):
         issue_code(
             "G4 S1               ; Mentally prep for second whack\n".format(v.bigbrain3d_x_position - 20))
         issue_code("G1 X{:.3f} F3000   ; approach for second whach\n".format(v.bigbrain3d_x_position - 10))
