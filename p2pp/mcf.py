@@ -607,7 +607,7 @@ def gcode_parseline(index):
         # EMPTY GRID SKIPPING CHECK FOR SIDE WIPE/TOWER DELTA/FULLPURGE
         ################################################################
         if g.Class == CLS_EMPTY and "EMPTY GRID START" in g.get_comment():
-            if v.skippable_layer[g.Layer]:
+            if g.Layer < len(v.skippable_layer) and v.skippable_layer[g.Layer]:
                 v.towerskipped = True
                 remove_previous_move_in_tower()
                 if v.tower_delta:
@@ -717,7 +717,7 @@ def gcode_parseline(index):
 
     if v.side_wipe or v.full_purge_reduction:
         if g.Class in [CLS_TOOL_PURGE, CLS_ENDPURGE, CLS_EMPTY]:
-            if v.skippable_layer[g.Layer]:
+            if g.Layer < len(v.skippable_layer) and v.skippable_layer[g.Layer]:
                 g.move_to_comment("skipped purge")
             else:
                 v.side_wipe_length += g.E
