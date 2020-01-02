@@ -124,8 +124,8 @@ def center(win, width, height):
     x = (win.winfo_screenwidth() // 2) - (width // 2)  # center horizontally in screen
     y = (win.winfo_screenheight() // 2) - (height // 2)  # center vertically in screen
     win.geometry('{}x{}+{}+{}'.format(width, height, x, y))
-    win.minsize(width, height)
-    win.maxsize(width, height)
+    win.minsize(int(width / 1.2), int(height / 1.2))
+    win.maxsize(width * 4, height * 4)
 
 
 def set_printer_id(text):
@@ -162,7 +162,7 @@ def configinfo():
 
 mainwindow = tkinter.Tk()
 mainwindow.title("Palette2 Post Processing for PrusaSliceer")
-center(mainwindow, 800, 600)
+center(mainwindow, 800, 620)
 
 if platformD == 'Windows':
     logo_image = os.path.dirname(sys.argv[0]) + '\\favicon.ico'
@@ -172,13 +172,13 @@ if platformD == 'Windows':
 mainwindow['padx'] = 10
 mainwindow['pady'] = 10
 boldfontlarge = 'Helvetica 30 bold'
-normalfont = 'Helvetica 16'
-boldfont = 'Helvetica 16 bold'
+normalfont = 'Helvetica 15'
+boldfont = 'Helvetica 15 bold'
 fixedfont = 'Courier 14'
 fixedsmallfont = 'Courier 12'
 
 # Top Information Frqme
-infoframe = tkinter.Frame(mainwindow, border=3, relief='sunken', background="#808080")
+infoframe = tkinter.Frame(mainwindow, border=3, relief='flat', background="#808080")
 infoframe.pack(side=tkinter.TOP, fill=tkinter.X)
 
 # logo
@@ -186,8 +186,8 @@ logoimage = tkinter.PhotoImage(file=os.path.dirname(sys.argv[0]) + "/appicon.ppm
 logofield = tkinter.Label(infoframe, image=logoimage)
 logofield.pack(side=tkinter.LEFT, fill=tkinter.Y)
 
-infosubframe = tkinter.Frame(infoframe, background="#808080")
-infosubframe.pack(side=tkinter.LEFT, fill=tkinter.X)
+infosubframe = tkinter.Frame(infoframe, relief='flat', background="#808080")
+infosubframe.pack(side=tkinter.LEFT, fill=tkinter.X, )
 infosubframe["padx"] = 20
 
 # file name display
@@ -223,25 +223,29 @@ progressbar.grid(row=3, column=2,  sticky='ew')
 logframe = tkinter.Frame(mainwindow, border=3, relief="sunken")
 logframe.pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
 
-loglistscroll = tkinter.Scrollbar(logframe, orient=tkinter.VERTICAL)
-loglistscroll.pack(side='right', fill=tkinter.Y)
+yloglistscroll = tkinter.Scrollbar(logframe, orient=tkinter.VERTICAL)
+yloglistscroll.pack(side='right', fill=tkinter.Y)
 
-loglist = tkinter.Text(logframe, yscrollcommand=loglistscroll.set, font=fixedsmallfont)
-loglist.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=1)
+xloglistscroll = tkinter.Scrollbar(logframe, orient=tkinter.HORIZONTAL)
+xloglistscroll.pack(side='bottom', fill=tkinter.X)
 
-loglistscroll.config(command=loglist.yview)
+loglist = tkinter.Text(logframe, yscrollcommand=yloglistscroll.set, xscrollcommand=xloglistscroll.set, wrap="none",
+                       font=fixedsmallfont)
+loglist.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
+
+yloglistscroll.config(command=loglist.yview)
+xloglistscroll.config(command=loglist.xview)
 
 # Button frame
-buttonframe = tkinter.Frame(mainwindow, border=1, relief="sunken")
+buttonframe = tkinter.Frame(mainwindow, border=1, relief="flat")
 buttonframe.pack(side=tkinter.BOTTOM, fill=tkinter.X)
 
-closebutton = tkinter.Button(buttonframe, text="Exit", state=tkinter.DISABLED, command=close_window)
-closebutton.pack(side=tkinter.RIGHT, fill=tkinter.X, expand=1)
+closebutton = tkinter.Button(buttonframe, text="Exit", state=tkinter.DISABLED, command=close_window, height=2)
+closebutton.pack(fill=tkinter.BOTH, expand=True)
 
-
-mainwindow.rowconfigure(0, weight=1)
-mainwindow.rowconfigure(1, weight=1000)
-mainwindow.rowconfigure(2, weight=1)
+mainwindow.rowconfigure(0, weight=1000)
+mainwindow.rowconfigure(1, weight=2)
+mainwindow.rowconfigure(2, weight=1000)
 
 mainwindow.lift()
 mainwindow.attributes('-topmost', True)
