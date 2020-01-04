@@ -9,6 +9,7 @@ __email__ = 'P2PP@pandora.be'
 
 from copy import deepcopy
 
+import p2pp.formatnumbers as fn
 import p2pp.gcode as gcode
 import p2pp.variables as v
 
@@ -97,9 +98,14 @@ def calculate_loadscheme():
             # print("{} FROM Loaded {} - Next {} ".format(input_to_replace, loadedinputs, nexttools[idx]))
             # print ("Splice {} Changing Input {} from {} to {}".format(idx,input_to_replace, tool_replaced, newtool ))
             loadedinputs[input_to_replace] = newtool
+
             last_used = find_previous_tool_replaced(tool_replaced, idx)
             if last_used > 0 and not last_used == idx:
-                v.m4c_early_warning[last_used + 1] = v.m4c_late_warning[-1]
+                v.m4c_late_warning[-1].append(last_used + 1)
+            else:
+                v.m4c_late_warning[-1].append(idx)
+
+            v.m4c_late_warning[-1].append(idx)
         else:
             v.m4c_late_warning.append([])
 
@@ -129,27 +135,20 @@ def calculate_input_index(swap, color):
         return 0
 
 
-M4C_LATE = 1
-M4C_EARLY = 0
-
-
-def generate_warninglist(type):
-    template = "O50{} D{} D{} D{} D{} D{}"
+def generate_warninglist():
+    template = "O500 {} {} {} {} {} {}"
 
     result = []
 
-    for idx in range(len(v.m4c_early_warning)):
-
-        if type == M4C_EARLY:
-            tmp_value = v.m4c_early_warning[idx]
-        else:
-            tmp_value = v.m4c_late_warning[idx]
-
+    hotswapID = 256
+    for tmp_value in v.m4c_late_warning:
         if len(tmp_value) > 0:
-            result.append(template.format(type,
-                                          idx,
-                                          int(v.splice_length[idx]),
-                                          tmp_value[0],
-                                          tmp_value[1],
-                                          tmp_value[2]))
+            result.append(template.format(fn.hexify_short(hotswapID),
+                                          fn.hexify_byte(tmp_value[0]),
+                                          fn.hexify_byte(tmp_value[1]),
+                                          fn.hexify_byte(tmp_value[2]),
+                                          fn.hexify_byte(tmp_value[3]),
+                                          fn.hexify_byte(tmp_value[4])))
+            hotswapID += 1
+
     return result

@@ -212,8 +212,8 @@ def header_generate_omega_palette2(job_name):
                       .format(v.splice_algorithm_table[i]))
 
     if v.m4c_numberoffilaments > 4:
-        v.m4c_headerinfo = m4c.generate_warninglist(m4c.M4C_LATE)
-        for i in m4c.generate_warninglist(m4c.M4C_EARLY) + v.m4c_headerinfo:
+        v.m4c_headerinfo = m4c.generate_warninglist()
+        for i in v.m4c_headerinfo:
             header.append(i + "\n")
 
     if not v.accessory_mode:
