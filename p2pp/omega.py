@@ -8,6 +8,7 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 import p2pp.gui as gui
+import p2pp.p2_m4c as m4c
 import p2pp.variables as v
 from p2pp.colornames import find_nearest_colour
 from p2pp.formatnumbers import hexify_short, hexify_float, hexify_long, hexify_byte
@@ -209,6 +210,11 @@ def header_generate_omega_palette2(job_name):
     for i in range(len(v.splice_algorithm_table)):
         header.append("O32 {}\n"
                       .format(v.splice_algorithm_table[i]))
+
+    if v.m4c_numberoffilaments > 4:
+        v.m4c_headerinfo = m4c.generate_warninglist(m4c.M4C_LATE)
+        for i in m4c.generate_warninglist(m4c.M4C_EARLY) + v.m4c_headerinfo:
+            header.append(i + "\n")
 
     if not v.accessory_mode:
         if len(v.splice_extruder_position) > 0:

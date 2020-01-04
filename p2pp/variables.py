@@ -20,15 +20,9 @@ palette_inputs_used = [False,
                        False,
                        False]
 
-filament_type = ["",
-                 "",
-                 "",
-                 ""]
+filament_type = [""] * 20
 
-filament_color_code = ["-",
-                       "-",
-                       "-",
-                       "-"]
+filament_color_code = ["-"] * 20
 
 filament_short = [0, 0, 0, 0]
 
@@ -38,7 +32,7 @@ retract_lift = [0.6, 0.6, 0.6, 0.6]
 retract_length = [0.8, 0.8, 0.8, 0.8]
 filament_diameter = [1.75, 1.75, 1.75, 1.75]
 
-wiping_info = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+wiping_info = []
 accessory_mode = False  # type Bool
 
 
@@ -75,7 +69,7 @@ processed_gcode = []  # final output array with Gcode
 # further in the purge tower.  This serves a similar function as the transition offset in chroma.
 splice_offset = 0  # type: int
 splice_extruder_position = []
-splice_used_tool = []  # type: List[Any]
+splice_used_tool = []
 splice_length = []
 
 # SIDE WIPES
@@ -258,5 +252,20 @@ classes = {
     99: "RETURN TO NORM"
 
 }
+
+### more than 4 color prints
+############################
+m4c_enabled = False
+m4c_toolchanges = []
+m4c_toolchange_source_positions = []
+m4c_loadedinputs = []
+m4c_early_tool = []
+m4c_early_warning = []
+m4c_late_warning = []
+m4c_color_table = []
+m4c_numberoffilaments = 4
+
+m4c_headerinfo = []
+
 
 regex_p2pp = re.compile("^;\s*P2PP\s+([^=]+)=?(.*)$")

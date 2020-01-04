@@ -12,6 +12,7 @@ import time
 
 import p2pp.gcode as gcode
 import p2pp.gui as gui
+import p2pp.p2_m4c as m4c
 import p2pp.parameters as parameters
 import p2pp.pings as pings
 import p2pp.purgetower as purgetower
@@ -109,8 +110,6 @@ def gcode_process_toolchange(new_tool, location, current_layer):
         location += v.extra_runout_filament
         v.material_extruded_per_color[v.current_tool] += v.extra_runout_filament
         v.total_material_extruded += v.extra_runout_filament
-    else:
-        v.palette_inputs_used[new_tool] = True
 
     length = location - v.previous_toolchange_location
 
@@ -399,6 +398,8 @@ def parse_gcode():
 
         if code.Command == 'T':
             cur_tool = int(code.Command_value)
+            v.m4c_toolchanges.append(cur_tool)
+            v.m4c_toolchange_source_positions.append(len(v.parsed_gcode))
 
         code.Tool = cur_tool
         code.Class = v.block_classification
@@ -825,6 +826,10 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
     v.tower_delta = v.max_tower_z_delta > 0
+
+    gui.create_logitem("Creating tool usage information")
+    m4c.calculate_loadscheme()
+
 
 
     if v.side_wipe:

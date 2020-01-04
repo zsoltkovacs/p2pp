@@ -48,7 +48,7 @@ def generate_blob(length, count):
         issue_code("G1 E{:6.3f} F200     ; Purge FAN 75% \n".format(length / 4))
     else:
         issue_code("G1 E{:6.3f} F200     ; UNRETRACT/PURGE/RETRACT \n".format(length))
-    purgetower.largeretract()
+    purgetower.retract(0)
     setfanspeed(255)
     issue_code(
         "G4 S{0:.0f}              ; blob {0}s cooling time\n".format(v.bigbrain3d_blob_cooling_time))

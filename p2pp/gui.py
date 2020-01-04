@@ -44,12 +44,26 @@ def print_summary(summary):
     if v.full_purge_reduction or v.tower_delta:
         create_logitem("Tower Delta Range  {:.2f}mm -  {:.2f}mm".format(v.min_tower_delta, v.max_tower_delta))
     create_emptyline()
-    create_logitem("Inputs/Materials used:")
 
-    for i in range(len(v.palette_inputs_used)):
-        if v.palette_inputs_used[i]:
-            create_colordefinition(i + 1, v.filament_type[i], v.filament_color_code[i],
-                                   v.material_extruded_per_color[i])
+    if v.m4c_numberoffilaments <= 4:
+
+        create_logitem("Inputs/Materials used:")
+
+        for i in range(len(v.palette_inputs_used)):
+            if v.palette_inputs_used[i]:
+                create_colordefinition("Input", i + 1, v.filament_type[i], v.filament_color_code[i],
+                                       v.material_extruded_per_color[i])
+
+    else:
+        create_logitem("Materials used:")
+        for i in range(v.m4c_numberoffilaments):
+            create_colordefinition("Filament", i + 1, v.filament_type[0], v.filament_color_code[i], 0)
+
+        create_emptyline()
+
+        create_logitem("Required Toolchanges: {}".format(len(v.m4c_headerinfo)))
+        for i in v.m4c_headerinfo:
+            create_logitem("      " + i)
 
     create_emptyline()
     for line in summary:
@@ -89,7 +103,8 @@ def create_logitem(text, color="black", force_update=True, position=tkinter.END)
     if force_update:
         mainwindow.update()
 
-def create_colordefinition(input, filament_type, color_code, filamentused):
+
+def create_colordefinition(name, input, filament_type, color_code, filamentused):
     global color_count
     color_count += 1
     tagname = "color" + str(color_count)
@@ -97,7 +112,7 @@ def create_colordefinition(input, filament_type, color_code, filamentused):
     tagname2 = "color" + str(color_count)
     loglist.tag_configure(tagname, foreground='black')
     loglist.tag_configure(tagname2, foreground="#"+color_code)
-    loglist.insert(tkinter.END, "  \tInput  {} {:-8.2f}mm - {} ".format(input, filamentused, filament_type), tagname)
+    loglist.insert(tkinter.END, "  \t{}  {} {:-8.2f}mm - {} ".format(name, input, filamentused, filament_type), tagname)
     loglist.insert(tkinter.END, "  \t[####]\t", tagname2)
     loglist.insert(tkinter.END, "  \t{}\n".format(colornames.find_nearest_colour(color_code)), tagname)
 
@@ -109,7 +124,7 @@ def close_window():
     mainwindow.destroy()
 
 def update_button_pressed():
-    v.upgradeprocess(version.latest_stable_version , v.update_file_list)
+    v.upgradeprocess(version.latest_stable_version, [])
 
 def close_button_enable():
     closebutton.config(state=tkinter.NORMAL)
