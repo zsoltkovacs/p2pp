@@ -197,9 +197,15 @@ def header_generate_omega_palette2(job_name):
     header.append('O29 ' + hexify_short(v.hotswap_count) + "\n")
 
     for i in range(len(v.splice_extruder_position)):
-        header.append("O30 D{:0>1d} {}\n".format(v.splice_used_tool[i],
+        if v.accessory_mode:
+            header.append("O30 D{:0>1d} {}\n".format(v.splice_used_tool[i],
                                                  hexify_float(v.splice_extruder_position[i])
                                                  )
+                          )
+        else:
+            header.append("O30 D{:0>1d} {}\n".format(v.splice_used_tool[i],
+                                                     hexify_float(v.splice_extruder_position[i] + v.autoloadingoffset)
+                                                     )
                       )
 
     if v.accessory_mode:
@@ -216,13 +222,19 @@ def header_generate_omega_palette2(job_name):
         for i in v.m4c_headerinfo:
             header.append(i + "\n")
 
+    if v.autoloadingoffset > 0:
+        header.append("O40 D{}".format(v.autoloadingoffset))
+    else:
+        v.autoloadingoffset = 0
+
     if not v.accessory_mode:
         if len(v.splice_extruder_position) > 0:
             header.append("O1 D{} {}\n"
-                          .format(job_name, hexify_long(int(v.splice_extruder_position[-1] + 0.5))))
+                          .format(job_name,
+                                  hexify_long(int(v.splice_extruder_position[-1] + 0.5 + v.autoloadingoffset))))
         else:
             header.append("O1 D{} {}\n"
-                          .format(job_name, hexify_long(int(v.total_material_extruded  + 0.5))))
+                          .format(job_name, hexify_long(int(v.total_material_extruded + 0.5 + v.autoloadingoffset))))
 
         header.append("M0\n")
         header.append("T0\n")
@@ -236,13 +248,14 @@ def generatesummary():
     summary = [";---------------------\n",
                "; - SPLICE INFORMATION-\n",
                ";---------------------\n",
-               ";       Splice Offset = {:-8.2f}mm\n\n".format(v.splice_offset)]
+               ";       Splice Offset = {:-8.2f}mm\n".format(v.splice_offset),
+               ";       Autoloading Offset = {:-8.2f}mm\n\n".format(v.autoloadingoffset)]
 
     for i in range(len(v.splice_extruder_position)):
         if i==0:
             pos = 0
         else:
-            pos = v.splice_extruder_position[i-1]
+            pos = v.splice_extruder_position[i - 1] + v.autoloadingoffset
 
         summary.append(";{:04}   Input: {}  Location: {:-8.2f}mm   length {:-8.2f}mm  ({})\n"
                        .format(i + 1,

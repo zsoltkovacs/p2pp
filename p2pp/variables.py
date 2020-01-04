@@ -234,6 +234,8 @@ prints_support = False
 skirtsize = 0
 skirts = 0
 bigbrain3d_prime = 0
+autoloadingoffset = 0
+
 
 classes = {
     0: "Undefined     ",

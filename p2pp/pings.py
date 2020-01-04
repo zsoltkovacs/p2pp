@@ -30,7 +30,7 @@ def check_connected_ping():
             "; --- P2PP - Added Sequence - INITIATE PING -  START COMMAND after {:-10.4f}mm of extrusion \n".format(
                 v.last_ping_extruder_position))
         gcode.issue_code("G4 S0 \n")
-        gcode.issue_code("O31 {}\n".format(hexify_float(v.last_ping_extruder_position)))
+        gcode.issue_code("O31 {}\n".format(hexify_float(v.last_ping_extruder_position + v.autoloadingoffset)))
         gcode.issue_code("; --- P2PP - Added Sequence - INITIATE PING  -  END\n")
 
 

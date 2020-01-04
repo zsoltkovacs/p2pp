@@ -93,6 +93,10 @@ def check_config_parameters(keyword, value):
         v.after_sidewipe_gcode.append(value)
         return
 
+    if keyword == "AUTOLOADINGOFFSET":
+        v.autoloadingoffset = floatparameter(value)
+        return
+
     if keyword == "AUTOADDPURGE":
         v.autoaddsplice = True
         return
