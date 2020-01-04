@@ -103,7 +103,7 @@ def calculate_loadscheme():
             if last_used > 0 and not last_used == idx:
                 v.m4c_late_warning[-1].append(last_used + 1)
             else:
-                v.m4c_late_warning[-1].append(idx)
+                v.m4c_late_warning[-1].append(-1)
 
             v.m4c_late_warning[-1].append(idx)
         else:
