@@ -173,7 +173,6 @@ def header_generate_omega_palette2(job_name):
 
     str = "O25"
 
-
     for i in range(4):
         if v.palette_inputs_used[i]:
             if v.filament_color_code[i] == "-":
