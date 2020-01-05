@@ -178,11 +178,11 @@ def header_generate_omega_palette2(job_name):
             if v.filament_color_code[i] == "-":
                 v.filament_color_code[i] = '000000'
 
-            header.append("D{}{}{}{} ".format(v.used_filament_types.index(v.filament_type[i]) + 1,
-                                              v.filament_color_code[i].strip("\n"),
-                                              find_nearest_colour(v.filament_color_code[i].strip("\n")),
-                                              v.filament_type[i].strip("\n")
-                                              ))
+            header.append("D{}{}{}{}".format(v.used_filament_types.index(v.filament_type[i]) + 1,
+                                             v.filament_color_code[i].strip("\n"),
+                                             find_nearest_colour(v.filament_color_code[i].strip("\n")),
+                                             v.filament_type[i].strip("\n")
+                                             ))
         else:
             header.append("D0 ")
 
