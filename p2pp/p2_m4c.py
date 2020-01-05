@@ -145,12 +145,12 @@ def generate_warninglist():
 
     for tmp_value in v.m4c_late_warning:
         if len(tmp_value) > 0:
-            source = "D{}{}{} ".format(v.filament_color_code[tmp_value[1]].strip("\n"),
-                                       find_nearest_colour(v.filament_color_code[tmp_value[1]].strip("\n")),
-                                       v.filament_type[0].strip("\n"))
-            target = "D{}{}{} ".format(v.filament_color_code[tmp_value[2]].strip("\n"),
-                                       find_nearest_colour(v.filament_color_code[tmp_value[2]].strip("\n")),
-                                       v.filament_type[0].strip("\n"))
+            source = "D{}{}{}".format(v.filament_color_code[tmp_value[1]].strip("\n"),
+                                      find_nearest_colour(v.filament_color_code[tmp_value[1]].strip("\n")),
+                                      v.filament_type[0].strip("\n"))
+            target = "D{}{}{}".format(v.filament_color_code[tmp_value[2]].strip("\n"),
+                                      find_nearest_colour(v.filament_color_code[tmp_value[2]].strip("\n")),
+                                      v.filament_type[0].strip("\n"))
             result.append(template.format(fn.hexify_short(hotswapID),
                                           fn.hexify_byte(tmp_value[0]),
                                           source,
