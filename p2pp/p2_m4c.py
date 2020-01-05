@@ -12,6 +12,7 @@ from copy import deepcopy
 import p2pp.formatnumbers as fn
 import p2pp.gcode as gcode
 import p2pp.variables as v
+from colornames import find_nearest_colour
 
 
 # routined to support more than 4 colors.
@@ -141,12 +142,19 @@ def generate_warninglist():
     result = []
 
     hotswapID = 256
+
     for tmp_value in v.m4c_late_warning:
         if len(tmp_value) > 0:
+            source = "D{}{}{} ".format(v.filament_color_code[tmp_value[1]].strip("\n"),
+                                       find_nearest_colour(v.filament_color_code[tmp_value[1]].strip("\n")),
+                                       v.filament_type[0].strip("\n"))
+            target = "D{}{}{} ".format(v.filament_color_code[tmp_value[2]].strip("\n"),
+                                       find_nearest_colour(v.filament_color_code[tmp_value[2]].strip("\n")),
+                                       v.filament_type[0].strip("\n"))
             result.append(template.format(fn.hexify_short(hotswapID),
                                           fn.hexify_byte(tmp_value[0]),
-                                          fn.hexify_byte(tmp_value[1]),
-                                          fn.hexify_byte(tmp_value[2]),
+                                          source,
+                                          target,
                                           fn.hexify_byte(tmp_value[3]),
                                           fn.hexify_byte(tmp_value[4])))
             hotswapID += 1
