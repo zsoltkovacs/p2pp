@@ -929,7 +929,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
             opf = open(maffile, "w")
             for i in range(len(header)):
                 if not header[i].startswith(";"):
-                    opf.write(header[i])
+                    opf.write(header[i].strip('\n') + "\r\n")
 
         gui.print_summary(omega_result['summary'])
 
