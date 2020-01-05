@@ -155,8 +155,8 @@ def generate_warninglist():
                                           fn.hexify_byte(tmp_value[0]),
                                           source,
                                           target,
-                                          fn.hexify_byte(tmp_value[3]),
-                                          fn.hexify_byte(tmp_value[4])))
+                                          fn.hexify_short(tmp_value[3]),
+                                          fn.hexify_short(tmp_value[4])))
             hotswapID += 1
 
     return result
