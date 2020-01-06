@@ -536,7 +536,7 @@ In order to make use of the device:
      ;P2PP BIGBRAIN3D_BLOBSIZE=40   
      ;P2PP BIGBRAIN3D_COOLINGTIME=20
      ;P2PP BIGBRAIN3D_PURGEPOSITION=250.1   [ replace this with the value for your printer ]
-     ;P2PP BIGBRAIN3D_MOTORPOWER_HIGH=850
+     ;P2PP BIGBRAIN3D_MOTORPOWER_HIGH=800
      ;P2PP BIGBRAIN3D_MOTORPOWER_NORMAL=550
      ;P2PP BIGBRAIN3D_ENABLE
 ```   
@@ -554,7 +554,7 @@ In order to make use of the device:
   Position of the X-Carriage when the device is fully depliyed.   You should get this infor during setup of the device
   Note that moving the device too far right will result in losing steps and subsequent layer shift...  
   
-> **;P2PP BIGBRAIN3D_MOTORPOWER_HIGH=850 **  *[ALPHA]*
+> **;P2PP BIGBRAIN3D_MOTORPOWER_HIGH=800 **  *[ALPHA]*
 
   Sets the value for high motor power during the engagement of the device, value taken from the BB3D site
   
