@@ -51,13 +51,13 @@ def print_summary(summary):
 
         for i in range(len(v.palette_inputs_used)):
             if v.palette_inputs_used[i]:
-                create_colordefinition("Input", i + 1, v.filament_type[i], v.filament_color_code[i],
+                create_colordefinition(0, i + 1, v.filament_type[i], v.filament_color_code[i],
                                        v.material_extruded_per_color[i])
 
     else:
         create_logitem("Materials used:")
         for i in range(v.m4c_numberoffilaments):
-            create_colordefinition("Filament", i + 1, v.filament_type[0], v.filament_color_code[i], 0)
+            create_colordefinition(1, i + 1, v.filament_type[0], v.filament_color_code[i], 0)
 
         create_emptyline()
 
@@ -104,17 +104,34 @@ def create_logitem(text, color="black", force_update=True, position=tkinter.END)
         mainwindow.update()
 
 
-def create_colordefinition(name, input, filament_type, color_code, filamentused):
+def create_colordefinition(reporttype, input, filament_type, color_code, filamentused):
     global color_count
+    if reporttype == 0:
+        name = "Input"
+    if reporttype == 1:
+        name = "Filament"
+
     color_count += 1
     tagname = "color" + str(color_count)
     color_count += 1
     tagname2 = "color" + str(color_count)
     loglist.tag_configure(tagname, foreground='black')
     loglist.tag_configure(tagname2, foreground="#"+color_code)
-    loglist.insert(tkinter.END, "  \t{}  {} {:-8.2f}mm - {} ".format(name, input, filamentused, filament_type), tagname)
+
+    try:
+        filament_id = v.filament_ids[input - 1]
+    except IndexError:
+        filament_id = ""
+
+    if reporttype == 0:
+        loglist.insert(tkinter.END, "  \t{}  {} {:-8.2f}mm - {}".format(name, input, filamentused, filament_type),
+                       tagname)
+    if reporttype == 1:
+        loglist.insert(tkinter.END, "  \t{}  {}  - {}".format(name, input, filament_type), tagname)
+
     loglist.insert(tkinter.END, "  \t[####]\t", tagname2)
-    loglist.insert(tkinter.END, "  \t{}\n".format(colornames.find_nearest_colour(color_code)), tagname)
+    loglist.insert(tkinter.END, "  \t{:15} {} \n".format(colornames.find_nearest_colour(color_code), filament_id),
+                   tagname)
 
 
 def create_emptyline():

@@ -31,6 +31,7 @@ filament_list = False
 retract_lift = [0.6, 0.6, 0.6, 0.6]
 retract_length = [0.8, 0.8, 0.8, 0.8]
 filament_diameter = [1.75, 1.75, 1.75, 1.75]
+filament_ids = []
 
 wiping_info = []
 accessory_mode = False  # type Bool
@@ -268,6 +269,5 @@ m4c_color_table = []
 m4c_numberoffilaments = 4
 
 m4c_headerinfo = []
-
 
 regex_p2pp = re.compile("^;\s*P2PP\s+([^=]+)=?(.*)$")

@@ -518,10 +518,11 @@ def gcode_parseline(index):
 
     if g.Class == CLS_TOOL_PURGE and not (v.side_wipe or v.full_purge_reduction):
 
-        if g.is_movement_command() and g.has_E:
+        if g.is_movement_command() and g.E is not None:
             _x = g.get_parameter("X", v.current_position_x)
             _y = g.get_parameter("Y", v.current_position_y)
             # removepositive extrusions while moving into the tower
+
             if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y)) and g.E > 0:
                 g.remove_parameter("E")
 
