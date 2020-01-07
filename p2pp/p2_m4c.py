@@ -101,7 +101,7 @@ def calculate_loadscheme():
             loadedinputs[input_to_replace] = newtool
 
             last_used = find_previous_tool_replaced(tool_replaced, idx)
-            if last_used > 0 and not last_used == idx:
+            if last_used > 0 and not last_used + 1 == idx:
                 v.m4c_late_warning[-1].append(last_used + 1)
             else:
                 v.m4c_late_warning[-1].append(-1)
