@@ -97,7 +97,7 @@ def create_sidewipe_BigBrain3D():
         issue_code("\nG1 Z20.000 F8640    ; Increase Z to prevent collission with bed\n")
 
     if (v.bigbrain3d_y_position is not None):
-        issue_code("\nG1 Y{:.3f} F8640    ; change Y position to purge equipment\n")
+        issue_code("\nG1 Y{:.3f} F8640    ; change Y position to purge equipment\n".format(v.bigbrain3d_y_position))
 
     issue_code("G1 X{:.3f} F10800  ; go near edge of bed\n".format(v.bigbrain3d_x_position - 30))
     issue_code("G4 S0               ; wait for the print buffer to clear\n")
