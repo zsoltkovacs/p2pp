@@ -136,6 +136,10 @@ def check_config_parameters(keyword, value):
         v.bigbrain3d_x_position = floatparameter(value)
         return
 
+    if keyword == "BIGBRAIN3D_PURGEYPOSITION":
+        v.bigbrain3d_y_position = floatparameter(value)
+        return
+
     if keyword == "BIGBRAIN3D_MOTORPOWER_HIGH":
         v.bigbrain3d_motorpower_high = intparameter(value)
         return
