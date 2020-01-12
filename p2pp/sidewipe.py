@@ -31,21 +31,21 @@ def generate_blob(length, count):
     issue_code("\n;---- BIGBRAIN3D SIDEWIPE BLOB {} -- purge {:.3f}mm\n".format(count + 1, length))
     # issue_code("M907 X{} ; set motor power\n".format(int(v.purgemotorpower)))
 
+    setfanspeed(0)
     issue_code(
         "G1 X{:.3f} F3000   ; go near the edge of the print\n".format(v.bigbrain3d_x_position - 10))
     issue_code(
         "G1 X{:.3f} F1000   ; go to the actual wiping position\n".format(v.bigbrain3d_x_position))  # takes 2.5 seconds
-    setfanspeed(0)
     if v.retraction < 0:
         purgetower.unretract(v.current_tool, 1200)
     if v.bigbrain3d_smartfan:
         issue_code("G1 E{:6.3f} F200     ; Purge FAN OFF \n".format(length / 4))
+        setfanspeed(32)
+        issue_code("G1 E{:6.3f} F200     ; Purge FAN 12% \n".format(length / 4))
         setfanspeed(64)
         issue_code("G1 E{:6.3f} F200     ; Purge FAN 25% \n".format(length / 4))
-        setfanspeed(128)
-        issue_code("G1 E{:6.3f} F200     ; Purge FAN 50% \n".format(length / 4))
-        setfanspeed(192)
-        issue_code("G1 E{:6.3f} F200     ; Purge FAN 75% \n".format(length / 4))
+        setfanspeed(96)
+        issue_code("G1 E{:6.3f} F200     ; Purge FAN 37% \n".format(length / 4))
     else:
         issue_code("G1 E{:6.3f} F200     ; UNRETRACT/PURGE/RETRACT \n".format(length))
     purgetower.retract(0)
