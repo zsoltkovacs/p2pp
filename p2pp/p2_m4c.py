@@ -58,9 +58,11 @@ def find_previous_tool_replaced(tool, index):
 
 
 def patchup_toolchanges():
+    # when we have only 4 extruders defined, keep the user defined input settings from PrusaSlicer
     if v.m4c_numberoffilaments == 4:
         return
 
+    # otherwise replace the color with the right color offset.
     for idx in range(len(v.m4c_toolchange_source_positions)):
         try:
             old = v.parsed_gcode[v.m4c_toolchange_source_positions[idx]]
@@ -87,6 +89,7 @@ def calculate_loadscheme():
         nexttools.append(calc_next(-1, v.m4c_toolchanges[idx:]))
 
     loadedinputs = deepcopy(nexttools[0][:4])
+    loadedinputs.sort()
 
     for idx in range(len(v.m4c_toolchanges) - 2):
 
