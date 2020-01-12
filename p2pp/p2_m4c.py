@@ -58,6 +58,9 @@ def find_previous_tool_replaced(tool, index):
 
 
 def patchup_toolchanges():
+    if v.m4c_numberoffilaments == 4:
+        return
+
     for idx in range(len(v.m4c_toolchange_source_positions)):
         try:
             old = v.parsed_gcode[v.m4c_toolchange_source_positions[idx]]
