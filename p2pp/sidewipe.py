@@ -30,12 +30,13 @@ def resetfanspeed():
 def generate_blob(length, count):
     issue_code("\n;---- BIGBRAIN3D SIDEWIPE BLOB {} -- purge {:.3f}mm\n".format(count + 1, length))
     # issue_code("M907 X{} ; set motor power\n".format(int(v.purgemotorpower)))
-
+    setfanspeed(0)
+    issue_code("G4 P2000")
     issue_code(
         "G1 X{:.3f} F3000   ; go near the edge of the print\n".format(v.bigbrain3d_x_position - 10))
     issue_code(
         "G1 X{:.3f} F1000   ; go to the actual wiping position\n".format(v.bigbrain3d_x_position))  # takes 2.5 seconds
-    setfanspeed(0)
+
     if v.retraction < 0:
         purgetower.unretract(v.current_tool, 1200)
     if v.bigbrain3d_smartfan:
