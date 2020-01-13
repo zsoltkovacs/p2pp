@@ -156,6 +156,10 @@ def check_config_parameters(keyword, value):
         v.bigbrain3d_prime = intparameter(value)
         return
 
+    if keyword == "BIGBRAIN3D_FAN_OFF_PAUSE":
+        v.bigbrain3d_fanoffdelay = intparameter(value)
+        return
+
     if keyword == "BIGBRAIN3D_ENABLE":
         if not v.wipe_remove_sparse_layers:
             v.bigbrain3d_purge_enabled = True

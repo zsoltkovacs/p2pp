@@ -32,6 +32,9 @@ def generate_blob(length, count):
     # issue_code("M907 X{} ; set motor power\n".format(int(v.purgemotorpower)))
 
     setfanspeed(0)
+    if v.bigbrain3d_fanoffdelay > 0:
+        issue_code("G4 P{} ; delay to let the fan spinn down".format(v.bigbrain3d_fanoffdelay))
+
     issue_code(
         "G1 X{:.3f} F3000   ; go near the edge of the print\n".format(v.bigbrain3d_x_position - 10))
     issue_code(

@@ -12,7 +12,7 @@ from copy import deepcopy
 import p2pp.formatnumbers as fn
 import p2pp.gcode as gcode
 import p2pp.variables as v
-from colornames import find_nearest_colour
+from p2pp.colornames import find_nearest_colour
 
 
 # routined to support more than 4 colors.

@@ -217,6 +217,7 @@ bigbrain3d_smartfan = False
 bigbrain3d_motorpower_high = 550
 bigbrain3d_motorpower_normal = 540
 bigbrain3d_whacks = 1
+bigbrain3d_fanoffdelay = 0
 
 tower_measure = False
 expect_retract = False
