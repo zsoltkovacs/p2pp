@@ -541,15 +541,16 @@ def gcode_parseline(index):
             if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y)):
                 g.remove_parameter("E")
 
-    if not v.side_wipe and g.is_movement_command():
-        if g.has_X():
-            if v.wipe_tower_info['minx'] <= g.X <= v.wipe_tower_info['maxx']:
-                v.keep_x = g.X
-        if g.has_Y():
-            if v.wipe_tower_info['miny'] <= g.Y <= v.wipe_tower_info['maxy']:
-                v.keep_y = g.Y
-    elif not x_on_bed(g.X):
-        g.remove_parameter("X")
+    if g.is_movement_command():
+        if not v.side_wipe:
+            if g.has_X():
+                if v.wipe_tower_info['minx'] <= g.X <= v.wipe_tower_info['maxx']:
+                    v.keep_x = g.X
+            if g.has_Y():
+                if v.wipe_tower_info['miny'] <= g.Y <= v.wipe_tower_info['maxy']:
+                    v.keep_y = g.Y
+        elif not x_on_bed(g.X):
+            g.remove_parameter("X")
 
     if not v.full_purge_reduction and not v.side_wipe and g.is_movement_command() and g.has_E() and g.has_parameter(
             "F"):
