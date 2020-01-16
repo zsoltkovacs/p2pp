@@ -170,22 +170,21 @@ def header_generate_omega_palette2(job_name):
     header.append('O23 D0001' + "\n")  # unused
     header.append('O24 D0000' + "\n")  # unused
 
-    header.append("O25 ")
+    str = "O25"
 
     for i in range(4):
         if v.palette_inputs_used[i]:
             if v.filament_color_code[i] == "-":
                 v.filament_color_code[i] = '000000'
-
-            header.append("D{}{}{}{} ".format(v.used_filament_types.index(v.filament_type[i]) + 1,
-                                              v.filament_color_code[i].strip("\n"),
-                                              find_nearest_colour(v.filament_color_code[i].strip("\n")),
-                                              v.filament_type[i].strip("\n")
-                                              ))
+            str += " D{}{}{}{}".format(v.used_filament_types.index(v.filament_type[i]) + 1,
+                                       v.filament_color_code[i].strip("\n"),
+                                       find_nearest_colour(v.filament_color_code[i].strip("\n")),
+                                       v.filament_type[i].strip("\n")
+                                       )
         else:
-            header.append("D0 ")
+            str += (" D0")
 
-    header.append("\n")
+    header.append(str + "\n")
 
     header.append('O26 ' + hexify_short(len(v.splice_extruder_position)) + "\n")
     header.append('O27 ' + hexify_short(len(v.ping_extruder_position)) + "\n")
