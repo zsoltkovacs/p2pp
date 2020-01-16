@@ -7,6 +7,7 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
+import io
 import os
 import time
 
@@ -912,10 +913,14 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
             else:
                 maffile = pre + ".maf"
             gui.create_logitem("Generating PALETTE MAF/MSF file: " + maffile)
-            opf = open(maffile, "w")
-            for i in range(len(header)):
-                if not header[i].startswith(";"):
-                    opf.write(header[i])
+            # opf = open(maffile, "w")
+            with io.open('tmpfile', 'w', newline='\r\n') as opf:
+                for i in range(len(header)):
+                    if not header[i].startswith(";"):
+                        try:
+                            opf.write(unicode(header[i]))
+                        except:
+                            opf.write(header[i])
 
         gui.print_summary(omega_result['summary'])
 
