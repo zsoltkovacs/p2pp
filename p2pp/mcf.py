@@ -541,7 +541,7 @@ def gcode_parseline(index):
             if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y)):
                 g.remove_parameter("E")
 
-    if not v.side_wipe:
+    if not v.side_wipe and g.is_movement_command():
         if g.has_X():
             if v.wipe_tower_info['minx'] <= g.X <= v.wipe_tower_info['maxx']:
                 v.keep_x = g.X
