@@ -264,10 +264,14 @@ def generatesummary():
     summary.append(";Number of color swaps in this print: {}\n".format(len(v.m4c_late_warning)))
     summary.append(";Filament defined for this print:\n")
     for i in range(v.m4c_numberoffilaments):
+        try:
+            id = v.filament_ids[i]
+        except IndexError:
+            id = ""
         summary.append(";.   Filament {} - Color Code {} - {:20}  {}\n".format(i + 1, v.filament_color_code[i],
                                                                                find_nearest_colour(
                                                                                    v.filament_color_code[i].strip(
-                                                                                       "\n")), v.filament_ids[i]))
+                                                                                       "\n")), id))
     summary.append("\n")
 
     summary.append(";---------------------\n")

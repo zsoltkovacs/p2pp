@@ -8,6 +8,7 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 import os
+import platform
 import time
 
 import p2pp.gcode as gcode
@@ -921,7 +922,10 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
             opf = open(maffile, "w")
             for i in range(len(header)):
                 if not header[i].startswith(";"):
-                    opf.write(header[i].strip('\n') + "\r\n")
+                    if platform.system() != "Windows":
+                        opf.write(header[i].strip('\n') + "\r\n")
+                    else:
+                        opf.write(header[i].strip('\n').strip('\r') + "\r\n")
 
         gui.print_summary(omega_result['summary'])
 
