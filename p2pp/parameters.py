@@ -1,29 +1,31 @@
 __author__ = 'Tom Van den Eede'
-__copyright__ = 'Copyright 2018, Palette2 Splicer Post Processing Project'
+__copyright__ = 'Copyright 2018-2019, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
-__license__ = 'GPL'
+__license__ = 'GPLv3'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
+import p2pp.gui as gui
 import p2pp.variables as v
-from p2pp.logfile import log_warning
 
 
 def floatparameter(s):
     pos = s.find("=")
     try:
-        return float(s[pos+1:])
-    except:
+        return float(s[pos + 1:])
+    except ValueError:
         return 0
+
 
 def stringparameter(s):
     pos = s.find("=")
     try:
-        return s[pos+1:].strip()
-    except:
+        return s[pos + 1:].strip()
+    except IndexError:
         return ""
+
 
 def check_config_parameters(line):
     # BASIC SETUP  (material setup handled in mcf.py
@@ -32,21 +34,37 @@ def check_config_parameters(line):
     if "PRINTERPROFILE" in line:
         tmp_string = stringparameter(line)
         if len(tmp_string) != 16:
-            log_warning("Invalid Printer profile!  - Has invalid length (expect 16) - [{}]"
-                        .format(tmp_string))
-            tmp_string= ""
+            gui.log_warning("Invalid Printer profile!  - Has invalid length (expect 16) - [{}]"
+                            .format(tmp_string))
+            tmp_string = ""
         if not all(char in set("0123456789ABCDEFabcdef") for char in tmp_string):
-            log_warning("Invalid Printer profile!  - Invalid characters  (expect 0123456789abcdef) - [{}]"
-                        .format(tmp_string))
+            gui.log_warning("Invalid Printer profile!  - Invalid characters  (expect 0123456789abcdef) - [{}]"
+                            .format(tmp_string))
             tmp_string = ""
 
         if len(tmp_string) == 16:
             v.printer_profile_string = tmp_string
+            gui.set_printer_id(v.printer_profile_string)
         return
 
+    if "ACCESSORYMODE_MAF" in line:
+        v.accessory_mode = True
+        gui.create_logitem("Config: Palette2 Accessory Mode Selected")
+
+    if "ACCESSORYMODE_MSF" in line:
+        v.accessory_mode = True
+        v.palette_plus = True
+        gui.create_logitem("Config: Palette+ Accessory Mode Selected")
+
+    if "P+LOADINGOFFSET" in line:
+        v.palette_plus_loading_offset = int(floatparameter(line))
+
+    if "P+PPM" in line:
+        v.palette_plus_ppm = int(floatparameter(line))
 
     if "SPLICEOFFSET" in line:
         v.splice_offset = floatparameter(line)
+        gui.create_logitem("Splice Offset set to {:-5.2f}mm".format(v.splice_offset))
         return
 
     if "PROFILETYPEOVERRIDE" in line:
@@ -61,6 +79,7 @@ def check_config_parameters(line):
 
     if "EXTRAENDFILAMENT" in line:
         v.extra_runout_filament = floatparameter(line)
+        gui.create_logitem("Extra filament at end of print {:-8.2f}mm".format(v.extra_runout_filament))
         return
 
     if "BEFORESIDEWIPEGCODE" in line:
@@ -71,11 +90,14 @@ def check_config_parameters(line):
         v.after_sidewipe_gcode.append(stringparameter(line))
         return
 
+    if "AUTOADDPURGE" in line:
+        v.autoaddsplice = True
+
     if "MINSTARTSPLICE" in line:
         v.min_start_splice_length = floatparameter(line)
         if v.min_start_splice_length < 100:
             v.min_start_splice_length = 100
-            log_warning("Minimal first slice length adjusted to 100mm")
+            gui.log_warning("Minimal first slice length adjusted to 100mm")
         return
 
     if "BEDSIZEX" in line:
@@ -91,33 +113,62 @@ def check_config_parameters(line):
         v.bed_origin_y = floatparameter(line)
         return
 
+    if "BIGBRAIN3D_BLOBSIZE" in line:
+        v.bigbrain3d_blob_size = int(floatparameter(line))
+
+    if "BIGBRAIN3D_COOLINGTIME" in line:
+        v.bigbrain3d_blob_cooling_time = int(floatparameter(line))
+
+    if "BIGBRAIN3D_PURGEPOSITION" in line:
+        v.bigbrain3d_x_position = floatparameter(line)
+
+    if "BIGBRAIN3D_MOTORPOWER_HIGH" in line:
+        v.bigbrain3d_motorpower_high = int(floatparameter(line))
+
+    if "BIGBRAIN3D_MOTORPOWER_NORMAL" in line:
+        v.bigbrain3d_motorpower_normal = int(floatparameter(line))
+
+    if "BIGBRAIN3D_NUMBER_OF_WHACKS" in line:
+        v.bigbrain3d_whacks = int(floatparameter(line))
+
+    if "BIGBRAIN3D_ENABLE" in line:
+        v.bigbrain3d_purge_enabled = True
+        gui.log_warning("BIGBRAIN3D Will only work with installed hardware on a Prusa Printer")
+
+    if "BIGBRAIN3D_SMARTFAN" in line:
+        v.bigbrain3d_smartfan = True
+
+
     if "MINSPLICE" in line:
         v.min_splice_length = floatparameter(line)
         if v.min_splice_length < 70:
-            v. min_splice_length = 70
-            log_warning("Minimal slice length adjusted to 70mm")
+            v.min_splice_length = 70
+            gui.log_warning("Minimal slice length adjusted to 70mm")
         return
 
-    # LINEAR PING
-
+    # LINEAR PING removed
 
     if "LINEARPINGLENGTH" in line:
         v.ping_interval = floatparameter(line)
         v.ping_length_multiplier = 1.0
         if v.ping_interval < 300:
             v.ping_interval = 300
-            log_warning("Minimal Linear Ping distance is 300mm!  Your config stated: {}".format(line))
+            gui.log_warning("Minimal Linear Ping distance is 300mm!  Your config stated: {}".format(line))
+        gui.create_logitem("Linear Ping interval of  {:-6.2f}mm".format(v.ping_interval))
         return
 
-    if "LINEARPING" in line:
-        v.ping_length_multiplier = 1.0
+    if line.endswith("LINEARPING"):
+        gui.log_warning("LINEARPING deprecated, use LINEARPINGLENGTH  parameter instead")
         return
-
 
     # SIDE TRANSITIONING
     if "SIDEWIPELOC" in line:
         v.side_wipe_loc = stringparameter(line)
         return
+
+    if "PURGETOPSPEED" in line:
+        v.purgetopspeed = int(floatparameter(line))
+        gui.create_logitem("Purge Max speed set to {:.0f}mm/min ({}mm/s)".format(v.purgetopspeed, v.purgetopspeed / 60))
 
     if "WIPEFEEDRATE" in line:
         v.wipe_feedrate = floatparameter(line)
@@ -140,10 +191,46 @@ def check_config_parameters(line):
     if "PURGETOWERDELTA" in line:
         if abs(floatparameter(line)) != abs(float(0)):
             v.max_tower_z_delta = abs(floatparameter(line))
-            log_warning("CAUTION --  TOWER DELTA ENABLED -- {:-2.2f}mm".format(v.max_tower_z_delta))
+            gui.create_logitem("Max Purge Tower Delta set to {:-2.2f}mm".format(v.max_tower_z_delta))
         return
+    if "FULLPURGEREDUCTION" in line:
+        gui.create_logitem("Full purge reduction configured")
+        v.full_purge_reduction = True
+
+    if line.endswith("CHECKVERSION"):
+        import p2pp.checkversion as cv
+        import version
+        latest = cv.get_version(cv.MASTER)
+        if latest > version.Version:
+            gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False, "2.0")
+        else:
+            if (latest < version.Version):
+                latest = cv.get_version(cv.DEV)
+                if (latest > version.Version):
+                    gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False,
+                                       "2.0")
+
 
     # REPRAP COMPATIBILITY
     if "REPRAPCOMPATIBLE" in line:
         v.reprap_compatible = True
         return
+
+    # Program parameters
+    if "NOGUI" in line:
+        v.gui = False
+        return
+
+    if "CONSOLEWAIT" in line:
+        v.consolewait = True
+
+    if "IGNOREWARNINGS" in line:
+        v.ignore_warnings = True
+
+    if "ABSOLUTEEXTRUDER" in line:
+        v.absolute_extruder = True
+        gui.create_logitem("Convert to absolute extrusion parameters")
+
+    if "DEBUGTCOMMAND" in line:
+        v.debug_leaveToolCommands = True
+        gui.log_warning("DEBUGTCOMMAND ACTIVE - File will not print correctly!!")

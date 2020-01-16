@@ -1,13 +1,20 @@
 __author__ = 'Tom Van den Eede'
-__copyright__ = 'Copyright 2018, Palette2 Splicer Post Processing Project'
+__copyright__ = 'Copyright 2018-2019, Palette2 Splicer Post Processing Project'
 __credits__ = ['Tom Van den Eede',
                'Tim Brookman'
                ]
-__license__ = 'GPL'
+__license__ = 'GPLv3'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 import struct
+
+
+def hexify_byte(num):
+    # hexify_short: Converts a short integer into the specific notation used by Mosaic
+    if num < 0:
+        num += 256
+    return "D" + '{0:02x}'.format(num)
 
 
 def hexify_short(num):
@@ -24,7 +31,9 @@ def hexify_long(num):
 
 def hexify_float(f):
     # hexify_float: Converts a 32-bit floating point number into the specific notation used by Mosaic
-    return "D" + (hex(struct.unpack('<I', struct.pack('<f', f))[0]))[2:]
+    _number = (hex(struct.unpack('<I', struct.pack('<f', f))[0]))[2:]
+
+    return "D{:0>8}".format(_number)
 
 
 def hours(sec):
