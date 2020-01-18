@@ -357,7 +357,6 @@ def parse_gcode():
             if m:
                 parameters.check_config_parameters(m.group(1), m.group(2))
 
-
             if line.startswith(";P2PP MATERIAL_"):
                 algorithm_process_material_configuration(line[15:])
 
@@ -365,26 +364,16 @@ def parse_gcode():
             # if not supports are printed or layers are synced, there is no need to look at the layerheight,
             # otherwise look at the layerheight to determine the layer progress
 
-            if v.synced_support or not v.prints_support:
-                if line.startswith(";LAYER"):
-                    try:
-                        layer = int(line[7:])
-                    except ValueError:
-                        fields = line[7:].split(" ")
-                        for field in fields:
-                            try:
-                                layer = int(field)
-                                break
-                            except ValueError:
-                                pass
-            else:
-                if line.startswith(";LAYERHEIGHT"):
-                    try:
-                        tmp1 = float(line[12:])
-                        tmp = tmp1
-                        layer = int((tmp - v.first_layer_height + 0.005) / v.layer_height)
-                    except ValueError:
-                        pass
+            lm = layer_regex.match(line)
+            if lm:
+                llm = len(lm.group(1))
+                lmv = float(lm.group(2))
+                if v.synced_support or not v.prints_support:
+                    if llm == 5:  # LAYER
+                        layer = int(lmv)
+                else:
+                    if llm == 11:  # LAYERHEIGHT
+                        layer = int((lmv - v.first_layer_height + 0.005) / v.layer_height)
 
             if layer == v.parsedlayer:
                 layer = -1
