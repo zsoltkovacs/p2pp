@@ -214,8 +214,8 @@ bigbrain3d_blob_cooling_time = 12
 bigbrain3d_blob_size = 40
 bigbrain3d_purge_enabled = False
 bigbrain3d_smartfan = False
-bigbrain3d_motorpower_high = 550
-bigbrain3d_motorpower_normal = 540
+bigbrain3d_motorpower_high = 450
+bigbrain3d_motorpower_normal = 300
 bigbrain3d_whacks = 1
 bigbrain3d_fanoffdelay = 0
 

@@ -538,8 +538,8 @@ In order to make use of the device:
      ;P2PP BIGBRAIN3D_BLOBSIZE=40   
      ;P2PP BIGBRAIN3D_COOLINGTIME=20
      ;P2PP BIGBRAIN3D_PURGEPOSITION=250.1   [ replace this with the value for your printer ]
-     ;P2PP BIGBRAIN3D_MOTORPOWER_HIGH=550
-     ;P2PP BIGBRAIN3D_MOTORPOWER_NORMAL=540
+     ;P2PP BIGBRAIN3D_MOTORPOWER_HIGH=450
+     ;P2PP BIGBRAIN3D_MOTORPOWER_NORMAL=300
      ;P2PP BIGBRAIN3D_ENABLE
 ```   
  
@@ -556,11 +556,11 @@ In order to make use of the device:
   Position of the X-Carriage when the device is fully depliyed.   You should get this infor during setup of the device
   Note that moving the device too far right will result in losing steps and subsequent layer shift...  
   
-> **;P2PP BIGBRAIN3D_MOTORPOWER_HIGH=550 **  *[ALPHA]*
+> **;P2PP BIGBRAIN3D_MOTORPOWER_HIGH=450 **  *[ALPHA]*
 
   Sets the value for high motor power during the engagement of the device, The default value is 550, if you see that the motor is unable to hold position and you see layershifts in your print you may need to increase this setting or reduce the number of springs.   Increasing the value will increase the temperature of the X-axis motor.  Further active cooling may be required to prevent damage.
   
-> **;P2PP BIGBRAIN3D_MOTORPOWER_NORMAL=540 **  *[ALPHA]*
+> **;P2PP BIGBRAIN3D_MOTORPOWER_NORMAL=300 **  *[ALPHA]*
 
   Value for normal printing motor power (default taken from BB3D site)
   
