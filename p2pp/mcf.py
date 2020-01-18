@@ -9,6 +9,7 @@ __email__ = 'P2PP@pandora.be'
 
 import io
 import os
+import re
 import time
 
 import p2pp.gcode as gcode
@@ -21,6 +22,8 @@ import p2pp.variables as v
 from p2pp.gcodeparser import parse_slic3r_config
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
 from p2pp.sidewipe import create_side_wipe, create_sidewipe_BigBrain3D
+
+layer_regex = re.compile("\s*;\s*(LAYER|LAYERHEIGHT)?\s+(\d+(\.\d+)?)\s*")
 
 
 def remove_previous_move_in_tower():
@@ -361,6 +364,7 @@ def parse_gcode():
             layer = -1
             # if not supports are printed or layers are synced, there is no need to look at the layerheight,
             # otherwise look at the layerheight to determine the layer progress
+
             if v.synced_support or not v.prints_support:
                 if line.startswith(";LAYER"):
                     try:
@@ -923,11 +927,12 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
             with io.open('tmpfile', 'w', newline='\r\n') as opf:
 
                 for i in range(len(header)):
-                    if not header[i].startswith(";"):
+                    h = header[i].strip('\n\r') + "\n"
+                    if not h.startswith(";"):
                         try:
-                            opf.write(unicode(header[i]))
+                            opf.write(unicode(h))
                         except:
-                            opf.write(header[i])
+                            opf.write(h)
 
         gui.print_summary(omega_result['summary'])
 
