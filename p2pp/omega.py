@@ -8,6 +8,7 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 import p2pp.gui as gui
+import p2pp.p2_m4c as m4c
 import p2pp.variables as v
 from p2pp.colornames import find_nearest_colour
 from p2pp.formatnumbers import hexify_short, hexify_float, hexify_long, hexify_byte
