@@ -7,6 +7,8 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
+import math
+
 import p2pp.gcode as gcode
 import p2pp.gcodeparser as gcodeparser
 import p2pp.variables as v
@@ -42,6 +44,10 @@ def if_defined(x, y):
 def calculate_purge(movelength):
     volume = v.extrusion_width * v.layer_height * (abs(movelength) + v.layer_height)
     return gcodeparser.filament_volume_to_length(volume)
+
+
+def volfromlength(length):
+    return length * v.filament_diameter[0] / 2.0 * v.filament_diameter[0] / 2.0 * math.pi
 
 
 def generate_rectangle(result, x, y, w, h):

@@ -192,7 +192,7 @@ class GCodeCommand:
             v.total_material_extruded += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
             v.material_extruded_per_color[
                 v.current_tool] += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
-
+            v.purge_count += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
         v.processed_gcode.append(str(self))
         # v.processed_gcode.append(  "[{}]  {} ".format(v.classes[self.Class],str(self)))
 
@@ -203,6 +203,7 @@ class GCodeCommand:
             v.total_material_extruded += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
             v.material_extruded_per_color[
                 v.current_tool] += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
+            v.purge_count += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
 
         v.processed_gcode.append(s)
 

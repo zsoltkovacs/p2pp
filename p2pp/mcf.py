@@ -389,10 +389,10 @@ def parse_gcode():
             if layer >= 0:
                 v.parsedlayer = layer
 
-            if layer > 0:
-                v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
-                toolchange = 0
-                emptygrid = 0
+                if layer > 0:
+                    v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
+                    toolchange = 0
+                    emptygrid = 0
 
             update_class(line)
 
@@ -486,6 +486,15 @@ def gcode_parseline(index):
 
     previous_block_class = v.parsed_gcode[max(0, index - 1)].Class
     classupdate = g.Class != previous_block_class
+
+    if classupdate and previous_block_class == CLS_TOOL_PURGE:
+        if v.purge_count > 0:
+            gcode.issue_code(
+                ";>>> Total purge {:4.0f}mm3 - {:4.0f}mm <<<\n".format(purgetower.volfromlength(v.purge_count),
+                                                                       v.purge_count))
+
+    if classupdate and g.Class == CLS_TOOL_PURGE:
+        v.purge_count = 0
 
     if classupdate and g.Class == CLS_BRIM and v.side_wipe and v.bigbrain3d_purge_enabled:
         v.side_wipe_length = v.bigbrain3d_prime * v.bigbrain3d_blob_size
@@ -856,10 +865,8 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         gui.log_warning("AUTOEDDPURGE only works with side wipe and fullpurgereduction at this moment")
 
     if (len(v.skippable_layer) == 0) and v.pathprocessing:
-        gui.log_warning("LAYER configuration is missing... no output generated.")
-        gui.log_warning("Put these lines in your AFTER_LAYER_CHANGE G-code under PRINTER settings in PrusaSlicer")
-        gui.log_warning(";LAYER [layer_num]")
-        gui.log_warning(";LAYERHEIGHT [layer_z]")
+        gui.log_warning("LAYER configuration is missing. NO OUTPUT FILE GENERATED.")
+        gui.log_warning("Check the P2PP documentation for furhter info.")
     else:
 
         if v.tower_delta:

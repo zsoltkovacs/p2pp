@@ -226,6 +226,7 @@ tower_measure = False
 expect_retract = False
 
 keep_speed = 0
+purge_count = 0.0
 
 purgetopspeed = 99999
 wipe_remove_sparse_layers = False
