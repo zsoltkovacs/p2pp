@@ -172,10 +172,21 @@ def header_generate_omega_palette2(job_name):
 
     str = "O25"
 
-    for i in range(4):
-        if v.palette_inputs_used[i]:
-            if v.filament_color_code[i] == "-":
-                v.filament_color_code[i] = '000000'
+    initools = v.m4c_loadedinputs[0]
+
+    if len(initools) < 4:
+        if v.m4c_numberoffilaments == 4:
+            initools = [0, 1, 2, 3]
+            for i in range(4):
+                if not v.palette_inputs_used[i]:
+                    initools[i] = -1
+        else:
+            while len(initools < 4):
+                initools.append(-1)
+
+    for i in initools:
+        if i != -1:
+
             str += " D{}{}{}{}".format(v.used_filament_types.index(v.filament_type[i]) + 1,
                                        v.filament_color_code[i].strip("\n"),
                                        find_nearest_colour(v.filament_color_code[i].strip("\n")),
@@ -195,9 +206,15 @@ def header_generate_omega_palette2(job_name):
     header.append('O29 ' + hexify_short(v.hotswap_count) + "\n")
 
     for i in range(len(v.splice_extruder_position)):
-        header.append("O30 D{:0>1d} {}\n".format(v.splice_used_tool[i],
+        if v.accessory_mode:
+            header.append("O30 D{:0>1d} {}\n".format(v.splice_used_tool[i],
                                                  hexify_float(v.splice_extruder_position[i])
                                                  )
+                          )
+        else:
+            header.append("O30 D{:0>1d} {}\n".format(v.splice_used_tool[i],
+                                                     hexify_float(v.splice_extruder_position[i] + v.autoloadingoffset)
+                                                     )
                       )
 
     if v.accessory_mode:
@@ -209,13 +226,24 @@ def header_generate_omega_palette2(job_name):
         header.append("O32 {}\n"
                       .format(v.splice_algorithm_table[i]))
 
+    if v.m4c_numberoffilaments > 4:
+        v.m4c_headerinfo = m4c.generate_warninglist()
+        for i in v.m4c_headerinfo:
+            header.append(i + "\n")
+
+    if v.autoloadingoffset > 0:
+        header.append("O40 D{}".format(v.autoloadingoffset))
+    else:
+        v.autoloadingoffset = 0
+
     if not v.accessory_mode:
         if len(v.splice_extruder_position) > 0:
             header.append("O1 D{} {}\n"
-                          .format(job_name, hexify_long(int(v.splice_extruder_position[-1] + 0.5))))
+                          .format(job_name,
+                                  hexify_long(int(v.splice_extruder_position[-1] + 0.5 + v.autoloadingoffset))))
         else:
             header.append("O1 D{} {}\n"
-                          .format(job_name, hexify_long(int(v.total_material_extruded  + 0.5))))
+                          .format(job_name, hexify_long(int(v.total_material_extruded + 0.5 + v.autoloadingoffset))))
 
         header.append("M0\n")
         header.append("T0\n")
@@ -226,10 +254,31 @@ def header_generate_omega_palette2(job_name):
 
 
 def generatesummary():
-    summary = [";---------------------\n",
-               "; - SPLICE INFORMATION-\n",
-               ";---------------------\n",
-               ";       Splice Offset = {:-8.2f}mm\n\n".format(v.splice_offset)]
+    summary = []
+
+    summary.append(";---------------------\n")
+    summary.append("; - COLORS DEFINED   -\n")
+    summary.append(";---------------------\n")
+    summary.append(";Number of extruders defined in PrusaSlicer: {}\n".format(v.m4c_numberoffilaments))
+    summary.append(";Number of color swaps in this print: {}\n".format(len(v.m4c_late_warning)))
+    summary.append(";Filament defined for this print:\n")
+    for i in range(v.m4c_numberoffilaments):
+        try:
+            id = v.filament_ids[i]
+        except IndexError:
+            id = ""
+        summary.append(";.   Filament {} - Color Code {} - {:20}  {}\n".format(i + 1, v.filament_color_code[i],
+                                                                               find_nearest_colour(
+                                                                                   v.filament_color_code[i].strip(
+                                                                                       "\n")), id))
+    summary.append("\n")
+
+    summary.append(";---------------------\n")
+    summary.append("; - SPLICE INFORMATION-\n")
+    summary.append(";---------------------\n")
+    summary.append(";       Splice Offset = {:-8.2f}mm\n".format(v.splice_offset))
+    summary.append(";       Autoloading Offset = {:-8.2f}mm\n\n".format(v.autoloadingoffset))
+
 
     for i in range(len(v.splice_extruder_position)):
         if i==0:

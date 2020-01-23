@@ -93,6 +93,10 @@ def check_config_parameters(keyword, value):
         v.after_sidewipe_gcode.append(value)
         return
 
+    if keyword == "AUTOLOADINGOFFSET":
+        v.autoloadingoffset = floatparameter(value)
+        return
+
     if keyword == "AUTOADDPURGE":
         v.autoaddsplice = True
         return
@@ -132,6 +136,10 @@ def check_config_parameters(keyword, value):
         v.bigbrain3d_x_position = floatparameter(value)
         return
 
+    if keyword == "BIGBRAIN3D_PURGEYPOSITION":
+        v.bigbrain3d_y_position = floatparameter(value)
+        return
+
     if keyword == "BIGBRAIN3D_MOTORPOWER_HIGH":
         v.bigbrain3d_motorpower_high = intparameter(value)
         return
@@ -146,6 +154,10 @@ def check_config_parameters(keyword, value):
 
     if keyword == "BIGBRAIN3D_PRIME_BLOBS":
         v.bigbrain3d_prime = intparameter(value)
+        return
+
+    if keyword == "BIGBRAIN3D_FAN_OFF_PAUSE":
+        v.bigbrain3d_fanoffdelay = intparameter(value)
         return
 
     if keyword == "BIGBRAIN3D_ENABLE":

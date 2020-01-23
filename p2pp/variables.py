@@ -20,15 +20,9 @@ palette_inputs_used = [False,
                        False,
                        False]
 
-filament_type = ["",
-                 "",
-                 "",
-                 ""]
+filament_type = [""] * 20
 
-filament_color_code = ["-",
-                       "-",
-                       "-",
-                       "-"]
+filament_color_code = ["-"] * 20
 
 filament_short = [0, 0, 0, 0]
 
@@ -37,8 +31,9 @@ filament_list = False
 retract_lift = [0.6, 0.6, 0.6, 0.6]
 retract_length = [0.8, 0.8, 0.8, 0.8]
 filament_diameter = [1.75, 1.75, 1.75, 1.75]
+filament_ids = []
 
-wiping_info = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+wiping_info = []
 accessory_mode = False  # type Bool
 
 
@@ -75,7 +70,7 @@ processed_gcode = []  # final output array with Gcode
 # further in the purge tower.  This serves a similar function as the transition offset in chroma.
 splice_offset = 0  # type: int
 splice_extruder_position = []
-splice_used_tool = []  # type: List[Any]
+splice_used_tool = []
 splice_length = []
 
 # SIDE WIPES
@@ -214,6 +209,7 @@ backpassed = False
 
 # prusa side wipe contraption
 bigbrain3d_x_position = 256.5
+bigbrain3d_y_position = None
 bigbrain3d_blob_cooling_time = 12
 bigbrain3d_blob_size = 40
 bigbrain3d_purge_enabled = False
@@ -221,6 +217,7 @@ bigbrain3d_smartfan = False
 bigbrain3d_motorpower_high = 450
 bigbrain3d_motorpower_normal = 300
 bigbrain3d_whacks = 1
+bigbrain3d_fanoffdelay = 0
 
 tower_measure = False
 expect_retract = False
@@ -241,6 +238,8 @@ prints_support = False
 skirtsize = 0
 skirts = 0
 bigbrain3d_prime = 0
+autoloadingoffset = 0
+
 
 classes = {
     0: "Undefined     ",
@@ -259,5 +258,19 @@ classes = {
     99: "RETURN TO NORM"
 
 }
+
+### more than 4 color prints
+############################
+m4c_enabled = False
+m4c_toolchanges = []
+m4c_toolchange_source_positions = []
+m4c_loadedinputs = []
+m4c_early_tool = []
+m4c_early_warning = []
+m4c_late_warning = []
+m4c_color_table = []
+m4c_numberoffilaments = 4
+
+m4c_headerinfo = []
 
 regex_p2pp = re.compile("^;\s*P2PP\s+([^=]+)=?(.*)$")

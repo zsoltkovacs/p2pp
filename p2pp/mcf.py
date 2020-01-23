@@ -9,10 +9,12 @@ __email__ = 'P2PP@pandora.be'
 
 import io
 import os
+import re
 import time
 
 import p2pp.gcode as gcode
 import p2pp.gui as gui
+import p2pp.p2_m4c as m4c
 import p2pp.parameters as parameters
 import p2pp.pings as pings
 import p2pp.purgetower as purgetower
@@ -20,6 +22,8 @@ import p2pp.variables as v
 from p2pp.gcodeparser import parse_slic3r_config
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
 from p2pp.sidewipe import create_side_wipe, create_sidewipe_BigBrain3D
+
+layer_regex = re.compile("\s*;\s*(LAYER|LAYERHEIGHT)?\s+(\d+(\.\d+)?)\s*")
 
 
 def remove_previous_move_in_tower():
@@ -362,26 +366,17 @@ def parse_gcode():
             layer = -1
             # if not supports are printed or layers are synced, there is no need to look at the layerheight,
             # otherwise look at the layerheight to determine the layer progress
-            if v.synced_support or not v.prints_support:
-                if line.startswith(";LAYER"):
-                    try:
-                        layer = int(line[7:])
-                    except ValueError:
-                        fields = line[7:].split(" ")
-                        for field in fields:
-                            try:
-                                layer = int(field)
-                                break
-                            except ValueError:
-                                pass
-            else:
-                if line.startswith(";LAYERHEIGHT"):
-                    try:
-                        tmp1 = float(line[12:])
-                        tmp = tmp1
-                        layer = int((tmp - v.first_layer_height + 0.005) / v.layer_height)
-                    except ValueError:
-                        pass
+
+            lm = layer_regex.match(line)
+            if lm:
+                llm = len(lm.group(1))
+                lmv = float(lm.group(2))
+                if v.synced_support or not v.prints_support:
+                    if llm == 5:  # LAYER
+                        layer = int(lmv)
+                else:
+                    if llm == 11:  # LAYERHEIGHT
+                        layer = int((lmv - v.first_layer_height + 0.005) / v.layer_height)
 
             if layer == v.parsedlayer:
                 layer = -1
@@ -389,10 +384,10 @@ def parse_gcode():
             if layer >= 0:
                 v.parsedlayer = layer
 
-                if layer > 0:
-                    v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
-                    toolchange = 0
-                    emptygrid = 0
+            if layer > 0:
+                v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
+                toolchange = 0
+                emptygrid = 0
 
             update_class(line)
 
@@ -400,6 +395,8 @@ def parse_gcode():
 
         if code.Command == 'T':
             cur_tool = int(code.Command_value)
+            v.m4c_toolchanges.append(cur_tool)
+            v.m4c_toolchange_source_positions.append(len(v.parsed_gcode))
 
         code.Tool = cur_tool
         code.Class = v.block_classification
@@ -527,7 +524,7 @@ def gcode_parseline(index):
 
     if g.Class == CLS_TOOL_PURGE and not (v.side_wipe or v.full_purge_reduction):
 
-        if g.is_movement_command() and g.has_E:
+        if g.is_movement_command() and g.has_E():
             _x = g.get_parameter("X", v.current_position_x)
             _y = g.get_parameter("Y", v.current_position_y)
             # removepositive extrusions while moving into the tower
@@ -836,6 +833,10 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
     v.tower_delta = v.max_tower_z_delta > 0
 
+    gui.create_logitem("Creating tool usage information")
+    m4c.calculate_loadscheme()
+
+
 
     if v.side_wipe:
 
@@ -922,12 +923,14 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
             gui.create_logitem("Generating PALETTE MAF/MSF file: " + maffile)
             # opf = open(maffile, "w")
             with io.open('tmpfile', 'w', newline='\r\n') as opf:
+
                 for i in range(len(header)):
-                    if not header[i].startswith(";"):
+                    h = header[i].strip('\n\r') + "\n"
+                    if not h.startswith(";"):
                         try:
-                            opf.write(unicode(header[i]))
+                            opf.write(unicode(h))
                         except:
-                            opf.write(header[i])
+                            opf.write(h)
 
         gui.print_summary(omega_result['summary'])
 
