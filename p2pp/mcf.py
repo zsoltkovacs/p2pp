@@ -484,13 +484,13 @@ def gcode_parseline(index):
     previous_block_class = v.parsed_gcode[max(0, index - 1)].Class
     classupdate = g.Class != previous_block_class
 
-    if classupdate and previous_block_class == CLS_TOOL_PURGE:
+    if classupdate and previous_block_class in [CLS_TOOL_PURGE, CLS_EMPTY]:
         if v.purge_count > 0:
             gcode.issue_code(
                 ";>>> Total purge {:4.0f}mm3 - {:4.0f}mm <<<\n".format(purgetower.volfromlength(v.purge_count),
                                                                        v.purge_count))
 
-    if classupdate and g.Class == CLS_TOOL_PURGE:
+    if classupdate and g.Class in [CLS_TOOL_PURGE, CLS_EMPTY]:
         v.purge_count = 0
 
     if classupdate and g.Class == CLS_BRIM and v.side_wipe and v.bigbrain3d_purge_enabled:
