@@ -182,7 +182,7 @@ def header_generate_omega_palette2(job_name):
                 if not v.palette_inputs_used[i]:
                     initools[i] = -1
         else:
-            while len(initools < 4):
+            while len(initools) < 4:
                 initools.append(-1)
 
     for i in initools:
