@@ -191,7 +191,8 @@ def coordinate_in_tower(x, y):
     return x_coordinate_in_tower(x) and y_coordinate_in_tower(y)
 
 def entertower(layer_hght):
-    if v.cur_tower_z_delta > 0:
+    purgeheight = layer_hght - v.cur_tower_z_delta
+    if v.current_position_z != purgeheight:
         purgeheight = layer_hght - v.cur_tower_z_delta
         v.max_tower_delta = max(v.cur_tower_z_delta, v.max_tower_delta)
         gcode.issue_code(";------------------------------\n")
@@ -499,9 +500,9 @@ def gcode_parseline(index):
         create_sidewipe_BigBrain3D()
 
     # remove M900 K0 commands during unload
-    if g.Class == CLS_TOOL_UNLOAD and (
-            g.fullcommand == "G4" or (g.fullcommand in ["M900"] and g.get_parameter("K", 0) == 0)):
-        g.move_to_comment("tool unload")
+    if g.Class == CLS_TOOL_UNLOAD:
+        if (g.fullcommand == "G4" or (g.fullcommand in ["M900"] and g.get_parameter("K", 0) == 0)):
+            g.move_to_comment("tool unload")
 
     ## ALL SITUATIONS
     ##############################################
@@ -524,6 +525,8 @@ def gcode_parseline(index):
             return
 
     if g.Class == CLS_TOOL_PURGE and not (v.side_wipe or v.full_purge_reduction):
+
+
 
         if g.is_movement_command() and g.has_E():
             _x = g.get_parameter("X", v.current_position_x)
