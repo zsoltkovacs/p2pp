@@ -18,12 +18,9 @@ Build = 13
 
 latest_stable_version = ""
 
-
-Version = "{}.{}.{}".format(MajorVersion, MinorVersion, Build)
+Version = "{}.{:02}.{:03}".format(MajorVersion, MinorVersion, Build)
 
 ##################################
 # UPDATE FILES FOR CURRENT VERSION
 ##################################
 # zip_file=p2pp_mac.zip
-
-

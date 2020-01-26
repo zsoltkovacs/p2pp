@@ -51,7 +51,7 @@ def get_version( _url_ ):
         if _maj==-1 or _min==-1 or _bld==-1:
             return None
 
-        return "{}.{}.{}".format(_maj, _min, _bld)
+        return ("{}.{:02}.{:03}".format(_maj, _min, _bld)).strip("0")
     except:
         return None
 
