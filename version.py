@@ -13,14 +13,15 @@ __status__ = 'BETA'
 MajorVersion = 4
 MinorVersion = 0
 Build = 8
-Subbuild = 1
+Subbuild = 2
 
 # version 4.0.8 - horizontal scrollbarr added - limited resize possible
 
 latest_stable_version = ""
 
 
-Version = "{}.{}.{}".format(MajorVersion, MinorVersion, Build)
+Version = "{}.{:02}.{:03}".format(MajorVersion, MinorVersion, Build)
+
 
 ##################################
 # UPDATE FILES FOR CURRENT VERSION
