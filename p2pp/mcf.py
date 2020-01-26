@@ -605,7 +605,7 @@ def gcode_parseline(index):
 
             if classupdate and g.Class == CLS_TOOL_PURGE:
                 g.issue_command()
-                gcode.issue_code("G1 X{} Y{} ;\n".format(v.keep_x, v.keep_y))
+                gcode.issue_code("G1 X{} Y{} F8640;\n".format(v.keep_x, v.keep_y))
                 v.current_position_x = v.keep_x
                 v.current_position_x = v.keep_y
                 entertower(g.Layer * v.layer_height + v.first_layer_height)
