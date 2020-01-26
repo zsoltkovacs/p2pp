@@ -400,7 +400,6 @@ def parse_gcode():
 
         if code.Command == 'T':
             cur_tool = int(code.Command_value)
-            v.toolchange_processed = True
 
         code.Tool = cur_tool
         code.Class = v.block_classification
@@ -443,6 +442,7 @@ def gcode_parseline(index):
         gcode_process_toolchange(int(g.Command_value), v.total_material_extruded, g.Layer)
         if not v.debug_leaveToolCommands:
             g.move_to_comment("Color Change")
+        v.toolchange_processed = g.Layer
         g.issue_command()
         return
 
@@ -725,14 +725,14 @@ def gcode_parseline(index):
                 v.side_wipe_length += g.E
                 g.move_to_comment("side wipe/full purge")
 
-    if v.side_wipe and g.Class == CLS_NORMAL and classupdate :
+    if v.side_wipe and g.Class == CLS_NORMAL and classupdate and v.toolchange_processed == g.Layer:
         if v.bigbrain3d_purge_enabled:
             create_sidewipe_BigBrain3D()
         else:
             create_side_wipe()
 
     if g.Class == CLS_NORMAL:
-        v.toolchange_processed = False
+        v.toolchange_processed = -1
 
     # check here issue with unretract
     #################################
