@@ -307,8 +307,15 @@ def parse_slic3r_config():
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 wiping_info = gcode_line[parameter_start + 1:].strip(" ").split(",")
+                _warning = True
                 for i in range(len(wiping_info)):
+                    if int(wiping_info[i]) != 140 and int(wiping_info[i]) != 0:
+                        _warning = False
+
                     wiping_info[i] = filament_volume_to_length(float(wiping_info[i]))
             v.max_wipe = max(wiping_info)
             v.wiping_info = wiping_info
+            if _warning:
+                gui.log_warning("All purge lenghts 70/70 OR 140.  Purge lenghts may not have been set correctly.")
             continue
+
