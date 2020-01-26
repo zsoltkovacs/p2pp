@@ -397,6 +397,7 @@ def parse_gcode():
             cur_tool = int(code.Command_value)
             v.m4c_toolchanges.append(cur_tool)
             v.m4c_toolchange_source_positions.append(len(v.parsed_gcode))
+            v.toolchange_processed = True
 
         code.Tool = cur_tool
         code.Class = v.block_classification
@@ -730,11 +731,14 @@ def gcode_parseline(index):
                 v.side_wipe_length += g.E
                 g.move_to_comment("side wipe/full purge")
 
-    if v.side_wipe and g.Class == CLS_NORMAL and classupdate:
+    if v.side_wipe and g.Class == CLS_NORMAL and classupdate and v.toolchange_processed:
         if v.bigbrain3d_purge_enabled:
             create_sidewipe_BigBrain3D()
         else:
             create_side_wipe()
+
+    if g.Class == CLS_NORMAL:
+        v.toolchange_processed = False
 
     # check here issue with unretract
     #################################
