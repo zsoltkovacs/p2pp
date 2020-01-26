@@ -725,7 +725,7 @@ def gcode_parseline(index):
                 v.side_wipe_length += g.E
                 g.move_to_comment("side wipe/full purge")
 
-    if v.side_wipe and g.Class == CLS_NORMAL and classupdate and v.toolchange_processed:
+    if v.side_wipe and g.Class == CLS_NORMAL and classupdate :
         if v.bigbrain3d_purge_enabled:
             create_sidewipe_BigBrain3D()
         else:

@@ -120,8 +120,6 @@ def create_sidewipe_BigBrain3D():
     v.side_wipe_length = 0
 
 
-
-
 def create_side_wipe():
     if not v.side_wipe or v.side_wipe_length == 0:
         return
