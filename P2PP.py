@@ -96,9 +96,8 @@ def main(args):
 if __name__ == "__main__":
     v.version = ver.Version
 
-    if len(sys.argv) == 1:
+    if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] == "-i"):
         platformD = platform.system()
-
 
         MASTER_VERSION = checkversion.get_version(checkversion.MASTER)
         DEV_VERSION = checkversion.get_version(checkversion.DEV)
@@ -106,7 +105,7 @@ if __name__ == "__main__":
         if MASTER_VERSION and DEV_VERSION:
 
             if v.version > MASTER_VERSION:
-                if v.version <DEV_VERSION:
+                if v.version < DEV_VERSION:
                     v.version += " (New dev version {} available)".format(DEV_VERSION)
                     color = "red"
                 else:
