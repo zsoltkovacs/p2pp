@@ -739,6 +739,7 @@ def gcode_parseline(index):
                 create_sidewipe_BigBrain3D()
             else:
                 create_side_wipe()
+            v.toolchange_processed = False
 
         if g.Class == CLS_NORMAL:
             gcode.GCodeCommand(";TOOLCHANGE PROCESSED").issue_command()
