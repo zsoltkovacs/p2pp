@@ -193,14 +193,13 @@ def coordinate_in_tower(x, y):
 def entertower(layer_hght):
     purgeheight = layer_hght - v.cur_tower_z_delta
     if v.current_position_z != purgeheight:
-        purgeheight = layer_hght - v.cur_tower_z_delta
         v.max_tower_delta = max(v.cur_tower_z_delta, v.max_tower_delta)
         gcode.issue_code(";------------------------------\n")
         gcode.issue_code(";  P2PP DELTA ENTER\n")
         gcode.issue_code(
-            ";  Current Z-Height = {:.2f};  Tower height = {:.2f}; delta = {:.2f}".format(v.current_position_z,
+            ";  Current Z-Height = {:.2f};  Tower height = {:.2f}; delta = {:.2f} [ {} ]".format(v.current_position_z,
                                                                                           purgeheight,
-                                                                                          v.current_position_z - purgeheight))
+                                                                                          v.current_position_z - purgeheight, layer_hght))
         if v.retraction >= 0:
             purgetower.retract(v.current_tool)
         gcode.issue_code(
@@ -216,14 +215,13 @@ def entertower(layer_hght):
 
 
 def leavetower():
-    if v.cur_tower_z_delta > 0:
-        gcode.issue_code(";------------------------------\n")
-        gcode.issue_code(";  P2PP DELTA LEAVE\n")
-        gcode.issue_code(
-            ";  Returning to Current Z-Height = {:.2f}; ".format(v.current_position_z))
-        gcode.issue_code(
-            "G1 Z{:.2f} F10810\n".format(v.current_position_z))
-        gcode.issue_code(";------------------------------\n")
+    gcode.issue_code(";------------------------------\n")
+    gcode.issue_code(";  P2PP DELTA LEAVE\n")
+    gcode.issue_code(
+        ";  Returning to Current Z-Height = {:.2f}; ".format(v.current_position_z))
+    gcode.issue_code(
+        "G1 Z{:.2f} F10810\n".format(v.current_position_z))
+    gcode.issue_code(";------------------------------\n")
 
 CLS_UNDEFINED = 0
 CLS_NORMAL = 1
@@ -398,7 +396,7 @@ def parse_gcode():
             cur_tool = int(code.Command_value)
             v.m4c_toolchanges.append(cur_tool)
             v.m4c_toolchange_source_positions.append(len(v.parsed_gcode))
-            v.toolchange_processed = True
+
 
         code.Tool = cur_tool
         code.Class = v.block_classification
@@ -442,6 +440,7 @@ def gcode_parseline(index):
         if not v.debug_leaveToolCommands:
             g.move_to_comment("Color Change")
         g.issue_command()
+        v.toolchange_processed = True
         return
 
     if g.fullcommand in ["M104", "M109", "M140", "M190", "M73", "M84", "M201", "M204"]:
@@ -622,12 +621,12 @@ def gcode_parseline(index):
                 v.towerskipped = True
                 remove_previous_move_in_tower()
                 if v.tower_delta:
-                    v.cur_tower_z_delta += v.layer_height
+                    v. cur_tower_z_delta += v.layer_height
                     gcode.issue_code(";-------------------------------------\n")
                     gcode.issue_code(";  GRID SKIP --TOWER DELTA {:6.2f}mm\n".format(v.cur_tower_z_delta))
                     gcode.issue_code(";-------------------------------------\n")
             else:
-                if "EMPTY GRID START" in g.get_comment():
+                if "EMPTY GRID START" in g.get_comment() and not v.side_wipe:
                     entertower(g.Layer * v.layer_height + v.first_layer_height)
 
 
@@ -734,14 +733,16 @@ def gcode_parseline(index):
                 v.side_wipe_length += g.E
                 g.move_to_comment("side wipe/full purge")
 
-    if v.side_wipe and g.Class == CLS_NORMAL and classupdate and v.toolchange_processed:
-        if v.bigbrain3d_purge_enabled:
-            create_sidewipe_BigBrain3D()
-        else:
-            create_side_wipe()
+    if v.toolchange_processed:
+        if v.side_wipe and g.Class == CLS_NORMAL and classupdate:
+            if v.bigbrain3d_purge_enabled:
+                create_sidewipe_BigBrain3D()
+            else:
+                create_side_wipe()
 
-    if g.Class == CLS_NORMAL:
-        v.toolchange_processed = False
+        if g.Class == CLS_NORMAL:
+            gcode.GCodeCommand(";TOOLCHANGE PROCESSED").issue_command()
+            v.toolchange_processed = False
 
     # check here issue with unretract
     #################################
