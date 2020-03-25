@@ -763,8 +763,8 @@ def gcode_parseline(index):
 
     if g.is_unretract_command():
         if g.has_E():
-            g.update_parameter("E", min(v.retraction, g.E))
-            v.retraction -= g.E
+            g.update_parameter("E", min(-v.retraction, g.E))
+            v.retraction += g.E
         else:
             v.retraction = 0
 
