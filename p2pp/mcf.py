@@ -933,8 +933,8 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
             else:
                 maffile = pre + ".maf"
             gui.create_logitem("Generating PALETTE MAF/MSF file: " + maffile)
-            # opf = open(maffile, "w")
-            with io.open('tmpfile', 'w', newline='\r\n') as opf:
+
+            with io.open(maffile, 'w', newline='\r\n') as opf:
 
                 for i in range(len(header)):
                     h = header[i].strip('\n\r') + "\n"
