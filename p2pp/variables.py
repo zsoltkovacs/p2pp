@@ -213,6 +213,7 @@ bigbrain3d_x_position = 256.5
 bigbrain3d_y_position = None
 bigbrain3d_blob_cooling_time = 12
 bigbrain3d_blob_size = 40
+bigbrain3d_blob_speed = 200
 bigbrain3d_purge_enabled = False
 bigbrain3d_smartfan = False
 bigbrain3d_motorpower_high = 450

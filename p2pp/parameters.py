@@ -128,6 +128,10 @@ def check_config_parameters(keyword, value):
         v.bigbrain3d_blob_size = intparameter(value)
         return
 
+    if keyword == "BIGBRAIN3D_BLOBSPEED":
+        v.bigbrain3d_blob_speed = intparameter(value)
+        return
+
     if keyword == "BIGBRAIN3D_COOLINGTIME":
         v.bigbrain3d_blob_cooling_time = intparameter(value)
         return

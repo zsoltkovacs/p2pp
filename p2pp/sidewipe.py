@@ -43,15 +43,15 @@ def generate_blob(length, count):
     if v.retraction < 0:
         purgetower.unretract(v.current_tool, 1200)
     if v.bigbrain3d_smartfan:
-        issue_code("G1 E{:6.3f} F200     ; Purge FAN OFF \n".format(length / 4))
+        issue_code("G1 E{:6.3f} F{}     ; Purge FAN OFF \n".format(length / 4, v.bigbrain3d_blob_speed))
         setfanspeed(32)
-        issue_code("G1 E{:6.3f} F200     ; Purge FAN 12% \n".format(length / 4))
+        issue_code("G1 E{:6.3f} F{}     ; Purge FAN 12% \n".format(length / 4, v.bigbrain3d_blob_speed))
         setfanspeed(64)
-        issue_code("G1 E{:6.3f} F200     ; Purge FAN 25% \n".format(length / 4))
+        issue_code("G1 E{:6.3f} F{}     ; Purge FAN 25% \n".format(length / 4, v.bigbrain3d_blob_speed))
         setfanspeed(96)
-        issue_code("G1 E{:6.3f} F200     ; Purge FAN 37% \n".format(length / 4))
+        issue_code("G1 E{:6.3f} F{}     ; Purge FAN 37% \n".format(length / 4, v.bigbrain3d_blob_speed))
     else:
-        issue_code("G1 E{:6.3f} F200     ; UNRETRACT/PURGE/RETRACT \n".format(length))
+        issue_code("G1 E{:6.3f} F{}     ; UNRETRACT/PURGE/RETRACT \n".format(length, v.bigbrain3d_blob_speed))
     purgetower.largeretract()
     setfanspeed(255)
     issue_code(
