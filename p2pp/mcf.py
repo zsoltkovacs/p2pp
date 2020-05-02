@@ -64,6 +64,9 @@ def optimize_tower_skip(skipmax, layersize):
                 "Warning: Purge Tower delta in effect: {} Layers or {:-6.2f}mm".format(skipped_num, skipped))
         else:
             gui.create_logitem("Tower Purge Delta could not be applied to this print")
+            for idx in range(len(v.skippable_layer)):
+                v.skippable_layer[idx] = False
+            v.tower_delta = False
 
     if not v.side_wipe and not v.bigbrain3d_purge_enabled:
         v.skippable_layer[0] = False
