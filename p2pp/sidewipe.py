@@ -36,7 +36,7 @@ def generate_blob(length, count):
         issue_code("G4 P{} ; delay to let the fan spinn down".format(v.bigbrain3d_fanoffdelay))
 
     issue_code(
-        "G1 X{:.3f} F3000   ; go near the edge of the print\n".format(v.bigbrain3d_x_position - 10))
+        "G1 X{:.3f} F3000   ; go near the edge of the print\n".format(v.bigbrain3d_x_position - v.bigbrain3d_left * 10))
     issue_code(
         "G1 X{:.3f} F1000   ; go to the actual wiping position\n".format(v.bigbrain3d_x_position))  # takes 2.5 seconds
 
@@ -56,15 +56,15 @@ def generate_blob(length, count):
     setfanspeed(255)
     issue_code(
         "G4 S{0:.0f}              ; blob {0}s cooling time\n".format(v.bigbrain3d_blob_cooling_time))
-    issue_code("G1 X{:.3f} F10800  ; activate flicker\n".format(v.bigbrain3d_x_position - 20))
+    issue_code("G1 X{:.3f} F10800  ; activate flicker\n".format(v.bigbrain3d_x_position - v.bigbrain3d_left * 20))
 
     for i in range(v.bigbrain3d_whacks):
         issue_code(
-            "G4 S1               ; Mentally prep for second whack\n".format(v.bigbrain3d_x_position - 20))
-        issue_code("G1 X{:.3f} F3000   ; approach for second whach\n".format(v.bigbrain3d_x_position - 10))
+            "G4 S1               ; Mentally prep for second whack\n".format(v.bigbrain3d_x_position - v.bigbrain3d_left * 20))
+        issue_code("G1 X{:.3f} F3000   ; approach for second whach\n".format(v.bigbrain3d_x_position - v.bigbrain3d_left * 10))
         issue_code("G1 X{:.3f} F1000   ; final position for whack and......\n".format(
             v.bigbrain3d_x_position))  # takes 2.5 seconds
-        issue_code("G1 X{:.3f} F10800  ; WHACKAAAAA!!!!\n".format(v.bigbrain3d_x_position - 20))
+        issue_code("G1 X{:.3f} F10800  ; WHACKAAAAA!!!!\n".format(v.bigbrain3d_x_position - v.bigbrain3d_left * 20))
 
 
 

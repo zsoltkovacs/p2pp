@@ -164,6 +164,10 @@ def check_config_parameters(keyword, value):
         v.bigbrain3d_fanoffdelay = intparameter(value)
         return
 
+    if keyword == "BIGBRAIN3D_LEFT_SIDE":
+        v.bigbrain3d_left = -1
+        return
+
     if keyword == "BIGBRAIN3D_ENABLE":
         if not v.wipe_remove_sparse_layers:
             v.bigbrain3d_purge_enabled = True
