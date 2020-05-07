@@ -23,7 +23,7 @@ from p2pp.gcodeparser import parse_slic3r_config
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
 from p2pp.sidewipe import create_side_wipe, create_sidewipe_BigBrain3D
 
-layer_regex = re.compile("\s*;\s*(LAYER|LAYERHEIGHT)?\s+(\d+(\.\d+)?)\s*")
+layer_regex = re.compile("\s*;\s*(LAYER|LAYERHEIGHT)\s+(\d+(\.\d+)?)\s*")
 
 
 def remove_previous_move_in_tower():
