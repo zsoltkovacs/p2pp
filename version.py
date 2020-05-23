@@ -11,7 +11,7 @@ __status__ = 'BETA'
 
 # general version info
 MajorVersion = 4
-MinorVersion = 6
+MinorVersion = 7
 Build = 0
 
 # version 4.0.8 - horizontal scrollbarr added - limited resize possible

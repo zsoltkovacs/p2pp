@@ -937,15 +937,25 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
                 maffile = pre + ".maf"
             gui.create_logitem("Generating PALETTE MAF/MSF file: " + maffile)
 
-            with io.open(maffile, 'w', newline='\r\n') as opf:
 
-                for i in range(len(header)):
-                    h = header[i].strip('\n\r') + "\n"
-                    if not h.startswith(";"):
-                        try:
-                            opf.write(unicode(h))
-                        except:
-                            opf.write(h)
+            maf = open(maffile, 'w')
+
+            for h in header:
+                h = h.strip('\r\n')
+                maf.write(unicode(h))
+                maf.write('\r\n')
+            maf.close()
+            #
+            # with io.open(maffile, 'w', newline='\r\n') as maf:
+            #
+            #     for i in range(len(header)):
+            #         h = header[i].strip('\n\r') + "\n"
+            #         if not h.startswith(";"):
+            #             try:
+            #                 maf.write(unicode(h))
+            #             except:
+            #                 maf.write(h)
+
 
         gui.print_summary(omega_result['summary'])
 
