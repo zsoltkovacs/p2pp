@@ -149,19 +149,29 @@ def create_side_wipe():
 
     yrange = [v.sidewipe_maxy, v.sidewipe_miny]
     rangeidx = 0
+    movefrom = v.sidewipe_miny
     moveto = yrange[rangeidx]
-
+    numdiffs = 20
     purgetower.unretract(v.current_tool)
+
 
     while v.side_wipe_length > 0:
         sweep = min(v.side_wipe_length, sweep_length)
         v.side_wipe_length -= sweep_length
         wipe_speed = min(5000, int(sweep_base_speed / sweep))
 
-        issue_code(
-            "G1 {} Y{} E{:.5f} F{}\n".format(v.side_wipe_loc, moveto, sweep * v.sidewipe_correction, wipe_speed))
+
+        # split this move in very short moves to allow for faster planning buffer depletion
+        diff = (moveto - movefrom) / numdiffs
+
+        for i in range(numdiffs):
+            issue_code("G1 {} Y{:.3f} E{:.5f} F{}\n".format(v.side_wipe_loc, movefrom + (i+1)*diff, sweep/numdiffs * v.sidewipe_correction, wipe_speed))
+
+        # issue_code(
+        #     "G1 {} Y{} E{:.5f} F{}\n".format(v.side_wipe_loc, moveto, sweep * v.sidewipe_correction, wipe_speed))
 
         rangeidx += 1
+        movefrom = moveto
         moveto = yrange[rangeidx % 2]
 
     for line in v.after_sidewipe_gcode:
