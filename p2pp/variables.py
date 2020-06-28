@@ -221,6 +221,7 @@ bigbrain3d_motorpower_normal = 300
 bigbrain3d_whacks = 1
 bigbrain3d_fanoffdelay = 0
 bigbrain3d_left = 1
+bigbrain3d_prime = 0
 
 tower_measure = False
 expect_retract = False
@@ -240,7 +241,7 @@ prints_support = False
 
 skirtsize = 0
 skirts = 0
-bigbrain3d_prime = 0
+
 autoloadingoffset = 0
 
 

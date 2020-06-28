@@ -253,6 +253,9 @@ def update_class(gcode_line):
         v.block_classification = CLS_TOOL_PURGE
 
     if gcode_line.startswith("; CP"):
+        if "PRIMING START" in gcode_line:
+            gui.log_warning("Extruder Primimng will not work with P2PP")
+
         if "TOOLCHANGE START" in gcode_line:
             v.block_classification = CLS_TOOL_START
 
@@ -485,6 +488,7 @@ def gcode_parseline(index):
 
         v.keep_speed = g.get_parameter("F", v.keep_speed)
 
+
     previous_block_class = v.parsed_gcode[max(0, index - 1)].Class
     classupdate = g.Class != previous_block_class
 
@@ -515,6 +519,8 @@ def gcode_parseline(index):
 
     ## ALL SITUATIONS
     ##############################################
+
+
     if g.Class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
 
         if g.is_movement_command():
