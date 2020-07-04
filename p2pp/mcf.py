@@ -526,7 +526,6 @@ def gcode_parseline(index):
         if g.is_movement_command():
             if v.side_wipe or v.tower_delta or v.full_purge_reduction:
                 g.move_to_comment("tool unload")
-
             else:
                 if g.has_Z():
                     g.remove_parameter("X")
@@ -609,13 +608,15 @@ def gcode_parseline(index):
         # specific for TOWER DELTA
         #######################################
 
-        if v.tower_delta:
+        # changed for version 4.09.0 moves in tower were going all wrong.
+        if not v.side_wipe and classupdate and g.Class == CLS_TOOL_PURGE:
+            g.issue_command()
+            gcode.issue_code("G1 X{} Y{} F8640;\n".format(v.keep_x, v.keep_y))
+            v.current_position_x = v.keep_x
+            v.current_position_x = v.keep_y
 
+        if v.tower_delta:
             if classupdate and g.Class == CLS_TOOL_PURGE:
-                g.issue_command()
-                gcode.issue_code("G1 X{} Y{} F8640;\n".format(v.keep_x, v.keep_y))
-                v.current_position_x = v.keep_x
-                v.current_position_x = v.keep_y
                 entertower(g.Layer * v.layer_height + v.first_layer_height)
                 return
 
