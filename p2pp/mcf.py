@@ -400,6 +400,7 @@ def parse_gcode():
 
         if code.Command == 'T':
             cur_tool = int(code.Command_value)
+            v.set_tool = cur_tool
             v.m4c_toolchanges.append(cur_tool)
             v.m4c_toolchange_source_positions.append(len(v.parsed_gcode))
 

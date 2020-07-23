@@ -67,12 +67,12 @@ def check_config_parameters(keyword, value):
 
     if keyword == "SPLICEOFFSET":
         v.splice_offset = floatparameter(value)
-        gui.create_logitem("Splice Offset set to {:-5.2f}mm".format(v.splice_offset))
+        gui.create_logitem("Splice Offset set tofiloverride {:-5.2f}mm".format(v.splice_offset))
         return
 
     if keyword == "PROFILETYPEOVERRIDE":
-        v.filament_type[v.current_tool] = value
-        v.used_filament_types.append(v.filament_type[v.current_tool])
+        v.filament_type[v.set_tool] = value
+        v.used_filament_types.append(v.filament_type[v.set_tool])
         v.used_filament_types = list(dict.fromkeys(v.used_filament_types))
         return
 

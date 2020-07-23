@@ -146,6 +146,7 @@ absolute_extruder = False  # type : bool
 
 previous_tool = -1
 current_tool = -1  # type: int
+set_tool = -1  # type: int
 previous_toolchange_location = 0  # type: float
 
 current_layer = "0"  # type: str # Capture layer information for short splice texts
