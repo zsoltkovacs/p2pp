@@ -465,13 +465,13 @@ def gcode_parseline(index):
             v.new_temp = g.get_parameter("S", v.current_temp)
             if v.new_temp >= v.current_temp:
                 g.fullcommand = "M109"
-                g.add_comment("updated to M109 {}-->{}".format(v.current_temp,v.new_temp))
-                g.issue_command()
+                v.temp2_stored_command = g.__str__();
+                g.add_comment("delayed until after move into tower {}-->{}".format(v.current_temp,v.new_temp))
                 v.current_temp = v.new_temp
-
+                g.issue_command()
             else:
                 g.fullcommand = "M109"
-                v.stored_command = g.__str__();
+                v.temp1_stored_command = g.__str__();
                 g.move_to_comment("delayed temp set until after purge {}-->{}".format(v.current_temp,v.new_temp))
                 g.issue_command()
 
@@ -480,9 +480,9 @@ def gcode_parseline(index):
 
 
     if not g.Class in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD] and v.current_temp != v.new_temp:
-        print(v.stored_command)
-        gcode.issue_code(v.stored_command)
-        v.stored_command = ""
+        print(v.temp1_stored_command)
+        gcode.issue_code(v.temp1_stored_command)
+        v.temp1_stored_command = ""
 
     # fan speed command
 
@@ -714,6 +714,10 @@ def gcode_parseline(index):
             v.current_position_x = _x
             v.current_position_x = _y
 
+            if v.temp2_stored_command != "":
+                gcode.issue_code(v.temp2_stored_command)
+                v.temp2_stored_command = ""
+
             g.remove_parameter("E")
             if g.get_parameter("X") == _x:
                 g.remove_parameter("X")
@@ -877,6 +881,10 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     gui.create_logitem("Pre-parsing GCode")
     gui.progress_string(4)
     parse_gcode()
+
+    if v.process_temp and v.side_wipe:
+        gui.log_warning("TEMPERATURECONTROL and Side Wipe / BigBrain3D are not compatible")
+
     if v.palette_plus:
         if v.palette_plus_ppm == -9:
             gui.log_warning("P+ parameter P+PPM not set correctly in startup GCODE")

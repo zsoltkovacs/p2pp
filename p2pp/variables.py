@@ -188,7 +188,8 @@ parsedlayer = -1
 process_temp = False
 current_temp = 0
 new_temp = 0
-stored_command = ""
+temp1_stored_command = ""
+temp2_stored_command = ""
 
 block_classification = 0
 previous_block_classification = 0
