@@ -11,6 +11,7 @@ import io
 import os
 import re
 import time
+import copy
 
 import p2pp.gcode as gcode
 import p2pp.gui as gui
@@ -450,9 +451,38 @@ def gcode_parseline(index):
         v.toolchange_processed = True
         return
 
-    if g.fullcommand in ["M104", "M109", "M140", "M190", "M73", "M84", "M201", "M204"]:
+    if g.fullcommand in [ "M140", "M190", "M73", "M84", "M201", "M204"]:
         g.issue_command()
         return
+
+    if g.fullcommand in [ "M104" , "M109" ]:
+        if not v.process_temp or not g.Class in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD]:
+            g.add_comment(" Unprocessed temp ")
+            g.issue_command()
+            v.new_temp = g.get_parameter("S", v.current_temp)
+            v.current_temp = v.new_temp
+        else:
+            v.new_temp = g.get_parameter("S", v.current_temp)
+            if v.new_temp >= v.current_temp:
+                g.fullcommand = "M109"
+                g.add_comment("updated to M109 {}-->{}".format(v.current_temp,v.new_temp))
+                g.issue_command()
+                v.current_temp = v.new_temp
+
+            else:
+                g.fullcommand = "M109"
+                v.stored_command = g.__str__();
+                g.move_to_comment("delayed temp set until after purge {}-->{}".format(v.current_temp,v.new_temp))
+                g.issue_command()
+
+        return
+
+
+
+    if not g.Class in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD] and v.current_temp != v.new_temp:
+        print(v.stored_command)
+        gcode.issue_code(v.stored_command)
+        v.stored_command = ""
 
     # fan speed command
 
