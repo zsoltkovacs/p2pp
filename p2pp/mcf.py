@@ -465,8 +465,8 @@ def gcode_parseline(index):
             v.new_temp = g.get_parameter("S", v.current_temp)
             if v.new_temp >= v.current_temp:
                 g.fullcommand = "M109"
-                g.move_to_comment("delayed temp rise until after purge {}-->{}".format(v.current_temp,v.new_temp))
                 v.temp2_stored_command = g.__str__();
+                g.move_to_comment("delayed temp rise until after purge {}-->{}".format(v.current_temp, v.new_temp))
                 v.current_temp = v.new_temp
             else:
                 v.temp1_stored_command = g.__str__();
