@@ -880,7 +880,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     gui.progress_string(4)
     parse_gcode()
 
-    if v.tower_delta:
+    if v.tower_delta or v.full_purge_reduction:
         if v.variable_layer:
             gui.log_warning("Variable layers are not compatible with tower delta")
 
