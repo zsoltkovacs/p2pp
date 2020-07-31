@@ -33,6 +33,10 @@ def check_config_parameters(keyword, value):
     if keyword == "TEMPERATURECONTROL":
         v.process_temp = True
 
+    if keyword == "SAVEUNPROCESSED":
+        v.save_unprocessed = True
+
+
     if keyword == "PRINTERPROFILE":
 
         if len(value) != 16:

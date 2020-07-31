@@ -84,6 +84,7 @@ toolchange_start = False
 toolchange_processed = False
 enterpurge = False
 variable_layer = False
+save_unprocessed = False
 
 purge_keep_x = None
 purge_keep_y = None

@@ -880,6 +880,15 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     gui.progress_string(4)
     parse_gcode()
 
+    if v.save_unprocessed:
+        pre, ext = os.path.splitext(input_file)
+        of = pre + "_unprocessed"+ext
+        gui.create_logitem("Outputing original code to: " + of)
+        opf = open(of, "w")
+        opf.writelines(v.input_gcode)
+        opf.close()
+
+
     if v.tower_delta or v.full_purge_reduction:
         if v.variable_layer:
             gui.log_warning("Variable layers are not compatible with fullpruge/tower delta")
