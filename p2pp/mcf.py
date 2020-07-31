@@ -880,6 +880,10 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     gui.progress_string(4)
     parse_gcode()
 
+    if v.tower_delta:
+        if v.variable_layer:
+            gui.log_warning("Variable layers are not compatible with tower delta")
+
     if v.process_temp and v.side_wipe:
         gui.log_warning("TEMPERATURECONTROL and Side Wipe / BigBrain3D are not compatible")
 
@@ -896,7 +900,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     m4c.calculate_loadscheme()
 
 
-
     if v.side_wipe:
 
         if v.skirts and v.ps_version > "2.2":
@@ -911,6 +914,8 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         if v.full_purge_reduction:
             gui.log_warning("Full Purge Reduction is not compatible with Side Wipe, performing Side Wipe")
             v.full_purge_reduction = False
+
+
 
     if v.full_purge_reduction:
         v.side_wipe = False

@@ -108,6 +108,10 @@ def parse_slic3r_config():
                     pass
             continue
 
+        if gcode_line.startswith(";  variable_layer_height = 1"):
+            v.variable_layers = True
+            continue
+
 
         if gcode_line.startswith("; wipe_tower_x"):
             parameter_start = gcode_line.find("=")

@@ -83,6 +83,7 @@ wipe_feedrate = 3000  # type: int
 toolchange_start = False
 toolchange_processed = False
 enterpurge = False
+variable_layer = False
 
 purge_keep_x = None
 purge_keep_y = None
