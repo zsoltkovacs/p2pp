@@ -113,7 +113,6 @@ def parse_slic3r_config():
             if parameter_start != -1:
                 tmp = int(gcode_line[parameter_start + 1:].strip())
             v.variable_layer = (tmp==1)
-            print "XXX {}".format(v.variable_layer)
             continue
 
 
