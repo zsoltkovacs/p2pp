@@ -675,8 +675,20 @@ def gcode_parseline(index):
             v.towerskipped = False
 
         if v.towerskipped:
+            # keep retracts
             if not g.is_comment():
-                g.move_to_comment("tower skipped")
+                if g.is_retract_command():
+                    if v.retraction <= - (v.retract_length[v.current_tool] - 0.02):
+                        g.move_to_comment("tower skipped//Double Retract")
+                    else:
+                        if g.has_E():
+                            v.retraction += g.E
+                        else:
+                            v.retraction -= 1
+                else:
+                    if g.is_movement_command():
+                        if not g.has_Z():
+                            g.move_to_comment("tower skipped")
             g.issue_command()
             return
     else:
