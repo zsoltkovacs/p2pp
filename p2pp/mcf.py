@@ -700,6 +700,7 @@ def gcode_parseline(index):
             else:
                 _y = v.purge_keep_y
 
+
             if not coordinate_in_tower(_x, _y):
                 _x = v.purge_keep_x
                 _y = v.purge_keep_y
@@ -709,8 +710,17 @@ def gcode_parseline(index):
 
 
             if v.temp2_stored_command != "":
-                v.current_position_x = v.wipe_tower_info['minx']+2+4*v.extrusion_width
-                v.current_position_y = v.wipe_tower_info['miny']+2+8*v.extrusion_width
+
+                if abs(v.wipe_tower_info['minx']- v.purge_keep_x) < abs(v.wipe_tower_info['maxx']- v.purge_keep_x):
+                    v.current_position_x = v.wipe_tower_info['minx'] + 2 + 4 * v.extrusion_width
+                else:
+                    v.current_position_x = v.wipe_tower_info['maxx'] - 2 - 4 * v.extrusion_width
+
+                if abs(v.wipe_tower_info['miny']- v.purge_keep_y) < abs(v.wipe_tower_info['maxy']- v.purge_keep_y):
+                    v.current_position_y = v.wipe_tower_info['miny'] + 2 + 8 * v.extrusion_width
+                else:
+                    v.current_position_y = v.wipe_tower_info['maxy'] -1 - 8 * v.extrusion_width
+
                 gcode.issue_code(
                     "G1 X{:.3f} Y{:.3f} F8640; Move outside of tower to prevent ooze problems\n".format(v.current_position_x, v.current_position_y))
 
