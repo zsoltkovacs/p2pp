@@ -707,14 +707,23 @@ def gcode_parseline(index):
             if v.retraction == 0:
                 purgetower.retract(v.current_tool, 3000)
 
+
+            if v.temp2_stored_command != "":
+                v.current_position_x = v.wipe_tower_info['minx']+2+4*v.extrusion_width
+                v.current_position_y = v.wipe_tower_info['miny']+2+8*v.extrusion_width
+                gcode.issue_code(
+                    "G1 X{:.3f} Y{:.3f} F8640; Move outside of tower to prevent ooze problems\n".format(v.current_position_x, v.current_position_y))
+
+                gcode.issue_code(v.temp2_stored_command)
+                v.temp2_stored_command = ""
+
+
             gcode.issue_code(
                 "G1 X{:.3f} Y{:.3f} F8640; P2PP Inserted to realign\n".format(v.purge_keep_x, v.purge_keep_y))
             v.current_position_x = _x
             v.current_position_x = _y
 
-            if v.temp2_stored_command != "":
-                gcode.issue_code(v.temp2_stored_command)
-                v.temp2_stored_command = ""
+
 
             g.remove_parameter("E")
             if g.get_parameter("X") == _x:
