@@ -855,8 +855,10 @@ def gcode_parseline(index):
     if v.accessory_mode:
         pings.check_accessorymode_second(g.E)
 
-    if (g.has_E() and g.E > 0) and v.side_wipe_length == 0:
-        pings.check_connected_ping()
+
+    if g.is_movement_command():
+        if (g.has_E() and g.E > 0) and v.side_wipe_length == 0:
+            pings.check_connected_ping()
 
     v.previous_position_x = v.current_position_x
     v.previous_position_y = v.current_position_y
