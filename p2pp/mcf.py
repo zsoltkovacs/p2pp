@@ -44,7 +44,6 @@ def remove_previous_move_in_tower():
 
 
 def optimize_tower_skip(skipmax, layersize):
-
     skipped = 0.0
     skipped_num = 0
     if v.side_wipe or v.bigbrain3d_purge_enabled:
@@ -137,7 +136,7 @@ def gcode_process_toolchange(new_tool, location, current_layer):
                     v.autoadded_purge = v.min_start_splice_length - length
                 else:
                     gui.log_warning("Warning : Short first splice (<{}mm) Length:{:-3.2f}".format(length,
-                                                                                              v.min_start_splice_length))
+                                                                                                  v.min_start_splice_length))
 
                     filamentshortage = v.min_start_splice_length - v.splice_length[0]
                     v.filament_short[new_tool] = max(v.filament_short[new_tool], filamentshortage)
@@ -180,19 +179,20 @@ def coordinate_on_bed(x, y):
 
 
 def x_coordinate_in_tower(x):
-    if x == None:
+    if x is None:
         return False
     return inrange(x, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx'])
 
 
 def y_coordinate_in_tower(y):
-    if y == None:
+    if y is None:
         return False
     return inrange(y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy'])
 
 
 def coordinate_in_tower(x, y):
     return x_coordinate_in_tower(x) and y_coordinate_in_tower(y)
+
 
 def entertower(layer_hght):
     purgeheight = layer_hght - v.cur_tower_z_delta
@@ -202,8 +202,9 @@ def entertower(layer_hght):
         gcode.issue_code(";  P2PP DELTA ENTER\n")
         gcode.issue_code(
             ";  Current Z-Height = {:.2f};  Tower height = {:.2f}; delta = {:.2f} [ {} ]".format(v.current_position_z,
-                                                                                          purgeheight,
-                                                                                          v.current_position_z - purgeheight, layer_hght))
+                                                                                                 purgeheight,
+                                                                                                 v.current_position_z - purgeheight,
+                                                                                                 layer_hght))
         if v.retraction >= 0:
             purgetower.retract(v.current_tool)
         gcode.issue_code(
@@ -227,6 +228,7 @@ def leavetower():
         "G1 Z{:.2f} F10810\n".format(v.current_position_z))
     gcode.issue_code(";------------------------------\n")
 
+
 CLS_UNDEFINED = 0
 CLS_NORMAL = 1
 CLS_TOOL_START = 2
@@ -244,10 +246,7 @@ CLS_TOOLCOMMAND = 12
 SPEC_INTOWER = 16
 
 
-
-
 def update_class(gcode_line):
-
     v.previous_block_classification = v.block_classification
 
     if gcode_line[0] == "T":
@@ -280,7 +279,6 @@ def update_class(gcode_line):
             v.tower_measure = False
             v.block_classification = CLS_BRIM_END
 
-
         if "EMPTY GRID START" in gcode_line:
             v.block_classification = CLS_EMPTY
 
@@ -294,7 +292,6 @@ def update_class(gcode_line):
 
 
 def backpass(currentclass):
-
     if v.wipe_remove_sparse_layers:
         return
 
@@ -358,13 +355,11 @@ def parse_gcode():
 
         gui.progress_string(4 + 46 * index // total_line_count)
 
-
         if line.startswith(';'):
 
             m = v.regex_p2pp.match(line)
             if m:
                 parameters.check_config_parameters(m.group(1), m.group(2))
-
 
             if line.startswith(";P2PP MATERIAL_"):
                 algorithm_process_material_configuration(line[15:])
@@ -405,10 +400,8 @@ def parse_gcode():
             v.m4c_toolchanges.append(cur_tool)
             v.m4c_toolchange_source_positions.append(len(v.parsed_gcode))
 
-
         code.Tool = cur_tool
         code.Class = v.block_classification
-
 
         # code.add_comment("[{}]".format(v.classes[v.block_classification]))
         v.parsed_gcode.append(code)
@@ -439,7 +432,6 @@ def parse_gcode():
         index += 1
 
 
-
 def gcode_parseline(index):
     g = v.parsed_gcode[index]
 
@@ -451,12 +443,12 @@ def gcode_parseline(index):
         v.toolchange_processed = True
         return
 
-    if g.fullcommand in [ "M140", "M190", "M73", "M84", "M201", "M204"]:
+    if g.fullcommand in ["M140", "M190", "M73", "M84", "M201", "M204"]:
         g.issue_command()
         return
 
-    if g.fullcommand in [ "M104" , "M109" ]:
-        if not v.process_temp or not g.Class in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD]:
+    if g.fullcommand in ["M104", "M109"]:
+        if not v.process_temp or  g.Class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD]:
             g.add_comment(" Unprocessed temp ")
             g.issue_command()
             v.new_temp = g.get_parameter("S", v.current_temp)
@@ -465,19 +457,17 @@ def gcode_parseline(index):
             v.new_temp = g.get_parameter("S", v.current_temp)
             if v.new_temp >= v.current_temp:
                 g.fullcommand = "M109"
-                v.temp2_stored_command = g.__str__();
+                v.temp2_stored_command = g.__str__()
                 g.move_to_comment("delayed temp rise until after purge {}-->{}".format(v.current_temp, v.new_temp))
                 v.current_temp = v.new_temp
             else:
-                v.temp1_stored_command = g.__str__();
-                g.move_to_comment("delayed temp drop until after purge {}-->{}".format(v.current_temp,v.new_temp))
+                v.temp1_stored_command = g.__str__()
+                g.move_to_comment("delayed temp drop until after purge {}-->{}".format(v.current_temp, v.new_temp))
                 g.issue_command()
 
         return
 
-
-
-    if not g.Class in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD] and v.current_temp != v.new_temp:
+    if  g.Class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD] and v.current_temp != v.new_temp:
         print(v.temp1_stored_command)
         gcode.issue_code(v.temp1_stored_command)
         v.temp1_stored_command = ""
@@ -517,7 +507,6 @@ def gcode_parseline(index):
 
         v.keep_speed = g.get_parameter("F", v.keep_speed)
 
-
     previous_block_class = v.parsed_gcode[max(0, index - 1)].Class
     classupdate = g.Class != previous_block_class
 
@@ -542,13 +531,11 @@ def gcode_parseline(index):
 
     # remove M900 K0 commands during unload
     if g.Class == CLS_TOOL_UNLOAD:
-        if (g.fullcommand == "G4" or (g.fullcommand in ["M900"] and g.get_parameter("K", 0) == 0)):
+        if g.fullcommand == "G4" or (g.fullcommand in ["M900"] and g.get_parameter("K", 0) == 0):
             g.move_to_comment("tool unload")
-
 
     ## ALL SITUATIONS
     ##############################################
-
 
     if g.Class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
 
@@ -568,8 +555,6 @@ def gcode_parseline(index):
             return
 
     if g.Class == CLS_TOOL_PURGE and not (v.side_wipe or v.full_purge_reduction):
-
-
 
         if g.is_movement_command() and g.has_E():
             _x = g.get_parameter("X", v.current_position_x)
@@ -660,14 +645,13 @@ def gcode_parseline(index):
                 v.towerskipped = True
                 remove_previous_move_in_tower()
                 if v.tower_delta:
-                    v. cur_tower_z_delta += v.layer_height
+                    v.cur_tower_z_delta += v.layer_height
                     gcode.issue_code(";-------------------------------------\n")
                     gcode.issue_code(";  GRID SKIP --TOWER DELTA {:6.2f}mm\n".format(v.cur_tower_z_delta))
                     gcode.issue_code(";-------------------------------------\n")
             else:
                 if "EMPTY GRID START" in g.get_comment() and not v.side_wipe:
                     entertower(g.Layer * v.layer_height + v.first_layer_height)
-
 
         # changing from EMPTY to NORMAL
         ###############################
@@ -712,7 +696,6 @@ def gcode_parseline(index):
             else:
                 _y = v.purge_keep_y
 
-
             if not coordinate_in_tower(_x, _y):
                 _x = v.purge_keep_x
                 _y = v.purge_keep_y
@@ -720,32 +703,29 @@ def gcode_parseline(index):
             if v.retraction == 0:
                 purgetower.retract(v.current_tool, 3000)
 
-
             if v.temp2_stored_command != "":
 
-                if abs(v.wipe_tower_info['minx']- v.purge_keep_x) < abs(v.wipe_tower_info['maxx']- v.purge_keep_x):
+                if abs(v.wipe_tower_info['minx'] - v.purge_keep_x) < abs(v.wipe_tower_info['maxx'] - v.purge_keep_x):
                     v.current_position_x = v.wipe_tower_info['minx'] + 2 + 4 * v.extrusion_width
                 else:
                     v.current_position_x = v.wipe_tower_info['maxx'] - 2 - 4 * v.extrusion_width
 
-                if abs(v.wipe_tower_info['miny']- v.purge_keep_y) < abs(v.wipe_tower_info['maxy']- v.purge_keep_y):
+                if abs(v.wipe_tower_info['miny'] - v.purge_keep_y) < abs(v.wipe_tower_info['maxy'] - v.purge_keep_y):
                     v.current_position_y = v.wipe_tower_info['miny'] + 2 + 8 * v.extrusion_width
                 else:
-                    v.current_position_y = v.wipe_tower_info['maxy'] -1 - 8 * v.extrusion_width
+                    v.current_position_y = v.wipe_tower_info['maxy'] - 1 - 8 * v.extrusion_width
 
                 gcode.issue_code(
-                    "G1 X{:.3f} Y{:.3f} F8640; Move outside of tower to prevent ooze problems\n".format(v.current_position_x, v.current_position_y))
+                    "G1 X{:.3f} Y{:.3f} F8640; Move outside of tower to prevent ooze problems\n".format(
+                        v.current_position_x, v.current_position_y))
 
                 gcode.issue_code(v.temp2_stored_command)
                 v.temp2_stored_command = ""
-
 
             gcode.issue_code(
                 "G1 X{:.3f} Y{:.3f} F8640; P2PP Inserted to realign\n".format(v.purge_keep_x, v.purge_keep_y))
             v.current_position_x = _x
             v.current_position_x = _y
-
-
 
             g.remove_parameter("E")
             if g.get_parameter("X") == _x:
@@ -777,7 +757,6 @@ def gcode_parseline(index):
                     purgetower.retract(v.current_tool)
             v.expect_retract = False
 
-
         if v.retract_move and g.is_retract_command():
             # This is going to break stuff, G10 cannot take X and Y, what to do?
             if v.retract_x:
@@ -797,7 +776,6 @@ def gcode_parseline(index):
         if g.Class == CLS_BRIM and v.full_purge_reduction:
             g.move_to_comment("replaced by P2PP brim code")
             g.remove_parameter("E")
-
 
     if v.side_wipe or v.full_purge_reduction:
         if g.Class in [CLS_TOOL_PURGE, CLS_ENDPURGE, CLS_EMPTY]:
@@ -823,8 +801,6 @@ def gcode_parseline(index):
     #################################
 
     # g.Comment = " ; - {}".format(v.total_material_extruded)
-
-
 
     if g.is_retract_command():
         if v.retraction <= - (v.retract_length[v.current_tool] - 0.02):
@@ -854,7 +830,6 @@ def gcode_parseline(index):
 
     if v.accessory_mode:
         pings.check_accessorymode_second(g.E)
-
 
     if g.is_movement_command():
         if (g.has_E() and g.E > 0) and v.side_wipe_length == 0:
@@ -915,12 +890,11 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
 
     if v.save_unprocessed:
         pre, ext = os.path.splitext(input_file)
-        of = pre + "_unprocessed"+ext
+        of = pre + "_unprocessed" + ext
         gui.create_logitem("Outputing original code to: " + of)
         opf = open(of, "w")
         opf.writelines(v.input_gcode)
         opf.close()
-
 
     if v.tower_delta or v.full_purge_reduction:
         if v.variable_layer:
@@ -941,7 +915,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     gui.create_logitem("Creating tool usage information")
     m4c.calculate_loadscheme()
 
-
     if v.side_wipe:
 
         if v.skirts and v.ps_version > "2.2":
@@ -956,8 +929,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         if v.full_purge_reduction:
             gui.log_warning("Full Purge Reduction is not compatible with Side Wipe, performing Side Wipe")
             v.full_purge_reduction = False
-
-
 
     if v.full_purge_reduction:
         v.side_wipe = False
@@ -1028,7 +999,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
                 maffile = pre + ".maf"
             gui.create_logitem("Generating PALETTE MAF/MSF file: " + maffile)
 
-
             maf = open(maffile, 'w')
 
             for h in header:
@@ -1046,7 +1016,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
             #                 maf.write(unicode(h))
             #             except:
             #                 maf.write(h)
-
 
         gui.print_summary(omega_result['summary'])
 
