@@ -100,6 +100,8 @@ bed_size_x = -9999  # type: int
 bed_size_y = -9999  # type: int
 bed_origin_x = -9999  # type: int
 bed_origin_y = -9999  # type: int  # Account for the purge line at the start of the print
+bed_shape_warning = False
+bed_shape_rect = True
 
 # wipe_feedrates = {}
 

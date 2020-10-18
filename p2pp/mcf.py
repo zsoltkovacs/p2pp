@@ -888,15 +888,15 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     gui.progress_string(4)
     parse_gcode()
 
-    if v.bed_size_x==-9999 or v.bed_size_y==-9999 or v.bed_origin_x==-9999 or v.bed_origin_y==-9999:
+    if v.bed_size_x == -9999 or v.bed_size_y == -9999 or v.bed_origin_x == -9999 or v.bed_origin_y == -9999:
         gui.log_warning("Bedsize not correctly defined.  The generated file will NOT print")
     else:
         gui.create_logitem("Bed origin ({:3.1f}mm, {:3.1f}mm)".format(v.bed_origin_x,v.bed_origin_y))
         gui.create_logitem("Bed zise   ({:3.1f}mm, {:3.1f}mm)".format(v.bed_size_x, v.bed_size_y))
+        if v.bed_shape_rect and v.bed_shape_warning:
+                gui.create_logitem("Manual bed size override, Prusa Bedshape parameters ignored.")
 
     gui.create_logitem("")
-
-
 
     if v.save_unprocessed:
         pre, ext = os.path.splitext(input_file)

@@ -117,18 +117,22 @@ def check_config_parameters(keyword, value):
 
     if keyword == "BEDSIZEX":
         v.bed_size_x = floatparameter(value)
+        v.bed_shape_warning = True
         return
 
     if keyword == "BEDSIZEY":
         v.bed_size_y = floatparameter(value)
+        v.bed_shape_warning = True
         return
 
     if keyword == "BEDORIGINX":
         v.bed_origin_x = floatparameter(value)
+        v.bed_shape_warning = True
         return
 
     if keyword == "BEDORIGINY":
         v.bed_origin_y = floatparameter(value)
+        v.bed_shape_warning = True
         return
 
     if keyword == "BIGBRAIN3D_BLOBSIZE":

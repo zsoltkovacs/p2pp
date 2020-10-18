@@ -104,7 +104,7 @@ def get_bedshape( line ):
         v.bed_size_y = y_max - y_min + 5
 
     if len(coords) != 8:
-        gui.log_warning("None-rectangular bed detected: bounding rectangular of bed shape will be used for ON/OFF bed detection")
+        v.bed_shape_rect = False
 
 def parse_slic3r_config():
     for idx in range(len(v.input_gcode) - 1, -1, -1):
