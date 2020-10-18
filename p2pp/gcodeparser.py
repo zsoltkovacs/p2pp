@@ -8,6 +8,7 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 import math
+import re
 
 import p2pp.gui as gui
 import p2pp.variables as v
@@ -79,6 +80,32 @@ def filament_volume_to_length(x):
     return x / (v.filament_diameter[v.current_tool] / 2 * v.filament_diameter[v.current_tool] / 2 * math.pi)
 
 
+def get_bedshape( line ):
+    bedshape = re.compile("[-+]?\d*\.\d+|\d+")
+    coords = bedshape.findall(line)
+    if len(coords) >= 8:
+        x_coords = []
+        y_coords = []
+
+        coords = [float(i) for i in coords]
+        for i in range(len(coords)):
+            if i%2:
+                y_coords.append(coords[i])
+            else:
+                x_coords.append(coords[i])
+
+        x_min = min(x_coords)
+        x_max = max(x_coords)
+        y_min = min(y_coords)
+        y_max = max(y_coords)
+        v.bed_origin_x = x_min
+        v.bed_origin_y = y_min - 5
+        v.bed_size_x = x_max - x_min
+        v.bed_size_y = y_max - y_min + 5
+
+    if len(coords) != 8:
+        gui.log_warning("None-rectangular bed detected: bounding rectangular of bed shape will be used for ON/OFF bed detection")
+
 def parse_slic3r_config():
     for idx in range(len(v.input_gcode) - 1, -1, -1):
 
@@ -114,6 +141,9 @@ def parse_slic3r_config():
                 tmp = int(gcode_line[parameter_start + 1:].strip())
             v.variable_layer = (tmp==1)
             continue
+
+        if gcode_line.startswith("; bed_shape"):
+            get_bedshape(gcode_line)
 
 
         if gcode_line.startswith("; wipe_tower_x"):

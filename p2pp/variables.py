@@ -96,10 +96,10 @@ after_sidewipe_gcode = []
 
 filename = ""
 
-bed_size_x = 250  # type: int
-bed_size_y = 220  # type: int
-bed_origin_x = 0  # type: int
-bed_origin_y = -10.00  # type: int  # Account for the purge line at the start of the print
+bed_size_x = -9999  # type: int
+bed_size_y = -9999  # type: int
+bed_origin_x = -9999  # type: int
+bed_origin_y = -9999  # type: int  # Account for the purge line at the start of the print
 
 # wipe_feedrates = {}
 
