@@ -129,6 +129,8 @@ if __name__ == "__main__":
         if platformD == 'Darwin':
             gui.create_logitem("{}/p2pp.command".format(os.path.dirname(sys.argv[0])), "red")
         elif platformD == 'Windows':
+            pathname = os.path.dirname(sys.argv[0])
+            pathname = pathname.replace(" ","! ")
             gui.create_logitem("{}\\p2pp.bat".format(os.path.dirname(sys.argv[0])), "red")
 
         gui.create_emptyline()

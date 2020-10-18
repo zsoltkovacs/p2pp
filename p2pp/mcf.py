@@ -940,7 +940,7 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     v.pathprocessing = (v.tower_delta or v.full_purge_reduction or v.side_wipe)
 
     if v.autoaddsplice and not v.full_purge_reduction and not v.side_wipe:
-        gui.log_warning("AUTOEDDPURGE only works with side wipe and fullpurgereduction at this moment")
+        gui.log_warning("AUTOADDPURGE only works with side wipe and fullpurgereduction at this moment")
 
     if (len(v.skippable_layer) == 0) and v.pathprocessing:
         gui.log_warning("LAYER configuration is missing. NO OUTPUT FILE GENERATED.")
