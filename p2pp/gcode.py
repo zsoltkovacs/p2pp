@@ -27,7 +27,6 @@ class GCodeCommand:
     Class = 0
     Comment = None
     Layer = None
-    Tool = None
     X = None
     Y = None
     Z = None

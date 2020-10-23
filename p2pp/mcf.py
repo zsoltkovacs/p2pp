@@ -400,7 +400,6 @@ def parse_gcode():
             v.m4c_toolchanges.append(cur_tool)
             v.m4c_toolchange_source_positions.append(len(v.parsed_gcode))
 
-        code.Tool = cur_tool
         code.Class = v.block_classification
 
         # code.add_comment("[{}]".format(v.classes[v.block_classification]))

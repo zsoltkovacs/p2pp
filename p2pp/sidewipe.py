@@ -144,35 +144,42 @@ def create_side_wipe():
     issue_code("G1 F8640\n")
     issue_code("G0 {} Y{}\n".format(v.side_wipe_loc, v.sidewipe_miny))
 
-    sweep_base_speed = v.wipe_feedrate * 20 * abs(v.sidewipe_maxy - v.sidewipe_miny) / 150
-    sweep_length = 20
+    delta_y = abs(v.sidewipe_maxy - v.sidewipe_miny)
 
-    yrange = [v.sidewipe_maxy, v.sidewipe_miny]
-    rangeidx = 0
-    movefrom = v.sidewipe_miny
-    moveto = yrange[rangeidx]
-    numdiffs = 20
-    purgetower.unretract(v.current_tool)
+    if v.sidewipe_maxy == v.sidewipe_miny:      # no Y movement, just purge
+        issue_code("G1 E{:.5f} F{}\n".format(v.side_wipe_length, v.wipe_feedrate ))
+
+    else:
+
+        sweep_base_speed = v.wipe_feedrate * 20 * delta_y / 150
+        sweep_length = 20
+
+        yrange = [v.sidewipe_maxy, v.sidewipe_miny]
+        rangeidx = 0
+        movefrom = v.sidewipe_miny
+        moveto = yrange[rangeidx]
+        numdiffs = 20
+        purgetower.unretract(v.current_tool)
 
 
-    while v.side_wipe_length > 0:
-        sweep = min(v.side_wipe_length, sweep_length)
-        v.side_wipe_length -= sweep_length
-        wipe_speed = min(5000, int(sweep_base_speed / sweep))
+        while v.side_wipe_length > 0:
+            sweep = min(v.side_wipe_length, sweep_length)
+            v.side_wipe_length -= sweep_length
+            wipe_speed = min(5000, int(sweep_base_speed / sweep))
 
 
-        # split this move in very short moves to allow for faster planning buffer depletion
-        diff = (moveto - movefrom) / numdiffs
+            # split this move in very short moves to allow for faster planning buffer depletion
+            diff = (moveto - movefrom) / numdiffs
 
-        for i in range(numdiffs):
-            issue_code("G1 {} Y{:.3f} E{:.5f} F{}\n".format(v.side_wipe_loc, movefrom + (i+1)*diff, sweep/numdiffs * v.sidewipe_correction, wipe_speed))
+            for i in range(numdiffs):
+                issue_code("G1 {} Y{:.3f} E{:.5f} F{}\n".format(v.side_wipe_loc, movefrom + (i+1)*diff, sweep/numdiffs * v.sidewipe_correction, wipe_speed))
 
-        # issue_code(
-        #     "G1 {} Y{} E{:.5f} F{}\n".format(v.side_wipe_loc, moveto, sweep * v.sidewipe_correction, wipe_speed))
+            # issue_code(
+            #     "G1 {} Y{} E{:.5f} F{}\n".format(v.side_wipe_loc, moveto, sweep * v.sidewipe_correction, wipe_speed))
 
-        rangeidx += 1
-        movefrom = moveto
-        moveto = yrange[rangeidx % 2]
+            rangeidx += 1
+            movefrom = moveto
+            moveto = yrange[rangeidx % 2]
 
     for line in v.after_sidewipe_gcode:
         issue_code(line + "\n")
