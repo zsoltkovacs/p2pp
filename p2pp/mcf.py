@@ -356,7 +356,6 @@ def parse_gcode():
         gui.progress_string(4 + 46 * index // total_line_count)
 
         if line.startswith(';'):
-
             m = v.regex_p2pp.match(line)
             if m:
                 parameters.check_config_parameters(m.group(1), m.group(2))

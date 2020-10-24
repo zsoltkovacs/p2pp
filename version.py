@@ -11,8 +11,8 @@ __status__ = 'BETA'
 
 # general version info
 MajorVersion = 5
-MinorVersion = 2
-Build = 1
+MinorVersion = 3
+Build = 0
 
 releaseinfo = {
     '4.16.0': "final release for PrusaSlicer 2.2.0",
@@ -20,6 +20,7 @@ releaseinfo = {
     '5.1.0': "Automatic detection of bed origin and size",
     '5.2.0': "Static side purge",
     '5.2.1': "Extruder clear added on static purge",
+    '5.3.0': "error in minimal linear ping length error string",
     '--- RELEASE INFORMATION': 'END'
 }
 
