@@ -147,7 +147,13 @@ def create_side_wipe():
     delta_y = abs(v.sidewipe_maxy - v.sidewipe_miny)
 
     if v.sidewipe_maxy == v.sidewipe_miny:      # no Y movement, just purge
-        issue_code("G1 E{:.5f} F{}\n".format(v.side_wipe_length, v.wipe_feedrate ))
+
+        while v.side_wipe_length > 0:
+            sweep = min(v.side_wipe_length, 50)
+            issue_code("G1 E{:.5f} F{}\n".format(sweep, v.wipe_feedrate ))
+            purgetower.largeretract() # 3mm retraction cycle to dislodge potential stuck filament
+            purgetower.unretract(v.current_tool, v.wipe_feedrate)
+            v.side_wipe_length -= sweep
 
     else:
 
@@ -161,12 +167,10 @@ def create_side_wipe():
         numdiffs = 20
         purgetower.unretract(v.current_tool)
 
-
         while v.side_wipe_length > 0:
             sweep = min(v.side_wipe_length, sweep_length)
             v.side_wipe_length -= sweep_length
             wipe_speed = min(5000, int(sweep_base_speed / sweep))
-
 
             # split this move in very short moves to allow for faster planning buffer depletion
             diff = (moveto - movefrom) / numdiffs
