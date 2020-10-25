@@ -84,28 +84,31 @@ class GCodeCommand:
         # use the same formatting as prusa to ease file compares (X, Y, Z, E, F)
 
         sorted_keys = "XYZE"
-        if self.is_movement_command():
+        if self.is_movement_command:
             for key in sorted_keys:
                 if key in self.Parameters:
-                    form = ""
-                    if key in "XYZ":
-                        form = "{}{:0.3f} "
-                    if key == "E":
-                        form = "{}{:0.5f} "
+                    form = "{} {}"
                     value = self.Parameters[key]
-                    if value == None:
+                    if (value is None) or (value == ""):
                         gui.log_warning("GCode error detected, file might not print correctly")
                         value = ""
+
+                    if type(value) in [int, float]:
+                        if key in "XYZ":
+                               form = "{}{:0.3f} "
+                        if key == "E":
+                            form = "{}{:0.5f} "
 
                     p = p + form.format(key, value)
 
         for key in self.Parameters:
-            if not self.is_movement_command() or key not in sorted_keys:
+            if not self.is_movement_command or key not in sorted_keys:
                 value = self.Parameters[key]
                 if value == None:
                     value = ""
 
                 p = p + "{}{} ".format(key, value)
+
 
         c = self.fullcommand
         if not c:
