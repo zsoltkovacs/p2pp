@@ -35,7 +35,7 @@ def remove_previous_move_in_tower():
         tmp = gcode.GCodeCommand(line)
         if tmp.X and tmp.Y:
             if coordinate_in_tower(tmp.X, tmp.Y):
-                if tmp.is_movement_command() and tmp.has_E():
+                if tmp.is_movement_command and tmp.has_E():
                     v.total_material_extruded -= tmp.E
                     v.material_extruded_per_color[v.current_tool] -= tmp.E
                 tmp.move_to_comment("tower skipped")
@@ -83,7 +83,7 @@ def convert_to_absolute():
 
         line = gcode.GCodeCommand(v.processed_gcode[i])
 
-        if line.is_movement_command():
+        if line.is_movement_command:
             if line.has_E():
 
                 # if there is no filament reset code, make sure one is inserted before first extrusion
@@ -494,7 +494,7 @@ def gcode_parseline(index):
         g.issue_command()
         return
 
-    if g.is_movement_command():
+    if g.is_movement_command:
         if g.has_X():
             v.previous_purge_keep_x = v.purge_keep_x
             v.purge_keep_x = g.X
@@ -537,7 +537,7 @@ def gcode_parseline(index):
 
     if g.Class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
 
-        if g.is_movement_command():
+        if g.is_movement_command:
             if v.side_wipe or v.tower_delta or v.full_purge_reduction:
                 g.move_to_comment("tool unload")
             else:
@@ -554,7 +554,7 @@ def gcode_parseline(index):
 
     if g.Class == CLS_TOOL_PURGE and not (v.side_wipe or v.full_purge_reduction):
 
-        if g.is_movement_command() and g.has_E():
+        if g.is_movement_command and g.has_E():
             _x = g.get_parameter("X", v.current_position_x)
             _y = g.get_parameter("Y", v.current_position_y)
             # removepositive extrusions while moving into the tower
@@ -570,7 +570,7 @@ def gcode_parseline(index):
             g.remove_parameter("Y")
 
     # top off the purge speed in the tower during tower delta or during no tower processing
-    if not v.full_purge_reduction and not v.side_wipe and g.is_movement_command() and g.has_E() and g.has_parameter(
+    if not v.full_purge_reduction and not v.side_wipe and g.is_movement_command and g.has_E() and g.has_parameter(
             "F"):
         f = int(g.get_parameter("F", 0))
         if f > v.purgetopspeed:
@@ -589,7 +589,7 @@ def gcode_parseline(index):
 
         # remove any commands that are part of the purge tower and still perofrm actions WITHIN the tower
 
-        if g.is_movement_command() and g.Class in [CLS_ENDPURGE, CLS_ENDGRID] and g.has_X() and g.has_Y():
+        if g.is_movement_command and g.Class in [CLS_ENDPURGE, CLS_ENDGRID] and g.has_X() and g.has_Y():
             if coordinate_in_tower(g.X, g.Y):
                 g.remove_parameter("X")
                 g.remove_parameter("Y")
@@ -668,7 +668,7 @@ def gcode_parseline(index):
                         else:
                             v.retraction -= 1
                 else:
-                    if g.is_movement_command():
+                    if g.is_movement_command:
                         if not g.has_Z():
                             g.move_to_comment("tower skipped")
             g.issue_command()
@@ -680,7 +680,7 @@ def gcode_parseline(index):
                 pings.check_accessorymode_first()
             v.enterpurge = True
 
-        if v.enterpurge and g.is_movement_command():
+        if v.enterpurge and g.is_movement_command:
 
             v.enterpurge = False
 
@@ -747,7 +747,7 @@ def gcode_parseline(index):
     if v.full_purge_reduction and g.Class == CLS_NORMAL and classupdate:
         purgetower.purge_generate_sequence()
 
-    if g.is_movement_command():
+    if g.is_movement_command:
 
         if v.expect_retract and g.has_X() or g.has_Y():
             if not v.retraction < 0:
@@ -829,7 +829,7 @@ def gcode_parseline(index):
     if v.accessory_mode:
         pings.check_accessorymode_second(g.E)
 
-    if g.is_movement_command():
+    if g.is_movement_command:
         if (g.has_E() and g.E > 0) and v.side_wipe_length == 0:
             pings.check_connected_ping()
 

@@ -23,6 +23,7 @@ class GCodeCommand:
     Command = None
     fullcommand = None
     Command_value = None
+    is_movement_command = False
     Parameters = {}
     Class = 0
     Comment = None
@@ -77,6 +78,7 @@ class GCodeCommand:
             self.Y = self.get_parameter("Y", None)
             self.Z = self.get_parameter("Z", None)
             self.E = self.get_parameter("E", None)
+            self.is_movement_command = self.Command == "G" and self.Command_value in ['0', '1', '2', '3', '5', '10', '11']
 
     def __str__(self):
         p = ""
@@ -162,6 +164,7 @@ class GCodeCommand:
         self.Z = None
         self.E = None
         self.Parameters.clear()
+        self.is_movement_command = False
 
     def has_E(self):
         return self.E is not None
@@ -190,7 +193,7 @@ class GCodeCommand:
         return defaultvalue
 
     def issue_command(self):
-        if self.E is not None and self.is_movement_command():
+        if self.E is not None and self.is_movement_command:
             v.total_material_extruded += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
             v.material_extruded_per_color[
                 v.current_tool] += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
@@ -201,7 +204,7 @@ class GCodeCommand:
     def issue_command_speed(self, speed):
         s = str(self)
         s = s.replace("%SPEED%", "{:0.0f}".format(speed))
-        if self.E is not None and self.is_movement_command():
+        if self.E is not None and self.is_movement_command:
             v.total_material_extruded += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
             v.material_extruded_per_color[
                 v.current_tool] += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
@@ -218,25 +221,22 @@ class GCodeCommand:
     def is_comment(self):
         return self.Command is None and not (self.Comment is None)
 
-    def is_movement_command(self):
-        return self.Command == "G" and self.Command_value in ['0', '1', '2', '3', '5', '10', '11']
-
     def is_z_positioning(self):
-        return self.is_movement_command() and self.has_Z()
+        return self.is_movement_command and self.has_Z()
 
     def is_xy_positioning(self):
-        return self.is_movement_command() and self.has_X() and self.has_Y() and not self.has_E()
+        return self.is_movement_command and self.has_X() and self.has_Y() and not self.has_E()
 
     def is_retract_command(self):
         if self.has_E():
-            return (self.is_movement_command() and self.E < 0)
+            return (self.is_movement_command and self.E < 0)
         else:
             return self.fullcommand == "G10"
 
 
     def is_unretract_command(self):
         if self.has_E():
-            return (self.is_movement_command() and self.E > 0 and self.X is None and self.Y is None and self.Z is None)
+            return (self.is_movement_command and self.E > 0 and self.X is None and self.Y is None and self.Z is None)
         else:
             return self.fullcommand == "G11"
 
