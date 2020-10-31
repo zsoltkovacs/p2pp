@@ -642,7 +642,6 @@ def gcode_parseline(index):
 
         if v.tower_delta:
             if classupdate and g.Class == CLS_TOOL_PURGE:
-                print("Delta Layer: {}".format(g.Layer))
                 entertower(g.Layer * v.layer_height + v.first_layer_height)
                 return
 
@@ -663,7 +662,6 @@ def gcode_parseline(index):
                     gcode.issue_code(";-------------------------------------\n")
             else:
                 if "EMPTY GRID START" in g.get_comment() and not v.side_wipe:
-                    print("Grid  Layer: {}".format(g.Layer))
                     entertower(g.Layer * v.layer_height + v.first_layer_height)
 
         # changing from EMPTY to NORMAL

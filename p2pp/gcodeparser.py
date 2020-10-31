@@ -121,7 +121,7 @@ def parse_slic3r_config():
                 v.ps_version = s2[-1]
                 gui.create_logitem("File was created with PS version:{}".format(v.ps_version))
                 if v.ps_version < "2.2":
-                    gui.log_warning("This version of P2PP is optimized to work with PS2.2!")
+                    gui.log_warning("This version of P2PP is optimized to work with PS2.2 and PS2.3!")
             except:
                 pass
             continue
