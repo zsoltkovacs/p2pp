@@ -69,9 +69,9 @@ def patchup_toolchanges():
         except:
             old = v.parsed_gcode[v.m4c_toolchange_source_positions[-1]]
 
-        _ip = calculate_input_index(idx, int(old.Command_value))
+        _ip = calculate_input_index(idx, int(old.Command_value()))
         v.parsed_gcode[v.m4c_toolchange_source_positions[idx]] = gcode.GCodeCommand(
-            "T{} ; INPUT MAPPING MORE THAN 4 COLORS {} --> {}".format(_ip, _ip, int(old.Command_value)))
+            "T{} ; INPUT MAPPING MORE THAN 4 COLORS {} --> {}".format(_ip, _ip, int(old.Command_value())))
 
 
 def calculate_loadscheme():

@@ -35,7 +35,7 @@ def remove_previous_move_in_tower():
         tmp = gcode.GCodeCommand(line)
         if tmp.X and tmp.Y:
             if coordinate_in_tower(tmp.X, tmp.Y):
-                if tmp.is_movement_command and tmp.has_E():
+                if tmp.is_movement_command and tmp.E:
                     v.total_material_extruded -= tmp.E
                     v.material_extruded_per_color[v.current_tool] -= tmp.E
                 tmp.move_to_comment("tower skipped")
@@ -84,7 +84,7 @@ def convert_to_absolute():
         line = gcode.GCodeCommand(v.processed_gcode[i])
 
         if line.is_movement_command:
-            if line.has_E():
+            if line.E:
 
                 # if there is no filament reset code, make sure one is inserted before first extrusion
                 # this should not be needed
@@ -97,10 +97,10 @@ def convert_to_absolute():
                 line.update_parameter("E", absolute)
                 v.processed_gcode[i] = line.__str__()
 
-        if line.fullcommand == "M83":
+        if line.Command == "M83":
             v.processed_gcode[i] = "M82\n"
 
-        if line.fullcommand == "G92":
+        if line.Command == "G92":
             absolute = line.E
 
 
@@ -305,7 +305,7 @@ def backpass(currentclass):
         v.parsed_gcode[idx].Class = currentclass
 
         if v.parsed_gcode[idx].is_unretract_command():
-            if (v.parsed_gcode[idx].fullcommand == "G11"):
+            if (v.parsed_gcode[idx].Command == "G11"):
                 v.retraction = 0
             else:
                 v.retraction -= v.parsed_gcode[idx].E
@@ -380,10 +380,14 @@ def parse_gcode():
                 else:
                     if llm == 11:  # LAYERHEIGHT
 
-                        layer = (lmv - v.first_layer_height) * 100
-                        lh = v.layer_height * 100
-                        if layer % lh == 0:
-                            layer = int((lmv - v.first_layer_height + 0.005) / v.layer_height)
+                        fl = int(v.first_layer_height*100)
+                        l = int((lmv+0.001) * 100)
+                        l = l - fl
+
+                        lh = int(v.layer_height * 100)
+
+                        if l % lh == 0:
+                            layer = int(l / lh + 1)
                         else:
                             layer = v.parsedlayer
 
@@ -402,8 +406,8 @@ def parse_gcode():
 
         code = gcode.GCodeCommand(line)
 
-        if code.Command == 'T':
-            cur_tool = int(code.Command_value)
+        if code.is_toolchange:
+            cur_tool = int(code.command_value())
             v.set_tool = cur_tool
             v.m4c_toolchanges.append(cur_tool)
             v.m4c_toolchange_source_positions.append(len(v.parsed_gcode))
@@ -428,7 +432,7 @@ def parse_gcode():
             calculate_tower(code.X, code.Y)
 
         if v.block_classification == CLS_ENDGRID or v.block_classification == CLS_ENDPURGE:
-            if code.has_X() and code.has_Y():
+            if code.X and code.Y:
                 if not coordinate_in_tower(code.X, code.Y):
                     v.parsed_gcode[-1].Class = CLS_NORMAL
                     v.block_classification = CLS_NORMAL
@@ -442,19 +446,19 @@ def parse_gcode():
 def gcode_parseline(index):
     g = v.parsed_gcode[index]
 
-    if g.Command == 'T':
-        gcode_process_toolchange(int(g.Command_value), v.total_material_extruded, g.Layer)
+    if g.is_toolchange:
+        gcode_process_toolchange(int(g.command_value()), v.total_material_extruded, g.Layer)
         if not v.debug_leaveToolCommands:
             g.move_to_comment("Color Change")
         g.issue_command()
         v.toolchange_processed = True
         return
 
-    if g.fullcommand in ["M140", "M190", "M73", "M84", "M201", "M204"]:
+    if g.Command in ["M140", "M190", "M73", "M84", "M201", "M204"]:
         g.issue_command()
         return
 
-    if g.fullcommand in ["M104", "M109"]:
+    if g.Command in ["M104", "M109"]:
         if not v.process_temp or  g.Class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD]:
             g.add_comment(" Unprocessed temp ")
             g.issue_command()
@@ -463,7 +467,7 @@ def gcode_parseline(index):
         else:
             v.new_temp = g.get_parameter("S", v.current_temp)
             if v.new_temp >= v.current_temp:
-                g.fullcommand = "M109"
+                g.Command = "M109"
                 v.temp2_stored_command = g.__str__()
                 g.move_to_comment("delayed temp rise until after purge {}-->{}".format(v.current_temp, v.new_temp))
                 v.current_temp = v.new_temp
@@ -481,34 +485,34 @@ def gcode_parseline(index):
 
     # fan speed command
 
-    if g.fullcommand == "M107":
+    if g.Command == "M107":
         g.issue_command()
         v.saved_fanspeed = 0
         return
 
-    if g.fullcommand == "M106":
+    if g.Command == "M106":
         g.issue_command()
         v.saved_fanspeed = g.get_parameter("S", v.saved_fanspeed)
         return
 
     # flow rate changes have an effect on the filament consumption.  The effect is taken into account for ping generation
-    if g.fullcommand == "M221":
+    if g.Command == "M221":
         v.extrusion_multiplier = float(g.get_parameter("S", v.extrusion_multiplier * 100)) / 100
         g.issue_command()
         return
 
     # feed rate changes in the code are removed as they may interfere with the Palette P2 settings
-    if g.fullcommand in ["M220"]:
+    if g.Command in ["M220"]:
         g.move_to_comment("Feed Rate Adjustments are removed")
         g.issue_command()
         return
 
     if g.is_movement_command:
-        if g.has_X():
+        if g.X:
             v.previous_purge_keep_x = v.purge_keep_x
             v.purge_keep_x = g.X
 
-        if g.has_Y():
+        if g.Y:
             v.previous_purge_keep_y = v.purge_keep_y
             v.purge_keep_y = g.Y
 
@@ -538,7 +542,7 @@ def gcode_parseline(index):
 
     # remove M900 K0 commands during unload
     if g.Class == CLS_TOOL_UNLOAD:
-        if g.fullcommand == "G4" or (g.fullcommand in ["M900"] and g.get_parameter("K", 0) == 0):
+        if g.Command == "G4" or (g.Command in ["M900"] and g.get_parameter("K", 0) == 0):
             g.move_to_comment("tool unload")
 
     ## ALL SITUATIONS
@@ -550,7 +554,7 @@ def gcode_parseline(index):
             if v.side_wipe or v.tower_delta or v.full_purge_reduction:
                 g.move_to_comment("tool unload")
             else:
-                if g.has_Z():
+                if g.Z:
                     g.remove_parameter("X")
                     g.remove_parameter("Y")
                     g.remove_parameter("F")
@@ -563,7 +567,7 @@ def gcode_parseline(index):
 
     if g.Class == CLS_TOOL_PURGE and not (v.side_wipe or v.full_purge_reduction):
 
-        if g.is_movement_command and g.has_E():
+        if g.is_movement_command and g.E:
             _x = g.get_parameter("X", v.current_position_x)
             _y = g.get_parameter("Y", v.current_position_y)
             # removepositive extrusions while moving into the tower
@@ -579,7 +583,7 @@ def gcode_parseline(index):
             g.remove_parameter("Y")
 
     # top off the purge speed in the tower during tower delta or during no tower processing
-    if not v.full_purge_reduction and not v.side_wipe and g.is_movement_command and g.has_E() and g.has_parameter(
+    if not v.full_purge_reduction and not v.side_wipe and g.is_movement_command and g.E and g.has_parameter(
             "F"):
         f = int(g.get_parameter("F", 0))
         if f > v.purgetopspeed:
@@ -598,7 +602,7 @@ def gcode_parseline(index):
 
         # remove any commands that are part of the purge tower and still perofrm actions WITHIN the tower
 
-        if g.is_movement_command and g.Class in [CLS_ENDPURGE, CLS_ENDGRID] and g.has_X() and g.has_Y():
+        if g.is_movement_command and g.Class in [CLS_ENDPURGE, CLS_ENDGRID] and g.X and g.Y:
             if coordinate_in_tower(g.X, g.Y):
                 g.remove_parameter("X")
                 g.remove_parameter("Y")
@@ -638,6 +642,7 @@ def gcode_parseline(index):
 
         if v.tower_delta:
             if classupdate and g.Class == CLS_TOOL_PURGE:
+                print("Delta Layer: {}".format(g.Layer))
                 entertower(g.Layer * v.layer_height + v.first_layer_height)
                 return
 
@@ -658,6 +663,7 @@ def gcode_parseline(index):
                     gcode.issue_code(";-------------------------------------\n")
             else:
                 if "EMPTY GRID START" in g.get_comment() and not v.side_wipe:
+                    print("Grid  Layer: {}".format(g.Layer))
                     entertower(g.Layer * v.layer_height + v.first_layer_height)
 
         # changing from EMPTY to NORMAL
@@ -672,13 +678,13 @@ def gcode_parseline(index):
                     if v.retraction <= - (v.retract_length[v.current_tool] - 0.02):
                         g.move_to_comment("tower skipped//Double Retract")
                     else:
-                        if g.has_E():
+                        if g.E:
                             v.retraction += g.E
                         else:
                             v.retraction -= 1
                 else:
                     if g.is_movement_command:
-                        if not g.has_Z():
+                        if not g.Z:
                             g.move_to_comment("tower skipped")
             g.issue_command()
             return
@@ -693,12 +699,12 @@ def gcode_parseline(index):
 
             v.enterpurge = False
 
-            if g.has_X():
+            if g.X:
                 _x = v.previous_purge_keep_x
             else:
                 _x = v.purge_keep_x
 
-            if g.has_Y():
+            if g.Y:
                 _y = v.previous_purge_keep_y
             else:
                 _y = v.purge_keep_y
@@ -741,7 +747,7 @@ def gcode_parseline(index):
                 g.move_to_comment("-useless command-")
 
     if v.tower_delta:
-        if g.has_E() and g.Class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
+        if g.E and g.Class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
             if not inrange(g.X, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']):
                 g.remove_parameter("E")
             if not inrange(g.Y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy']):
@@ -750,7 +756,7 @@ def gcode_parseline(index):
     # process movement commands
     ###########################
 
-    if not g.has_E():
+    if not g.E:
         g.E = 0
 
     if v.full_purge_reduction and g.Class == CLS_NORMAL and classupdate:
@@ -758,9 +764,9 @@ def gcode_parseline(index):
 
     if g.is_movement_command:
 
-        if v.expect_retract and g.has_X() or g.has_Y():
+        if v.expect_retract and g.X or g.Y:
             if not v.retraction < 0:
-                if not g.has_E and g.E < 0:
+                if g.E < 0:
                     purgetower.retract(v.current_tool)
             v.expect_retract = False
 
@@ -813,19 +819,19 @@ def gcode_parseline(index):
         if v.retraction <= - (v.retract_length[v.current_tool] - 0.02):
             g.move_to_comment("Double Retract")
         else:
-            if g.has_E():
+            if g.E:
                 v.retraction += g.E
             else:
                 v.retraction -= 1
 
     if g.is_unretract_command():
-        if g.has_E():
+        if g.E:
             g.update_parameter("E", min(-v.retraction, g.E))
             v.retraction += g.E
         else:
             v.retraction = 0
 
-    if (g.has_X() or g.has_Y()) and (g.has_E() and g.E > 0) and v.retraction < 0 and abs(v.retraction) > 0.01:
+    if (g.X or g.Y) and (g.E > 0) and v.retraction < 0 and abs(v.retraction) > 0.01:
         gcode.issue_code(";fixup retracts\n")
         purgetower.unretract(v.current_tool)
         # v.retracted = False
@@ -839,7 +845,7 @@ def gcode_parseline(index):
         pings.check_accessorymode_second(g.E)
 
     if g.is_movement_command:
-        if (g.has_E() and g.E > 0) and v.side_wipe_length == 0:
+        if ( g.E > 0) and v.side_wipe_length == 0:
             pings.check_connected_ping()
 
     v.previous_position_x = v.current_position_x

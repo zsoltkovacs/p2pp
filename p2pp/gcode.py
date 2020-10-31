@@ -21,9 +21,8 @@ import p2pp.variables as v
 
 class GCodeCommand:
     Command = None
-    fullcommand = None
-    Command_value = None
     is_movement_command = False
+    is_toolchange = False
     Parameters = {}
     Class = 0
     Comment = None
@@ -35,11 +34,10 @@ class GCodeCommand:
 
     def __init__(self, gcode_line):
         self.Command = None
-        self.fullcommand = None
-        self.Command_value = None
         self.Parameters = {}
         self.Comment = None
         self.Layer = v.parsedlayer
+        self.is_toolchange = False
         gcode_line = gcode_line.strip()
         pos = gcode_line.find(";")
 
@@ -50,10 +48,11 @@ class GCodeCommand:
         fields = gcode_line.split(' ')
 
         if len(fields[0]) > 0:
-            command = fields[0]
-            self.Command = command[0]
-            self.Command_value = command[1:]
-            self.fullcommand = fields[0]
+
+            self.Command = fields[0]
+            self.is_toolchange = self.Command[0] == 'T'
+            self.is_movement_command = self.Command in ['G0', 'G1', 'G2', 'G3', 'G5', 'G10', 'G11']
+
             fields = fields[1:]
 
             while len(fields) > 0:
@@ -72,13 +71,24 @@ class GCodeCommand:
 
                     self.Parameters[p] = val
 
+                    if p=="X":
+                        self.X = val
+                    if p=="Y":
+                        self.Y = val
+                    if p=="Z":
+                        self.Z = val
+                    if p=="E":
+                        self.E = val
+
                 fields = fields[1:]
 
-            self.X = self.get_parameter("X", None)
-            self.Y = self.get_parameter("Y", None)
-            self.Z = self.get_parameter("Z", None)
-            self.E = self.get_parameter("E", None)
-            self.is_movement_command = self.Command == "G" and self.Command_value in ['0', '1', '2', '3', '5', '10', '11']
+
+
+    def command_value(self):
+            if self.Command:
+                return self.Command[1:]
+            else:
+                return None
 
     def __str__(self):
         p = ""
@@ -112,7 +122,7 @@ class GCodeCommand:
                 p = p + "{}{} ".format(key, value)
 
 
-        c = self.fullcommand
+        c = self.Command
         if not c:
             c = ""
 
@@ -155,28 +165,14 @@ class GCodeCommand:
     def move_to_comment(self, text):
         if self.Command:
             self.Comment = "-- P2PP -- removed [{}] - {}".format(text, self)
-
         self.Command = None
-        self.Command_value = None
-        self.fullcommand = None
         self.X = None
         self.Y = None
         self.Z = None
         self.E = None
         self.Parameters.clear()
         self.is_movement_command = False
-
-    def has_E(self):
-        return self.E is not None
-
-    def has_X(self):
-        return self.X is not None
-
-    def has_Y(self):
-        return self.Y is not None
-
-    def has_Z(self):
-        return self.Z is not None
+        self.is_toolchange = False
 
     def get_comment(self):
         if not self.Comment:
@@ -221,24 +217,21 @@ class GCodeCommand:
     def is_comment(self):
         return self.Command is None and not (self.Comment is None)
 
-    def is_z_positioning(self):
-        return self.is_movement_command and self.has_Z()
 
     def is_xy_positioning(self):
-        return self.is_movement_command and self.has_X() and self.has_Y() and not self.has_E()
+        return self.is_movement_command and self.X and self.Y and not self.E
 
     def is_retract_command(self):
-        if self.has_E():
+        if self.E:
             return (self.is_movement_command and self.E < 0)
         else:
-            return self.fullcommand == "G10"
-
+            return self.Command == "G10"
 
     def is_unretract_command(self):
-        if self.has_E():
+        if self.E:
             return (self.is_movement_command and self.E > 0 and self.X is None and self.Y is None and self.Z is None)
         else:
-            return self.fullcommand == "G11"
+            return self.Command == "G11"
 
 
 def issue_code(s):
