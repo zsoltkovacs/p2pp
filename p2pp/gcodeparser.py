@@ -205,20 +205,15 @@ def parse_slic3r_config():
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 tmp = float(gcode_line[parameter_start + 1:].strip())
-                if tmp == 0:
-                    v.synced_support = False
-                else:
-                    v.synced_support = True
+                v.synced_support = tmp == 1
             continue
 
         if gcode_line.startswith("; support_material "):
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 tmp = float(gcode_line[parameter_start + 1:].strip())
-                if tmp == 0:
-                    v.support_material = False
-                else:
-                    v.support_material = True
+                v.support_material = tmp == 1
+
             continue
 
         # TVDE: needs to be expanded to be able to support more than 4 colors

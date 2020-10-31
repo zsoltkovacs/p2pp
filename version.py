@@ -11,7 +11,7 @@ __status__ = 'BETA'
 
 # general version info
 MajorVersion = 5
-MinorVersion = 4
+MinorVersion = 5
 Build = 0
 
 releaseinfo = {
@@ -22,6 +22,7 @@ releaseinfo = {
     '5.2.1': "Extruder clear added on static purge",
     '5.3.0': "error in minimal linear ping length error string",
     '5.4.0': "corrected is_movement_command checking",
+    '5.5.0': "correction in non-synched support material handling",
     '--- RELEASE INFORMATION': 'END'
 }
 

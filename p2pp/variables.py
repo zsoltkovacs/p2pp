@@ -248,7 +248,7 @@ ps_version = "No version info detected"
 debug_leaveToolCommands = False
 
 synced_support = True
-prints_support = False
+support_material = False
 
 skirtsize = 0
 skirts = 0

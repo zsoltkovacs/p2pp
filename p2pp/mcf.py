@@ -368,15 +368,24 @@ def parse_gcode():
             # otherwise look at the layerheight to determine the layer progress
 
             lm = layer_regex.match(line)
+
             if lm is not None:
                 llm = len(lm.group(1))
                 lmv = float(lm.group(2))
-                if v.synced_support or not v.prints_support:
+
+                if v.synced_support or not v.support_material:
+
                     if llm == 5:  # LAYER
                         layer = int(lmv)
                 else:
                     if llm == 11:  # LAYERHEIGHT
-                        layer = int((lmv - v.first_layer_height + 0.005) / v.layer_height)
+
+                        layer = (lmv - v.first_layer_height) * 100
+                        lh = v.layer_height * 100
+                        if layer % lh == 0:
+                            layer = int((lmv - v.first_layer_height + 0.005) / v.layer_height)
+                        else:
+                            layer = v.parsedlayer
 
             if layer == v.parsedlayer:
                 layer = -1
