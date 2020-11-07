@@ -92,7 +92,6 @@ def main(args):
                  )
 
 
-
 if __name__ == "__main__":
     v.version = ver.Version
 
@@ -118,7 +117,7 @@ if __name__ == "__main__":
                 else:
                     v.version += " (Version up to date)"
                     color = "green"
-            gui.create_logitem(v.version, color , True)
+            gui.create_logitem(v.version, color, True)
 
         gui.configinfo()
         gui.create_emptyline()
@@ -130,7 +129,7 @@ if __name__ == "__main__":
             gui.create_logitem("{}/p2pp.command".format(os.path.dirname(sys.argv[0])), "red")
         elif platformD == 'Windows':
             pathname = os.path.dirname(sys.argv[0])
-            pathname = pathname.replace(" ","! ")
+            pathname = pathname.replace(" ", "! ")
             gui.create_logitem("{}\\p2pp.bat".format(os.path.dirname(sys.argv[0])), "red")
 
         gui.create_emptyline()
@@ -141,6 +140,6 @@ if __name__ == "__main__":
         gui.create_logitem("More info on: https://github.com/tomvandeneede/p2pp", "blue")
         gui.close_button_enable()
     else:
-        gui.create_logitem("Python Version Information: "+platform.python_version() ,
+        gui.create_logitem("Python Version Information: "+platform.python_version(),
                            "blue")
         main(vars(arguments.parse_args()))

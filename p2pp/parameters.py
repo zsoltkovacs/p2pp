@@ -36,7 +36,6 @@ def check_config_parameters(keyword, value):
     if keyword == "SAVEUNPROCESSED":
         v.save_unprocessed = True
 
-
     if keyword == "PRINTERPROFILE":
 
         if len(value) != 16:
@@ -246,8 +245,6 @@ def check_config_parameters(keyword, value):
             if parm != float(0):
                 v.max_tower_z_delta = abs(floatparameter(value))
                 gui.create_logitem("Max Purge Tower Delta set to {:-2.2f}mm".format(v.max_tower_z_delta))
-
-
         return
 
     if keyword == "FULLPURGEREDUCTION":
@@ -266,9 +263,9 @@ def check_config_parameters(keyword, value):
         if latest > version.Version:
             gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False, "2.0")
         else:
-            if (latest < version.Version):
+            if latest < version.Version:
                 latest = cv.get_version(cv.DEV)
-                if (latest > version.Version):
+                if latest > version.Version:
                     gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False,
                                        "2.0")
 

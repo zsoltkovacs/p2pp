@@ -66,7 +66,7 @@ def patchup_toolchanges():
     for idx in range(len(v.m4c_toolchange_source_positions)):
         try:
             old = v.parsed_gcode[v.m4c_toolchange_source_positions[idx]]
-        except:
+        except IndexError:
             old = v.parsed_gcode[v.m4c_toolchange_source_positions[-1]]
 
         _ip = calculate_input_index(idx, int(old.Command_value()))
@@ -101,7 +101,7 @@ def calculate_loadscheme():
         v.m4c_early_warning.append([])
 
         # checkif there is a tool we can unload
-        if not newtool in loadedinputs:
+        if newtool not in loadedinputs:
             input_to_replace = find_last_used(loadedinputs, nexttools[idx])
             tool_replaced = loadedinputs[input_to_replace]
             v.m4c_late_warning.append([input_to_replace, tool_replaced, newtool])
@@ -141,7 +141,7 @@ def calculate_loadscheme():
 def calculate_input_index(swap, color):
     try:
         return v.m4c_loadedinputs[swap].index(color)
-    except:
+    except [IndexError, ValueError]:
         return 0
 
 

@@ -67,8 +67,7 @@ def generate_blob(length, count):
         issue_code("G1 X{:.3f} F10800  ; WHACKAAAAA!!!!\n".format(v.bigbrain3d_x_position - v.bigbrain3d_left * 20))
 
 
-
-def create_sidewipe_BigBrain3D():
+def create_sidewipe_bb3d():
     if not v.side_wipe or v.side_wipe_length == 0:
         return
 
@@ -79,7 +78,6 @@ def create_sidewipe_BigBrain3D():
     if purgeleft > 1:
         purgeblobs += 1
 
-    keepe = v.total_material_extruded
     correction = v.bigbrain3d_blob_size * purgeblobs - v.side_wipe_length
 
     issue_code(";-------------------------------\n")
@@ -97,10 +95,10 @@ def create_sidewipe_BigBrain3D():
     keep_xpos = v.current_position_x
     keep_ypos = v.current_position_y
 
-    if (v.current_position_z < 20):
+    if v.current_position_z < 20:
         issue_code("\nG1 Z20.000 F8640    ; Increase Z to prevent collission with bed\n")
 
-    if (v.bigbrain3d_y_position is not None):
+    if v.bigbrain3d_y_position is not None:
         issue_code("\nG1 Y{:.3f} F8640    ; change Y position to purge equipment\n".format(v.bigbrain3d_y_position))
 
     issue_code("G1 X{:.3f} F10800  ; go near edge of bed\n".format(v.bigbrain3d_x_position - 30))
@@ -111,7 +109,7 @@ def create_sidewipe_BigBrain3D():
     for i in range(purgeblobs):
         generate_blob(v.bigbrain3d_blob_size, i)
 
-    if (v.current_position_z < 20):
+    if v.current_position_z < 20:
 
         if v.retraction != 0:
             purgetower.retract(v.current_tool)
@@ -124,8 +122,6 @@ def create_sidewipe_BigBrain3D():
     issue_code("\n;-------------------------------\n\n")
 
     v.side_wipe_length = 0
-
-
 
 
 def create_side_wipe():
@@ -150,7 +146,7 @@ def create_side_wipe():
 
         while v.side_wipe_length > 0:
             sweep = min(v.side_wipe_length, 50)
-            issue_code("G1 E{:.5f} F{}\n".format(sweep, v.wipe_feedrate ))
+            issue_code("G1 E{:.5f} F{}\n".format(sweep, v.wipe_feedrate))
             purgetower.largeretract()  # 3mm retraction cycle to dislodge potential stuck filament
             purgetower.unretract(v.current_tool, v.wipe_feedrate)
             v.side_wipe_length -= sweep

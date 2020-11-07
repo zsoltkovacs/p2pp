@@ -79,16 +79,18 @@ def progress_string(pct):
         if len(v.process_warnings) == 0:
             completed("  COMPLETED OK", '#008000')
         else:
-            completed("  COMPLETED WITH WARNINGS",'#800000')
+            completed("  COMPLETED WITH WARNINGS", '#800000')
     else:
-       progress.set(pct)
+        progress.set(pct)
     mainwindow.update()
     last_pct = pct
 
+
 def completed(text, color):
     progressbar.destroy()
-    progress_field = tkinter.Label(infosubframe , text=text, font=boldfont, foreground=color,  background="#808080")
+    progress_field = tkinter.Label(infosubframe, text=text, font=boldfont, foreground=color,  background="#808080")
     progress_field.grid(row=3, column=2, sticky="ew")
+
 
 color_count = 0
 
@@ -104,8 +106,10 @@ def create_logitem(text, color="black", force_update=True, position=tkinter.END)
         mainwindow.update()
 
 
-def create_colordefinition(reporttype, input, filament_type, color_code, filamentused):
+def create_colordefinition(reporttype, p2_input, filament_type, color_code, filamentused):
     global color_count
+
+    name = "----"
     if reporttype == 0:
         name = "Input"
     if reporttype == 1:
@@ -119,15 +123,15 @@ def create_colordefinition(reporttype, input, filament_type, color_code, filamen
     loglist.tag_configure(tagname2, foreground="#"+color_code)
 
     try:
-        filament_id = v.filament_ids[input - 1]
+        filament_id = v.filament_ids[p2_input - 1]
     except IndexError:
         filament_id = ""
 
     if reporttype == 0:
-        loglist.insert(tkinter.END, "  \t{}  {} {:-8.2f}mm - {}".format(name, input, filamentused, filament_type),
+        loglist.insert(tkinter.END, "  \t{}  {} {:-8.2f}mm - {}".format(name, p2_input, filamentused, filament_type),
                        tagname)
     if reporttype == 1:
-        loglist.insert(tkinter.END, "  \t{}  {}  - {}".format(name, input, filament_type), tagname)
+        loglist.insert(tkinter.END, "  \t{}  {}  - {}".format(name, p2_input, filament_type), tagname)
 
     loglist.insert(tkinter.END, "  \t[####]\t", tagname2)
     loglist.insert(tkinter.END, "  \t{:15} {} \n".format(colornames.find_nearest_colour(color_code), filament_id),
@@ -137,11 +141,14 @@ def create_colordefinition(reporttype, input, filament_type, color_code, filamen
 def create_emptyline():
     create_logitem('')
 
+
 def close_window():
     mainwindow.destroy()
 
+
 def update_button_pressed():
     v.upgradeprocess(version.latest_stable_version, [])
+
 
 def close_button_enable():
     closebutton.config(state=tkinter.NORMAL)
@@ -175,12 +182,13 @@ def user_error(header, body_text):
 
 
 def ask_yes_no(title, message):
-    return (tkMessageBox.askquestion(title, message).upper()=="YES")
+    return tkMessageBox.askquestion(title, message).upper() == "YES"
 
 
 def log_warning(text):
     v.process_warnings.append(";" + text)
     create_logitem(text, "red")
+
 
 def configinfo():
     global infosubframe
@@ -189,7 +197,7 @@ def configinfo():
     infosubframe.pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
     tkinter.Label(infosubframe, text='CONFIGURATION  INFO', font=boldfontlarge, background="#909090").pack(side=tkinter.TOP, expand=1)
 
-    tkinter.Label(infosubframe, text="P2PP Version "+version.Version+"\n", font=boldfont, background="#909090").pack( side=tkinter.BOTTOM)
+    tkinter.Label(infosubframe, text="P2PP Version "+version.Version+"\n", font=boldfont, background="#909090").pack(side=tkinter.BOTTOM)
 
 
 mainwindow = tkinter.Tk()
@@ -247,7 +255,7 @@ tkinter.Label(infosubframe, text=version.Version, font=normalfont, background="#
 progress = tkinter.IntVar()
 progress.set(0)
 tkinter.Label(infosubframe, text='Progress:', font=boldfont, background="#808080").grid(row=3, column=1, sticky="w")
-progressbar = ttk.Progressbar(infosubframe ,orient='horizontal', mode='determinate', length=500, maximum=100, variable=progress)
+progressbar = ttk.Progressbar(infosubframe, orient='horizontal', mode='determinate', length=500, maximum=100, variable=progress)
 progressbar.grid(row=3, column=2,  sticky='ew')
 
 
@@ -283,4 +291,3 @@ mainwindow.lift()
 mainwindow.attributes('-topmost', True)
 mainwindow.after_idle(mainwindow.attributes, '-topmost', False)
 mainwindow.update()
-

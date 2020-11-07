@@ -7,14 +7,6 @@ __license__ = 'GPLv3 '
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
-XAXIS = "X"
-YAXIS = "Y"
-ZAXIS = "Z"
-SPEED = "F"
-EXTRUDER = "E"
-RELATIVE = True
-ABSOLUTE = False
-
 import p2pp.gui as gui
 import p2pp.variables as v
 
@@ -71,24 +63,22 @@ class GCodeCommand:
 
                     self.Parameters[p] = val
 
-                    if p=="X":
+                    if p == "X":
                         self.X = val
-                    if p=="Y":
+                    if p == "Y":
                         self.Y = val
-                    if p=="Z":
+                    if p == "Z":
                         self.Z = val
-                    if p=="E":
+                    if p == "E":
                         self.E = val
 
                 fields = fields[1:]
 
-
-
     def command_value(self):
-            if self.Command:
-                return self.Command[1:]
-            else:
-                return None
+        if self.Command:
+            return self.Command[1:]
+        else:
+            return None
 
     def __str__(self):
         p = ""
@@ -107,7 +97,7 @@ class GCodeCommand:
 
                     if type(value) in [int, float]:
                         if key in "XYZ":
-                               form = "{}{:0.3f} "
+                            form = "{}{:0.3f} "
                         if key == "E":
                             form = "{}{:0.5f} "
 
@@ -116,11 +106,10 @@ class GCodeCommand:
         for key in self.Parameters:
             if not self.is_movement_command or key not in sorted_keys:
                 value = self.Parameters[key]
-                if value == None:
+                if value is None:
                     value = ""
 
                 p = p + "{}{} ".format(key, value)
-
 
         c = self.Command
         if not c:
@@ -161,7 +150,6 @@ class GCodeCommand:
             if parameter == "E":
                 self.E = None
 
-
     def move_to_comment(self, text):
         if self.Command:
             self.Comment = "-- P2PP -- removed [{}] - {}".format(text, self)
@@ -183,29 +171,26 @@ class GCodeCommand:
     def has_parameter(self, parametername):
         return parametername in self.Parameters
 
-    def get_parameter(self, parm , defaultvalue = 0 ):
+    def get_parameter(self, parm, defaultvalue=0):
         if self.has_parameter(parm):
             return self.Parameters[parm]
         return defaultvalue
 
-    def issue_command(self):
+    def calculate_extrusion(self):
         if self.E is not None and self.is_movement_command:
             v.total_material_extruded += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
             v.material_extruded_per_color[
                 v.current_tool] += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
             v.purge_count += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
+
+    def issue_command(self):
+        self.calculate_extrusion()
         v.processed_gcode.append(str(self))
-        # v.processed_gcode.append(  "[{}]  {} ".format(v.classes[self.Class],str(self)))
 
     def issue_command_speed(self, speed):
         s = str(self)
         s = s.replace("%SPEED%", "{:0.0f}".format(speed))
-        if self.E is not None and self.is_movement_command:
-            v.total_material_extruded += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
-            v.material_extruded_per_color[
-                v.current_tool] += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
-            v.purge_count += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
-
+        self.calculate_extrusion()
         v.processed_gcode.append(s)
 
     def add_comment(self, text):
@@ -217,23 +202,21 @@ class GCodeCommand:
     def is_comment(self):
         return self.Command is None and not (self.Comment is None)
 
-
     def is_xy_positioning(self):
         return self.is_movement_command and self.X and self.Y and not self.E
 
     def is_retract_command(self):
         if self.E:
-            return (self.is_movement_command and self.E < 0)
+            return self.is_movement_command and self.E < 0
         else:
             return self.Command == "G10"
 
     def is_unretract_command(self):
         if self.E:
-            return (self.is_movement_command and self.E > 0 and self.X is None and self.Y is None and self.Z is None)
+            return self.is_movement_command and self.E > 0 and self.X is None and self.Y is None and self.Z is None
         else:
             return self.Command == "G11"
 
 
 def issue_code(s):
     GCodeCommand(s).issue_command()
-

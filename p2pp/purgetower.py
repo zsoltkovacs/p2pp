@@ -121,7 +121,6 @@ def _purge_create_sequence(code, pformat, x, y, w, h, step1):
         start1 += step1
 
 
-
 def purge_create_layers(x, y, w, h):
     global solidlayer, emptylayer, filllayer
 
@@ -174,6 +173,7 @@ def _purge_update_sequence_index():
         v.purgelayer += 1
         if v.side_wipe_length > 0:
             gcode.issue_code("G1 Z{:.2f} F10800\n".format((v.purgelayer + 1) * v.layer_height))
+
 
 def _purge_get_nextcommand_in_sequence():
     if current_purge_form == PURGE_SOLID:
@@ -228,6 +228,7 @@ def largeretract():
         gcode.issue_code("G10\n")
         v.retraction -= 1
 
+
 def unretract(tool, speed=-1):
     if v.retraction == 0:
         return
@@ -261,6 +262,7 @@ def purge_generate_brim():
     v.retract_y = last_brim_y
     # correct the amount of extrusion for the brim
 
+
 def purge_generate_sequence():
     global last_posx, last_posy
 
@@ -273,7 +275,6 @@ def purge_generate_sequence():
         return
 
     actual = 0
-    expected = v.side_wipe_length
 
     gcode.issue_code("; --------------------------------------------------\n")
     gcode.issue_code("; --- P2PP WIPE SEQUENCE START  FOR {:5.2f}mm\n".format(v.side_wipe_length))
@@ -287,7 +288,6 @@ def purge_generate_sequence():
     #         gcode.issue_code(
     #             "; --- CORRECTED PURGE TO TRANSITION LENGTH {:.2f}mm\n".format(v.wiping_info[index]))
     # gcode.issue_code("; --------------------------------------------------\n")
-
 
     v.max_tower_delta = max(v.max_tower_delta, v.current_position_z - (v.purgelayer + 1) * v.layer_height)
     v.min_tower_delta = min(v.min_tower_delta, v.current_position_z - (v.purgelayer + 1) * v.layer_height)

@@ -79,8 +79,8 @@ def algorithm_create_table():
                 algo = v.splice_algorithm_dictionary["{}{}".format(v.filament_type[i], v.filament_type[j])]
             except (IndexError, KeyError):
                 gui.log_warning("WARNING: No Algorithm defined for transitioning" +
-                            " {} to {}. Using Default".format(v.filament_type[i],
-                                                              v.filament_type[j]))
+                                " {} to {}. Using Default".format(v.filament_type[i],
+                                                                  v.filament_type[j]))
                 algo = v.default_splice_algorithm
             if v.palette_plus:
                 v.splice_algorithm_table.append("({},{})".format(algo_key, algo).replace("-", ""))
@@ -94,8 +94,8 @@ def algorithm_create_table():
 def header_generate_omega(job_name):
     if v.printer_profile_string == '':
         gui.log_warning("The PRINTERPROFILE identifier is missing, Please add:\n" +
-                    ";P2PP PRINTERPROFILE=<your printer profile ID>\n" +
-                    "to your Printers Start GCODE.\n")
+                        ";P2PP PRINTERPROFILE=<your printer profile ID>\n" +
+                        "to your Printers Start GCODE.\n")
 
     if len(v.splice_extruder_position) == 0:
         gui.log_warning("This does not look like a multi-colour file.\n")
@@ -155,6 +155,7 @@ def header_generate_omega_paletteplus():
 
     return {'header': header, 'summary': summary, 'warnings': warnings}
 
+
 def header_generate_omega_palette2(job_name):
     header = []
     summary = []
@@ -171,7 +172,7 @@ def header_generate_omega_palette2(job_name):
     header.append('O23 D0001' + "\n")  # unused
     header.append('O24 D0000' + "\n")  # unused
 
-    str = "O25"
+    omega_str = "O25"
 
     initools = v.m4c_loadedinputs[0]
 
@@ -188,15 +189,15 @@ def header_generate_omega_palette2(job_name):
     for i in initools:
         if i != -1:
 
-            str += " D{}{}{}{}".format(v.used_filament_types.index(v.filament_type[i]) + 1,
-                                       v.filament_color_code[i].strip("\n"),
-                                       find_nearest_colour(v.filament_color_code[i].strip("\n")),
-                                       v.filament_type[i].strip("\n")
-                                       )
+            omega_str += " D{}{}{}{}".format(v.used_filament_types.index(v.filament_type[i]) + 1,
+                                             v.filament_color_code[i].strip("\n"),
+                                             find_nearest_colour(v.filament_color_code[i].strip("\n")),
+                                             v.filament_type[i].strip("\n")
+                                             )
         else:
-            str += (" D0")
+            omega_str += " D0"
 
-    header.append(str + "\n")
+    header.append(omega_str + "\n")
 
     header.append('O26 ' + hexify_short(len(v.splice_extruder_position)) + "\n")
     header.append('O27 ' + hexify_short(len(v.ping_extruder_position)) + "\n")
@@ -209,14 +210,14 @@ def header_generate_omega_palette2(job_name):
     for i in range(len(v.splice_extruder_position)):
         if v.accessory_mode:
             header.append("O30 D{:0>1d} {}\n".format(v.splice_used_tool[i],
-                                                 hexify_float(v.splice_extruder_position[i])
-                                                 )
+                                                     hexify_float(v.splice_extruder_position[i])
+                                                     )
                           )
         else:
             header.append("O30 D{:0>1d} {}\n".format(v.splice_used_tool[i],
                                                      hexify_float(v.splice_extruder_position[i] + v.autoloadingoffset)
                                                      )
-                      )
+                          )
 
     if v.accessory_mode:
         for i in range(len(v.ping_extruder_position)):
@@ -255,23 +256,20 @@ def header_generate_omega_palette2(job_name):
 
 
 def generatesummary():
-    summary = []
+    summary = [";---------------------\n", "; - COLORS DEFINED   -\n", ";---------------------\n",
+               ";Number of extruders defined in PrusaSlicer: {}\n".format(v.m4c_numberoffilaments),
+               ";Number of color swaps in this print: {}\n".format(len(v.m4c_late_warning)),
+               ";Filament defined for this print:\n"]
 
-    summary.append(";---------------------\n")
-    summary.append("; - COLORS DEFINED   -\n")
-    summary.append(";---------------------\n")
-    summary.append(";Number of extruders defined in PrusaSlicer: {}\n".format(v.m4c_numberoffilaments))
-    summary.append(";Number of color swaps in this print: {}\n".format(len(v.m4c_late_warning)))
-    summary.append(";Filament defined for this print:\n")
     for i in range(v.m4c_numberoffilaments):
         try:
-            id = v.filament_ids[i]
+            fil_id = v.filament_ids[i]
         except IndexError:
-            id = ""
+            fil_id = ""
         summary.append(";.   Filament {} - Color Code {} - {:20}  {}\n".format(i + 1, v.filament_color_code[i],
                                                                                find_nearest_colour(
                                                                                    v.filament_color_code[i].strip(
-                                                                                       "\n")), id))
+                                                                                       "\n")), fil_id))
     summary.append("\n")
 
     summary.append(";---------------------\n")
@@ -280,9 +278,8 @@ def generatesummary():
     summary.append(";       Splice Offset = {:-8.2f}mm\n".format(v.splice_offset))
     summary.append(";       Autoloading Offset = {:-8.2f}mm\n\n".format(v.autoloadingoffset))
 
-
     for i in range(len(v.splice_extruder_position)):
-        if i==0:
+        if i == 0:
             pos = 0
         else:
             pos = v.splice_extruder_position[i-1]
@@ -303,14 +300,13 @@ def generatesummary():
 
     for i in range(len(v.ping_extruder_position)):
         pingtext = ";Ping {:04} at {:-8.2f}mm ({})\n".format(i + 1,
-                                                            v.ping_extruder_position[i],
-                                                            hexify_float(v.ping_extruder_position[i])
-                                                            )
-        summary.append( pingtext )
+                                                             v.ping_extruder_position[i],
+                                                             hexify_float(v.ping_extruder_position[i])
+                                                             )
+        summary.append(pingtext)
 
     if v.side_wipe and v.side_wipe_loc == "" and not v.bigbrain3d_purge_enabled:
         gui.log_warning("Using sidewipe with undefined SIDEWIPELOC!!!")
-
 
     return summary
 

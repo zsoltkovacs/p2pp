@@ -56,7 +56,7 @@ def colour_dist(r1, g1, b1, r2, g2, b2):
 def hex2int(hexnum):
     try:
         return int(hexnum, 16)
-    except:
+    except ValueError:
         return 0
 
 

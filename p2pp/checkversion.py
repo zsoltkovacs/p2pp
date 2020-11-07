@@ -19,14 +19,14 @@ DEV = version.format('dev')
 _p = platform.python_version().strip()
 python_version = _p[0]
 
-def get_version( _url_ ):
+
+def get_version(_url_):
     try:
         if python_version == "2":
             import urllib
             response = urllib.urlopen(_url_)
             lines = "".join(response).splitlines()
-
-        if python_version == "3":
+        else:   # python version 3
             import urllib.request
             import ssl
             https_sslv3_handler = urllib.request.HTTPSHandler(context=ssl.SSLContext())
@@ -35,10 +35,10 @@ def get_version( _url_ ):
             response = opener.open(_url_).read().decode('utf-8')
             lines = "".join(response).splitlines()
 
-         # get version information
-            _maj = -1
-            _min = -1
-            _bld = -1
+        # get version information
+        _maj = -1
+        _min = -1
+        _bld = -1
 
         for line in lines:
             if line.startswith("MajorVersion"):
@@ -48,12 +48,9 @@ def get_version( _url_ ):
             if line.startswith("Build"):
                 _bld = int(line[line.find("=")+1:])
 
-        if _maj==-1 or _min==-1 or _bld==-1:
+        if _maj == -1 or _min == -1 or _bld == -1:
             return None
 
-        return ("{}.{:02}.{:03}".format(_maj, _min, _bld))
+        return "{}.{:02}.{:03}".format(_maj, _min, _bld)
     except:
         return None
-
-
-

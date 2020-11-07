@@ -255,7 +255,6 @@ skirts = 0
 
 autoloadingoffset = 0
 
-
 classes = {
     0: "Undefined     ",
     1: "Normal GCode  ",
@@ -274,8 +273,8 @@ classes = {
 
 }
 
-### more than 4 color prints
-############################
+# more than 4 color prints
+
 m4c_enabled = False
 m4c_toolchanges = []
 m4c_toolchange_source_positions = []

@@ -7,11 +7,9 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
-import io
 import os
 import re
 import time
-import copy
 
 import p2pp.gcode as gcode
 import p2pp.gui as gui
@@ -22,7 +20,7 @@ import p2pp.purgetower as purgetower
 import p2pp.variables as v
 from p2pp.gcodeparser import parse_slic3r_config
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
-from p2pp.sidewipe import create_side_wipe, create_sidewipe_BigBrain3D
+from p2pp.sidewipe import create_side_wipe, create_sidewipe_bb3d
 
 layer_regex = re.compile("\s*;\s*(LAYER|LAYERHEIGHT)\s+(\d+(\.\d+)?)\s*")
 
@@ -305,7 +303,7 @@ def backpass(currentclass):
         v.parsed_gcode[idx].Class = currentclass
 
         if v.parsed_gcode[idx].is_unretract_command():
-            if (v.parsed_gcode[idx].Command == "G11"):
+            if v.parsed_gcode[idx].Command == "G11":
                 v.retraction = 0
             else:
                 v.retraction -= v.parsed_gcode[idx].E
@@ -342,7 +340,6 @@ def create_tower_gcode():
 
 
 def parse_gcode():
-    cur_tool = 0
     toolchange = 0
     emptygrid = 0
 
@@ -381,13 +378,13 @@ def parse_gcode():
                     if llm == 11:  # LAYERHEIGHT
 
                         fl = int(v.first_layer_height*100)
-                        l = int((lmv+0.001) * 100)
-                        l = l - fl
+                        lv = int((lmv+0.001) * 100)
+                        lv = lv - fl
 
                         lh = int(v.layer_height * 100)
 
-                        if l % lh == 0:
-                            layer = int(l / lh + 1)
+                        if lv % lh == 0:
+                            layer = int(lv / lh + 1)
                         else:
                             layer = v.parsedlayer
 
@@ -459,7 +456,7 @@ def gcode_parseline(index):
         return
 
     if g.Command in ["M104", "M109"]:
-        if not v.process_temp or  g.Class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD]:
+        if not v.process_temp or g.Class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD]:
             g.add_comment(" Unprocessed temp ")
             g.issue_command()
             v.new_temp = g.get_parameter("S", v.current_temp)
@@ -478,7 +475,7 @@ def gcode_parseline(index):
 
         return
 
-    if  g.Class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD] and v.current_temp != v.new_temp:
+    if g.Class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD] and v.current_temp != v.new_temp:
         print(v.temp1_stored_command)
         gcode.issue_code(v.temp1_stored_command)
         v.temp1_stored_command = ""
@@ -532,7 +529,7 @@ def gcode_parseline(index):
 
     if classupdate and g.Class == CLS_BRIM and v.side_wipe and v.bigbrain3d_purge_enabled:
         v.side_wipe_length = v.bigbrain3d_prime * v.bigbrain3d_blob_size
-        create_sidewipe_BigBrain3D()
+        create_sidewipe_bb3d()
 
     if not v.side_wipe:
         if x_coordinate_in_tower(g.X):
@@ -545,8 +542,7 @@ def gcode_parseline(index):
         if g.Command == "G4" or (g.Command in ["M900"] and g.get_parameter("K", 0) == 0):
             g.move_to_comment("tool unload")
 
-    ## ALL SITUATIONS
-    ##############################################
+    # ALL SITUATIONS
 
     if g.Class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
 
@@ -590,8 +586,8 @@ def gcode_parseline(index):
             g.update_parameter("F", v.purgetopspeed)
             g.add_comment(" prugespeed topped")
 
-    ## SIDEWIPE / FULLPURGEREDUCTION / TOWER DELTA
-    ###############################################
+    # SIDEWIPE / FULLPURGEREDUCTION / TOWER DELTA
+
     if v.pathprocessing:
 
         if g.Class == CLS_TONORMAL:
@@ -607,9 +603,7 @@ def gcode_parseline(index):
                 g.remove_parameter("X")
                 g.remove_parameter("Y")
 
-        ###################################
         # sepcific for FULL_PURGE_REDUCTION
-        ###################################
 
         if v.full_purge_reduction:
 
@@ -617,9 +611,7 @@ def gcode_parseline(index):
                 create_tower_gcode()
                 purgetower.purge_generate_brim()
 
-        ###################################
         # sepcific for SIDEWIPE
-        ###################################
 
         if v.side_wipe:
 
@@ -799,7 +791,7 @@ def gcode_parseline(index):
     if v.toolchange_processed:
         if v.side_wipe and g.Class == CLS_NORMAL and classupdate:
             if v.bigbrain3d_purge_enabled:
-                create_sidewipe_BigBrain3D()
+                create_sidewipe_bb3d()
             else:
                 create_side_wipe()
             v.toolchange_processed = False
@@ -836,14 +828,13 @@ def gcode_parseline(index):
 
     g.issue_command()
 
-    ### PING PROCESSING
-    ###################
+    # PING PROCESSING
 
     if v.accessory_mode:
         pings.check_accessorymode_second(g.E)
 
     if g.is_movement_command:
-        if ( g.E > 0) and v.side_wipe_length == 0:
+        if (g.E > 0) and v.side_wipe_length == 0:
             pings.check_connected_ping()
 
     v.previous_position_x = v.current_position_x
@@ -851,7 +842,7 @@ def gcode_parseline(index):
 
 
 # Generate the file and glue it all together!
-# #####################################################################
+
 def generate(input_file, output_file, printer_profile, splice_offset, silent):
     starttime = time.time()
     v.printer_profile_string = printer_profile
@@ -902,10 +893,10 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     if v.bed_size_x == -9999 or v.bed_size_y == -9999 or v.bed_origin_x == -9999 or v.bed_origin_y == -9999:
         gui.log_warning("Bedsize not correctly defined.  The generated file will NOT print")
     else:
-        gui.create_logitem("Bed origin ({:3.1f}mm, {:3.1f}mm)".format(v.bed_origin_x,v.bed_origin_y))
+        gui.create_logitem("Bed origin ({:3.1f}mm, {:3.1f}mm)".format(v.bed_origin_x, v.bed_origin_y))
         gui.create_logitem("Bed zise   ({:3.1f}mm, {:3.1f}mm)".format(v.bed_size_x, v.bed_size_y))
         if v.bed_shape_rect and v.bed_shape_warning:
-                gui.create_logitem("Manual bed size override, Prusa Bedshape parameters ignored.")
+            gui.create_logitem("Manual bed size override, Prusa Bedshape parameters ignored.")
 
     gui.create_logitem("")
 

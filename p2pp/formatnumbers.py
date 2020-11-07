@@ -12,16 +12,12 @@ import struct
 
 def hexify_byte(num):
     # hexify_short: Converts a short integer into the specific notation used by Mosaic
-    if num < 0:
-        num += 256
-    return "D" + '{0:02x}'.format(num)
+    return "D" + '{0:02x}'.format(num % 256)
 
 
 def hexify_short(num):
     # hexify_short: Converts a short integer into the specific notation used by Mosaic
-    if num < 0:
-        num += 65536
-    return "D" + '{0:04x}'.format(num)
+    return "D" + '{0:04x}'.format(num % 65536)
 
 
 def hexify_long(num):
@@ -32,7 +28,6 @@ def hexify_long(num):
 def hexify_float(f):
     # hexify_float: Converts a 32-bit floating point number into the specific notation used by Mosaic
     _number = (hex(struct.unpack('<I', struct.pack('<f', f))[0]))[2:]
-
     return "D{:0>8}".format(_number)
 
 
