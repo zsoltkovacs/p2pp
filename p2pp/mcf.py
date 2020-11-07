@@ -26,18 +26,22 @@ layer_regex = re.compile("\s*;\s*LAYER\s+(\d)\s*")
 layerheight_regex = re.compile("\s*;\s*LAYERHEIGHT\s+(\d+(\.\d+)?)\s*")
 
 def remove_previous_move_in_tower():
+
     idx = len(v.processed_gcode) - 10
 
     while idx < len(v.processed_gcode):
         line = v.processed_gcode[idx]
         tmp = gcode.GCodeCommand(line)
-        if tmp.X and tmp.Y:
-            if coordinate_in_tower(tmp.X, tmp.Y):
-                if tmp.is_movement_command and tmp.E:
-                    v.total_material_extruded -= tmp.E
-                    v.material_extruded_per_color[v.current_tool] -= tmp.E
-                tmp.move_to_comment("tower skipped")
-                v.processed_gcode[idx] = tmp.__str__()
+
+        if coordinate_in_tower(tmp.X, tmp.Y):
+            if tmp.is_movement_command and tmp.E:
+                v.total_material_extruded -= v.processed_gcode[idx]
+                v.material_extruded_per_color[v.current_tool] -= v.processed_gcode[idx]
+
+            tmp.move_to_comment("tower skipped")
+            v.processed_gcode[idx] = tmp.__str__()
+            v.processed_extrusion[idx] = 0
+
         idx = idx + 1
 
 

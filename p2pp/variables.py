@@ -63,6 +63,7 @@ default_printerprofile = '50325050494e464f'
 
 input_gcode = []
 processed_gcode = []  # final output array with Gcode
+processed_extrusion = []
 
 # These variables are used to build the splice information table (Omega-30 commands in GCode) that drives the Palette2.
 # spliceoffset allows for a correction of the position at which the transition occurs.

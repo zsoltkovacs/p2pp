@@ -177,19 +177,21 @@ class GCodeCommand:
         return defaultvalue
 
     def issue_command(self, speed=-1):
-        if self.E and  self.is_movement_command:
-            v.total_material_extruded += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
-            v.material_extruded_per_color[
-                v.current_tool] += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
-            v.purge_count += self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
+        extrusion = 0
+        if self.E:
+            extrusion = self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
+            if self.is_movement_command:
+                v.total_material_extruded += extrusion
+                v.material_extruded_per_color[ v.current_tool] += extrusion
+                v.purge_count += extrusion
 
-            if v.absolute_extruder and v.gcode_has_relative_e:
-                if v.absolute_counter == -9999 or v.absolute_counter > 3000:
-                    v.processed_gcode.append("G92 E0.00  ; Extruder counter reset")
-                    v.absolute_counter = 0
+                if v.absolute_extruder and v.gcode_has_relative_e:
+                    if v.absolute_counter == -9999 or v.absolute_counter > 3000:
+                        v.processed_gcode.append("G92 E0.00  ; Extruder counter reset")
+                        v.absolute_counter = 0
 
-                v.absolute_counter += self.E
-                self.update_parameter("E", v.absolute_counter)
+                    v.absolute_counter += self.E
+                    self.update_parameter("E", v.absolute_counter)
 
         if v.absolute_extruder and v.gcode_has_relative_e:
             if self.Command == "M83":
@@ -201,6 +203,7 @@ class GCodeCommand:
         if speed != -1:
             s = s.replace("%SPEED%", "{:0.0f}".format(speed))
         v.processed_gcode.append(s)
+        v.processed_extrusion.append(extrusion)
 
     def add_comment(self, text):
         if self.Comment:
