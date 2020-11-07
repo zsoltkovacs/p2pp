@@ -22,8 +22,8 @@ from p2pp.gcodeparser import parse_slic3r_config
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
 from p2pp.sidewipe import create_side_wipe, create_sidewipe_bb3d
 
-layer_regex = re.compile("\s*;\s*(LAYER|LAYERHEIGHT)\s+(\d+(\.\d+)?)\s*")
-
+layer_regex = re.compile("\s*;\s*LAYER\s+(\d)\s*")
+layerheight_regex = re.compile("\s*;\s*LAYERHEIGHT\s+(\d+(\.\d+)?)\s*")
 
 def remove_previous_move_in_tower():
     idx = len(v.processed_gcode) - 10
@@ -68,38 +68,6 @@ def optimize_tower_skip(skipmax, layersize):
 
     if not v.side_wipe and not v.bigbrain3d_purge_enabled:
         v.skippable_layer[0] = False
-
-
-def convert_to_absolute():
-    absolute = -9999
-
-    for i in range(len(v.processed_gcode)):
-
-        if absolute > 3000.0:
-            v.processed_gcode.insert(i, "G92 E0.000    ;Extruder counter reset ")
-            absolute = 0.00
-
-        line = gcode.GCodeCommand(v.processed_gcode[i])
-
-        if line.is_movement_command:
-            if line.E:
-
-                # if there is no filament reset code, make sure one is inserted before first extrusion
-                # this should not be needed
-                if absolute == -9999:
-                    v.processed_gcode.insert(i, "G92 E0.00")
-                    absolute = 0.0
-                    i += 1
-
-                absolute += line.E
-                line.update_parameter("E", absolute)
-                v.processed_gcode[i] = line.__str__()
-
-        if line.Command == "M83":
-            v.processed_gcode[i] = "M82\n"
-
-        if line.Command == "G92":
-            absolute = line.E
 
 
 # ################### GCODE PROCESSING ###########################
@@ -340,6 +308,7 @@ def create_tower_gcode():
 
 
 def parse_gcode():
+
     toolchange = 0
     emptygrid = 0
 
@@ -347,57 +316,50 @@ def parse_gcode():
     v.previous_block_classification = CLS_NORMAL
     total_line_count = len(v.input_gcode)
 
-    index = 0
-    for line in v.input_gcode:
+    for index in range(total_line_count):
 
-        gui.progress_string(4 + 46 * index // total_line_count)
+        if index % 5000 == 0:
+            gui.progress_string(4 + 46 * index // total_line_count)
+
+        line = v.input_gcode[index]
 
         if line.startswith(';'):
             m = v.regex_p2pp.match(line)
             if m:
-                parameters.check_config_parameters(m.group(1), m.group(2))
-
-            if line.startswith(";P2PP MATERIAL_"):
-                algorithm_process_material_configuration(line[15:])
+                if m.group(1).startswith("MATERIAL"):
+                    algorithm_process_material_configuration(m.group(1)[9:])
+                else:
+                    parameters.check_config_parameters(m.group(1), m.group(2))
 
             layer = -1
             # if not supports are printed or layers are synced, there is no need to look at the layerheight,
             # otherwise look at the layerheight to determine the layer progress
 
-            lm = layer_regex.match(line)
+            if v.synced_support or not v.support_material:
+                lm = layer_regex.match(line)
+                if lm:
+                    layer = int(lm.group(1))
+            else:
+                lm = layerheight_regex.match(line)
+                if lm:
+                    fl = int(v.first_layer_height*100)
+                    lv = int((float(lm.group(1))+0.001) * 100)
+                    lv = lv - fl
 
-            if lm is not None:
-                llm = len(lm.group(1))
-                lmv = float(lm.group(2))
+                    lh = int(v.layer_height * 100)
 
-                if v.synced_support or not v.support_material:
+                    if lv % lh == 0:
+                        layer = int(lv / lh + 1)
+                    else:
+                        layer = v.parsedlayer
 
-                    if llm == 5:  # LAYER
-                        layer = int(lmv)
-                else:
-                    if llm == 11:  # LAYERHEIGHT
-
-                        fl = int(v.first_layer_height*100)
-                        lv = int((lmv+0.001) * 100)
-                        lv = lv - fl
-
-                        lh = int(v.layer_height * 100)
-
-                        if lv % lh == 0:
-                            layer = int(lv / lh + 1)
-                        else:
-                            layer = v.parsedlayer
-
-            if layer == v.parsedlayer:
-                layer = -1
-
-            if layer >= 0:
+            if layer >= 0 and layer != v.parsedlayer:
                 v.parsedlayer = layer
 
-            if layer > 0:
-                v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
-                toolchange = 0
-                emptygrid = 0
+                if layer > 0:
+                    v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
+                    toolchange = 0
+                    emptygrid = 0
 
             update_class(line)
 
@@ -411,7 +373,6 @@ def parse_gcode():
 
         code.Class = v.block_classification
 
-        # code.add_comment("[{}]".format(v.classes[v.block_classification]))
         v.parsed_gcode.append(code)
 
         if v.block_classification != v.previous_block_classification:
@@ -436,8 +397,6 @@ def parse_gcode():
 
         if v.block_classification == CLS_BRIM_END:
             v.block_classification = CLS_NORMAL
-
-        index += 1
 
 
 def gcode_parseline(index):
@@ -978,10 +937,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
         gcode_process_toolchange(-1, v.total_material_extruded, 0)
         omega_result = header_generate_omega(_taskName)
         header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
-
-        if v.absolute_extruder and v.gcode_has_relative_e:
-            gui.create_logitem("Converting to absolute extrusion")
-            convert_to_absolute()
 
         # write the output file
         ######################

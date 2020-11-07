@@ -288,3 +288,10 @@ m4c_numberoffilaments = 4
 m4c_headerinfo = []
 
 regex_p2pp = re.compile("^;\s*P2PP\s+([^=]+)=?(.*)$")
+
+
+
+# conversion to absolute extruder:
+
+absolute_counter = -9999
+

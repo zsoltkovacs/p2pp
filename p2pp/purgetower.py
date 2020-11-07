@@ -307,7 +307,7 @@ def purge_generate_sequence():
         last_posy = if_defined(next_command.Y, last_posy)
         v.side_wipe_length -= if_defined(next_command.E, 0)
         actual += if_defined(next_command.E, 0)
-        next_command.issue_command_speed(getwipespeed())
+        next_command.issue_command(getwipespeed())
         _purge_update_sequence_index()
 
     # return to print height

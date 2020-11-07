@@ -11,7 +11,7 @@ __status__ = 'BETA'
 
 # general version info
 MajorVersion = 5
-MinorVersion = 5
+MinorVersion = 6
 Build = 0
 
 releaseinfo = {
@@ -23,6 +23,7 @@ releaseinfo = {
     '5.3.0': "error in minimal linear ping length error string",
     '5.4.0': "corrected is_movement_command checking",
     '5.5.0': "correction in non-synched support material handling",
+    '5.6.0': "updated in Aboslute conversion post processing",
     '--- RELEASE INFORMATION': 'END'
 }
 
