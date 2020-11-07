@@ -25,29 +25,10 @@ from p2pp.sidewipe import create_side_wipe, create_sidewipe_bb3d
 layer_regex = re.compile("\s*;\s*LAYER\s+(\d)\s*")
 layerheight_regex = re.compile("\s*;\s*LAYERHEIGHT\s+(\d+(\.\d+)?)\s*")
 
-def remove_previous_move_in_tower():
-
-    idx = len(v.processed_gcode) - 10
-
-    while idx < len(v.processed_gcode):
-        line = v.processed_gcode[idx]
-        tmp = gcode.GCodeCommand(line)
-
-        if coordinate_in_tower(tmp.X, tmp.Y):
-            if tmp.is_movement_command and tmp.E:
-                v.total_material_extruded -= v.processed_gcode[idx]
-                v.material_extruded_per_color[v.current_tool] -= v.processed_gcode[idx]
-
-            tmp.move_to_comment("tower skipped")
-            v.processed_gcode[idx] = tmp.__str__()
-            v.processed_extrusion[idx] = 0
-
-        idx = idx + 1
-
-
 def optimize_tower_skip(skipmax, layersize):
     skipped = 0.0
     skipped_num = 0
+
     if v.side_wipe or v.bigbrain3d_purge_enabled:
         base = -1
     else:
@@ -288,11 +269,11 @@ def backpass(currentclass):
 
 def calculate_tower(x, y):
     if x is not None:
-        v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], x - 4 * v.extrusion_width)
-        v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], x + 4 * v.extrusion_width)
+        v.wipe_tower_info['minx'] = min(v.wipe_tower_info['minx'], x - 2 * v.extrusion_width)
+        v.wipe_tower_info['maxx'] = max(v.wipe_tower_info['maxx'], x + 2 * v.extrusion_width)
     if y is not None:
-        v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], y - 8 * v.extrusion_width)
-        v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], y + 8 * v.extrusion_width)
+        v.wipe_tower_info['miny'] = min(v.wipe_tower_info['miny'], y - 4 * v.extrusion_width)
+        v.wipe_tower_info['maxy'] = max(v.wipe_tower_info['maxy'], y + 4 * v.extrusion_width)
 
 
 def create_tower_gcode():
@@ -353,7 +334,7 @@ def parse_gcode():
                     lh = int(v.layer_height * 100)
 
                     if lv % lh == 0:
-                        layer = int(lv / lh + 1)
+                        layer = int(lv / lh)
                     else:
                         layer = v.parsedlayer
 
@@ -603,19 +584,25 @@ def gcode_parseline(index):
             if classupdate and previous_block_class == CLS_TOOL_PURGE:
                 leavetower()
 
-        ################################################################
-        # EMPTY GRID SKIPPING CHECK FOR SIDE WIPE/TOWER DELTA/FULLPURGE
-        ################################################################
-        if g.Class == CLS_EMPTY and "EMPTY GRID START" in g.get_comment():
+        # if path processing is on then detect moevement into the tower
+        # since there is no empty path processing, it must be beginning of the
+        # empty grid sequence.
+
+        if v.towerskipped == False:
+
             if g.Layer < len(v.skippable_layer) and v.skippable_layer[g.Layer]:
-                v.towerskipped = True
-                remove_previous_move_in_tower()
-                if v.tower_delta:
-                    v.cur_tower_z_delta += v.layer_height
-                    gcode.issue_code(";-------------------------------------\n")
-                    gcode.issue_code(";  GRID SKIP --TOWER DELTA {:6.2f}mm\n".format(v.cur_tower_z_delta))
-                    gcode.issue_code(";-------------------------------------\n")
-            else:
+                if g.is_movement_command and g.X and g.Y:
+                    if coordinate_in_tower(g.X, g.Y):
+                        v.towerskipped = True
+                        if v.tower_delta:
+                            v.cur_tower_z_delta += v.layer_height
+                            gcode.issue_code(";-------------------------------------\n")
+                            gcode.issue_code(";  GRID SKIP --TOWER DELTA {:6.2f}mm\n".format(v.cur_tower_z_delta))
+                            gcode.issue_code(";-------------------------------------\n")
+
+        # EMPTY GRID SKIPPING CHECK FOR SIDE WIPE/TOWER DELTA/FULLPURGE
+        if g.Class == CLS_EMPTY and "EMPTY GRID START" in g.get_comment():
+            if g.Layer >= len(v.skippable_layer) or not v.skippable_layer[g.Layer]:
                 if "EMPTY GRID START" in g.get_comment() and not v.side_wipe:
                     entertower(g.Layer * v.layer_height + v.first_layer_height)
 
