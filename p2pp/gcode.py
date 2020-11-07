@@ -203,7 +203,6 @@ class GCodeCommand:
         if speed != -1:
             s = s.replace("%SPEED%", "{:0.0f}".format(speed))
         v.processed_gcode.append(s)
-        v.processed_extrusion.append(extrusion)
 
     def add_comment(self, text):
         if self.Comment:
