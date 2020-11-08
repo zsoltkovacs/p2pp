@@ -69,9 +69,9 @@ def patchup_toolchanges():
         except IndexError:
             old = v.parsed_gcode[v.m4c_toolchange_source_positions[-1]]
 
-        _ip = calculate_input_index(idx, int(old.Command_value()))
+        _ip = calculate_input_index(idx, int(old.command_value()))
         v.parsed_gcode[v.m4c_toolchange_source_positions[idx]] = gcode.GCodeCommand(
-            "T{} ; INPUT MAPPING MORE THAN 4 COLORS {} --> {}".format(_ip, _ip, int(old.Command_value())))
+            "T{} ; INPUT MAPPING MORE THAN 4 COLORS {} --> {}".format(_ip, _ip, int(old.command_value())))
 
 
 def calculate_loadscheme():
@@ -105,11 +105,10 @@ def calculate_loadscheme():
             input_to_replace = find_last_used(loadedinputs, nexttools[idx])
             tool_replaced = loadedinputs[input_to_replace]
             v.m4c_late_warning.append([input_to_replace, tool_replaced, newtool])
-            # print("{} FROM Loaded {} - Next {} ".format(input_to_replace, loadedinputs, nexttools[idx]))
-            # print ("Splice {} Changing Input {} from {} to {}".format(idx,input_to_replace, tool_replaced, newtool ))
             loadedinputs[input_to_replace] = newtool
 
             last_used = find_previous_tool_replaced(tool_replaced, idx)
+
             if last_used > 0 and not last_used + 1 == idx:
                 v.m4c_late_warning[-1].append(last_used + 1)
             else:

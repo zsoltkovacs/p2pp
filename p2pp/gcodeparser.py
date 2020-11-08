@@ -216,7 +216,6 @@ def parse_slic3r_config():
 
             continue
 
-        # TVDE: needs to be expanded to be able to support more than 4 colors
         if gcode_line.startswith("; extruder_colour") or gcode_line.startswith("; filament_colour"):
             filament_colour = ''
             parameter_start = gcode_line.find("=")
@@ -236,13 +235,11 @@ def parse_slic3r_config():
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 filament_diameters = gcode_line[parameter_start + 1:].strip(" ").split(",")
-                if len(filament_diameters) >= 4:
-                    for i in range(4):
-                        v.filament_diameter[i] = float(filament_diameters[i])
+                v.filament_diameter = [1.75] * max(len(filament_diameters), 4)
+                for i in range(len(filament_diameters)):
+                    v.filament_diameter[i] = float(filament_diameters[i])
             continue
 
-        # TVDE: needs to be expanded to be able to support more than 4 colors
-        # only check that is needed is that if nore than 4 colors exist, all must be of same type
         if gcode_line.startswith("; filament_type"):
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
@@ -256,16 +253,13 @@ def parse_slic3r_config():
                     if len(v.used_filament_types) > 1:
                         gui.log_warning("Prints with more than 4 colors should be of one filament type only!")
                         gui.log_warning("This file will not print correctly")
-                    v.filament_type = filament_string[:4]
+                    v.filament_type = filament_string
 
             if v.m4c_numberoffilaments > 4:
                 gui.log_warning(
                     "Number of inputs defined in print: {}.  Swaps may be required!!!".format(v.m4c_numberoffilaments))
 
             continue
-
-        # TVDE: needs to be expanded to be able to support more than 4 colors
-        # if more than 4, just retain the first four (check is done at other level, but for not all settings should be the same)
 
         if gcode_line.startswith("; retract_lift = "):
             if v.filament_list:
@@ -274,17 +268,15 @@ def parse_slic3r_config():
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 retracts = gcode_line[parameter_start + 1:].strip(" ").split(",")
-                if len(retracts) >= 4:
-                    for i in range(4):
-                        v.retract_lift[i] = float(retracts[i])
-                        if v.retract_lift[i] == 0:
-                            lift_error = True
+                v.retract_lift = [0.6] * max(len(retracts), 4)
+                for i in range(len(retracts)):
+                    v.retract_lift[i] = float(retracts[i])
+                    if v.retract_lift[i] == 0:
+                        lift_error = True
+                        gui.log_warning(
+                            "[Printer Settings]->[Extruders 1 -> {}]->[Retraction]->[Lift Z] should not be set to zero.".format(i))
                 if lift_error:
-                    gui.log_warning(
-                        "[Printer Settings]->[Extruders 1 -> {}]->[Retraction]->[Lift Z] should not be set to zero.".format(
-                            len(retracts)))
-                    gui.log_warning(
-                        "Generated file might not print correctly")
+                    gui.log_warning( "Generated file might not print correctly")
             continue
 
         # TVDE: needs to be expanded to be able to support more than 4 colors
@@ -294,15 +286,15 @@ def parse_slic3r_config():
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 retracts = gcode_line[parameter_start + 1:].strip(" ").split(",")
-                if len(retracts) >= 4:
-                    for i in range(4):
-                        v.retract_length[i] = float(retracts[i])
-                        if v.retract_length[i] == 0.0:
-                            retract_error = True
-                if retract_error:
-                    gui.log_warning(
-                        "[Printer Settings]->[Extruders 1 -> {} 4]->[Retraction Length] should not be set to zero.".format(
-                            len(retracts)))
+                v.retract_length = [0.8] * max(len(retracts), 4)
+                for i in range(len(retracts)):
+                    v.retract_length[i] = float(retracts[i])
+                    if v.retract_length[i] == 0.0:
+                        retract_error = True
+                        gui.log_warning(
+                            "[Printer Settings]->[Extruders 1 -> {} 4]->[Retraction Length] should not be set to zero.".format(i))
+                    if retract_error:
+                        gui.log_warning("Generated file might not print correctly")
             continue
 
         if gcode_line.startswith("; gcode_flavor"):

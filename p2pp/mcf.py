@@ -358,7 +358,7 @@ def parse_gcode():
 
         if code.is_toolchange:
             cur_tool = int(code.command_value())
-            if v.set_tool != -1:
+            if v.set_tool != -1 and v.set_tool<4:
                 v.p2pp_tool_unconfigged[v.set_tool] = False
             v.set_tool = cur_tool
             v.m4c_toolchanges.append(cur_tool)
