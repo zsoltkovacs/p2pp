@@ -129,6 +129,16 @@ def parse_slic3r_config():
                 pass
             continue
 
+        if gcode_line.startswith("; single_extruder_multi_material_priming"):
+            parameter_start = gcode_line.find("=")
+            if parameter_start != -1:
+                try:
+                    if (int(gcode_line[parameter_start + 1:].strip()) == 1):
+                        gui.log_warning("[Print Settings][Multiple Extruders][Wipe Tower]Prime all printing extruders MUST be turned off")
+                        gui.log_warning("THIS FILE WILL NOT PRINT CORRECTLY")
+                except [ValueError, IndexError]:
+                    pass
+            continue
         if gcode_line.startswith("; wipe_tower_no_sparse_layers"):
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:

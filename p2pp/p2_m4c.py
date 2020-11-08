@@ -139,9 +139,12 @@ def calculate_loadscheme():
 ########################################################################
 def calculate_input_index(swap, color):
     try:
+        if color not in v.m4c_loadedinputs[swap]:
+            return 0
         return v.m4c_loadedinputs[swap].index(color)
-    except [IndexError, ValueError]:
+    except IndexError:
         return 0
+
 
 
 def generate_warninglist():

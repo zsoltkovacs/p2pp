@@ -25,6 +25,7 @@ from p2pp.sidewipe import create_side_wipe, create_sidewipe_bb3d
 layer_regex = re.compile("\s*;\s*LAYER\s+(\d)\s*")
 layerheight_regex = re.compile("\s*;\s*LAYERHEIGHT\s+(\d+(\.\d+)?)\s*")
 
+
 def optimize_tower_skip(skipmax, layersize):
     skipped = 0.0
     skipped_num = 0
@@ -205,7 +206,8 @@ def update_class(gcode_line):
 
     if gcode_line.startswith("; CP"):
         if "PRIMING START" in gcode_line:
-            gui.log_warning("Extruder Primimng will not work with P2PP")
+            v.priming_skip = True
+            return
 
         if "TOOLCHANGE START" in gcode_line:
             v.block_classification = CLS_TOOL_START
