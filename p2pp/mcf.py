@@ -309,12 +309,18 @@ def parse_gcode():
         line = v.input_gcode[index]
 
         if line.startswith(';'):
-            m = v.regex_p2pp.match(line)
-            if m:
-                if m.group(1).startswith("MATERIAL"):
-                    algorithm_process_material_configuration(m.group(1)[9:])
-                else:
-                    parameters.check_config_parameters(m.group(1), m.group(2))
+
+            # try finding a P2PP configuration command
+            # until config_end command is encountered
+
+            if not v.p2pp_configend or v.set_tool > 3 or v.p2pp_tool_unconfigged[v.set_tool]:
+                m = v.regex_p2pp.match(line)
+                if m:
+                    if m.group(1).startswith("MATERIAL"):
+                        algorithm_process_material_configuration(m.group(1)[9:])
+                    else:
+                        parameters.check_config_parameters(m.group(1), m.group(2))
+
 
             layer = -1
             # if not supports are printed or layers are synced, there is no need to look at the layerheight,
@@ -352,6 +358,8 @@ def parse_gcode():
 
         if code.is_toolchange:
             cur_tool = int(code.command_value())
+            if v.set_tool != -1:
+                v.p2pp_tool_unconfigged[v.set_tool] = False
             v.set_tool = cur_tool
             v.m4c_toolchanges.append(cur_tool)
             v.m4c_toolchange_source_positions.append(len(v.parsed_gcode))

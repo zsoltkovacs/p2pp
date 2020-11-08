@@ -32,10 +32,12 @@ class GCodeCommand:
         self.is_toolchange = False
         gcode_line = gcode_line.strip()
         pos = gcode_line.find(";")
-
+        gl = gcode_line
         if pos != -1:
             self.Comment = gcode_line[pos + 1:]
-            gcode_line = (gcode_line.split(';')[0]).strip()
+            if pos == 1:
+                return
+            gcode_line = gcode_line[:pos].strip()
 
         fields = gcode_line.split(' ')
 

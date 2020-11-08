@@ -30,6 +30,9 @@ def check_config_parameters(keyword, value):
     if value is None:
         value = ""
 
+    if keyword == "CONFIGEND":
+        v.p2pp_configend = True
+
     if keyword == "TEMPERATURECONTROL":
         v.process_temp = True
 
