@@ -187,7 +187,7 @@ acc_ping_left = 0.0
 infill_speed = 0.0
 keep_hopspec = 0
 keep_hopcorrection = 0
-parsedlayer = -1
+last_parsed_layer = -1
 
 process_temp = False
 current_temp = 0
@@ -296,4 +296,4 @@ p2pp_tool_unconfigged = [True, True, True, True]
 # conversion to absolute extruder:
 
 absolute_counter = -9999
-
+layer_end = []

@@ -18,7 +18,6 @@ class GCodeCommand:
     Parameters = {}
     Class = 0
     Comment = None
-    Layer = None
     X = None
     Y = None
     Z = None
@@ -28,11 +27,9 @@ class GCodeCommand:
         self.Command = None
         self.Parameters = {}
         self.Comment = None
-        self.Layer = v.parsedlayer
         self.is_toolchange = False
         gcode_line = gcode_line.strip()
         pos = gcode_line.find(";")
-        gl = gcode_line
         if pos != -1:
             self.Comment = gcode_line[pos + 1:]
             if pos == 1:
