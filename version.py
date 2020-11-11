@@ -25,7 +25,7 @@ releaseinfo = {
     '5.5.0': "correction in non-synched support material handling",
     '5.6.0': "updated in Aboslute conversion post processing",
     '5.7.0': "Fixup More than 4 color print",
-    "5.10.0": "General code restructuring for optimized processing",ß
+    "5.10.0": "General code restructuring for optimized processing",
     '--- RELEASE INFORMATION': 'END'
 }
 
