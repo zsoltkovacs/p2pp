@@ -11,7 +11,7 @@ __status__ = 'BETA'
 
 # general version info
 MajorVersion = 5
-MinorVersion = 7
+MinorVersion = 10
 Build = 0
 
 releaseinfo = {
@@ -25,6 +25,7 @@ releaseinfo = {
     '5.5.0': "correction in non-synched support material handling",
     '5.6.0': "updated in Aboslute conversion post processing",
     '5.7.0': "Fixup More than 4 color print",
+    "5.10.0": "General code restructuring for optimized processing",ß
     '--- RELEASE INFORMATION': 'END'
 }
 
