@@ -73,7 +73,7 @@ def print_summary(summary):
 
 def progress_string(pct):
     global last_pct
-    if last_pct == pct:
+    if pct - last_pct < 2:
         return
     if pct == 100:
         if len(v.process_warnings) == 0:

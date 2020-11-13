@@ -90,7 +90,6 @@ class GCodeCommand:
 
     def __str__(self):
         p = ""
-
         # use the same formatting as prusa to ease file compares (X, Y, Z, E, F)
 
         sorted_keys = "XYZE"
