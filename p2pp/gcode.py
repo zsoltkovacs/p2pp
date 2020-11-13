@@ -14,7 +14,6 @@ import p2pp.variables as v
 class GCodeCommand:
     Command = None
     is_movement_command = False
-    is_toolchange = False
     Parameters = {}
     Class = 0
     Comment = None
@@ -23,13 +22,24 @@ class GCodeCommand:
     Z = None
     E = None
 
-    def __init__(self, gcode_line):
+    def __init__(self, gcode_line, is_comment=False):
+
         self.Command = None
         self.Parameters = {}
-        self.Comment = None
-        self.is_toolchange = False
+        self.is_movement_command = False
+        self.X = None
+        self.Y = None
+        self.Z = None
+        self.E = None
+
         gcode_line = gcode_line.strip()
-        pos = gcode_line.find(";")
+
+        if is_comment:
+            self.Comment = gcode_line[1:]
+            return
+        else:
+            pos = gcode_line.find(";")
+
         if pos != -1:
             self.Comment = gcode_line[pos + 1:]
             if pos == 1:
@@ -41,8 +51,7 @@ class GCodeCommand:
         if len(fields[0]) > 0:
 
             self.Command = fields[0]
-            self.is_toolchange = self.Command[0] == 'T'
-            self.is_movement_command = self.Command in ['G0', 'G1', 'G2', 'G3', 'G5', 'G10', 'G11']
+            self.is_movement_command = self.Command in ['G0', 'G1', 'G10', 'G11']
 
             fields = fields[1:]
 
@@ -122,22 +131,21 @@ class GCodeCommand:
         return ("{} {} {}".format(c, p, co)).strip() + "\n"
 
     def update_parameter(self, parameter, value):
-        self.Parameters[parameter] = value
-        if parameter == "X":
-            self.X = value
-        if parameter == "Y":
-            self.Y = value
-        if parameter == "Z":
-            self.Z = value
-        if parameter == "E":
-            self.E = value
+        if value:
+            self.Parameters[parameter] = value
+            if parameter == "X":
+                self.X = value
+            if parameter == "Y":
+                self.Y = value
+            if parameter == "Z":
+                self.Z = value
+            if parameter == "E":
+                self.E = value
+        else:
+            self.remove_parameter(parameter)
 
     def remove_parameter(self, parameter):
         if parameter in self.Parameters:
-            if self.Comment:
-                self.Comment = "[R_{}{}] ".format(parameter, self.Parameters[parameter]) + self.Comment
-            else:
-                self.Comment = "[R_{}{}] ".format(parameter, self.Parameters[parameter])
             self.Parameters.pop(parameter)
 
             if parameter == "X":
@@ -148,6 +156,40 @@ class GCodeCommand:
                 self.Z = None
             if parameter == "E":
                 self.E = None
+
+    def remove_x(self):
+        try:
+            self.Parameters.pop('X')
+            self.X = None
+        except KeyError:
+            pass
+
+    def remove_y(self):
+        try:
+            self.Parameters.pop('Y')
+            self.Y = None
+        except KeyError:
+            pass
+
+    def remove_z(self):
+        try:
+            self.Parameters.pop('Z')
+            self.Z = None
+        except KeyError:
+            pass
+
+    def remove_e(self):
+        try:
+            self.Parameters.pop('E')
+            self.E = None
+        except KeyError:
+            pass
+
+    def remove_f(self):
+        try:
+            self.Parameters.pop('F')
+        except KeyError:
+            pass
 
     def move_to_comment(self, text):
         if self.Command:

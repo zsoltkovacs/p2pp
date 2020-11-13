@@ -297,3 +297,7 @@ p2pp_tool_unconfigged = [True, True, True, True]
 
 absolute_counter = -9999
 layer_end = []
+
+
+layer_toolchange_counter = 0
+layer_emptygrid_counter = 0

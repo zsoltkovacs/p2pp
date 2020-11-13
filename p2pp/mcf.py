@@ -136,7 +136,6 @@ def x_coordinate_in_tower(x):
     return inrange(x, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx'])
 
 
-
 def y_coordinate_in_tower(y):
     if y is None:
         return False
@@ -147,9 +146,9 @@ def coordinate_in_tower(x, y):
     return x_coordinate_in_tower(x) and y_coordinate_in_tower(y)
 
 
-def check_move_in_tower(x,y):
+def check_move_in_tower(x, y):
     if x and y:
-        return coordinate_in_tower(x,y)
+        return coordinate_in_tower(x, y)
     return False
 
 
@@ -202,84 +201,61 @@ CLS_ENDPURGE = 512
 CLS_TONORMAL = 1024
 CLS_TOOLCOMMAND = 2048
 
-SPEC_INTOWER = 16
-
+hash_FIRST_LAYER_BRIM_START = hash("; CP WIPE TOWER FIRST LAYER BRIM START")
+hash_FIRST_LAYER_BRIM_END = hash("; CP WIPE TOWER FIRST LAYER BRIM END")
+hash_EMPTY_GRID_START = hash("; CP EMPTY GRID START")
+hash_EMPTY_GRID_END = hash("; CP EMPTY GRID END")
+hash_TOOLCHANGE_START = hash("'; CP TOOLCHANGE START")
+hash_TOOLCHANGE_UNLOAD = hash("; CP TOOLCHANGE UNLOAD")
+hash_TOOLCHANGE_WIPE = hash("; CP TOOLCHANGE WIPE")
+hash_TOOLCHANGE_END = hash("; CP TOOLCHANGE END")
 
 
 def update_class(gcode_line):
 
-    v.previous_block_classification = v.block_classification
+    line_hash = hash(gcode_line)
 
-    if gcode_line[0] == "T":
-        v.block_classification = CLS_TOOL_PURGE
-
-    if gcode_line.startswith("; CP"):
-        line = gcode_line[5:]
-
-        if line.startswith("TOOLCHANGE START"):
-            v.block_classification = CLS_TOOL_START
-            return
-
-        if line.startswith("TOOLCHANGE UNLOAD"):
-            v.block_classification = CLS_TOOL_UNLOAD
-            return
-
-        if line.startswith("TOOLCHANGE WIPE"):
-            v.block_classification = CLS_TOOL_PURGE
-            return
-
-        if line.startswith("TOOLCHANGE END"):
-            if v.previous_block_classification == CLS_TOOL_UNLOAD:
-                v.block_classification = CLS_NORMAL
-            else:
-                if v.previous_block_classification == CLS_TOOL_PURGE:
-                    v.block_classification = CLS_ENDPURGE
-                else:
-                    v.block_classification = CLS_TONORMAL
-            return
-
-        if line.startswith("WIPE TOWER FIRST LAYER BRIM START"):
-            v.block_classification = CLS_BRIM
-            v.tower_measure = True
-            return
-
-        if line.startswith("WIPE TOWER FIRST LAYER BRIM END"):
-            v.tower_measure = False
-            v.block_classification = CLS_BRIM_END
-            return
-
-        if line.startswith("EMPTY GRID START"):
-            v.block_classification = CLS_EMPTY
-            return
-
-        if line.startswith("EMPTY GRID END"):
-            v.block_classification = CLS_ENDGRID
-            return
-
-
-def backpass(currentclass):
-    if v.wipe_remove_sparse_layers:
+    if line_hash == hash_EMPTY_GRID_START:
+        v.block_classification = CLS_EMPTY
+        v.layer_emptygrid_counter += 1
         return
 
-    idx = len(v.parsed_gcode) - 2
+    if line_hash == hash_EMPTY_GRID_END:
+        v.block_classification = CLS_ENDGRID
+        return
 
-    end_search = idx - 10
-    while idx > end_search:
-        if v.parsed_gcode[idx].Class != CLS_NORMAL:
-            return
+    if line_hash == hash_TOOLCHANGE_START:
+        v.block_classification = CLS_TOOL_START
+        v.layer_toolchange_counter += 1
+        return
 
-        v.parsed_gcode[idx].Class = currentclass
+    if line_hash == hash_TOOLCHANGE_UNLOAD:
+        v.block_classification = CLS_TOOL_UNLOAD
+        return
 
-        if v.parsed_gcode[idx].is_unretract_command():
-            if v.parsed_gcode[idx].Command == "G11":
-                v.retraction = 0
+    if line_hash == hash_TOOLCHANGE_WIPE:
+        v.block_classification = CLS_TOOL_PURGE
+        return
+
+    if line_hash == hash_TOOLCHANGE_END:
+        if v.previous_block_classification == CLS_TOOL_UNLOAD:
+            v.block_classification = CLS_NORMAL
+        else:
+            if v.previous_block_classification == CLS_TOOL_PURGE:
+                v.block_classification = CLS_ENDPURGE
             else:
-                v.retraction -= v.parsed_gcode[idx].E
+                v.block_classification = CLS_TONORMAL
+        return
 
-        if v.parsed_gcode[idx].is_xy_positioning():
-            return
+    if line_hash == hash_FIRST_LAYER_BRIM_START:
+        v.block_classification = CLS_BRIM
+        v.tower_measure = True
+        return
 
-        idx = idx - 1
+    if line_hash == hash_FIRST_LAYER_BRIM_END:
+        v.tower_measure = False
+        v.block_classification = CLS_BRIM_END
+        return
 
 
 def calculate_tower(x, y):
@@ -309,94 +285,109 @@ def create_tower_gcode():
 
 def parse_gcode():
 
-    toolchange = 0
-    emptygrid = 0
+    v.layer_toolchange_counter = 0
+    v.layer_emptygrid_counter = 0
 
     v.block_classification = CLS_NORMAL
     v.previous_block_classification = CLS_NORMAL
     total_line_count = len(v.input_gcode)
 
+    backpass_line = -1
+
     for index in range(total_line_count):
+
+        v.previous_block_classification = v.block_classification
 
         if index % 5000 == 0:
             gui.progress_string(4 + 46 * index // total_line_count)
 
         line = v.input_gcode[index]
+        is_comment = False
 
         if line.startswith(';'):
 
             # try finding a P2PP configuration command
             # until config_end command is encountered
 
-            if not v.p2pp_configend or v.set_tool > 3 or v.p2pp_tool_unconfigged[v.set_tool]:
-                m = v.regex_p2pp.match(line)
-                if m:
-                    if m.group(1).startswith("MATERIAL"):
-                        algorithm_process_material_configuration(m.group(1)[9:])
-                    else:
-                        parameters.check_config_parameters(m.group(1), m.group(2))
+            is_comment = True
 
-
-            layer = -1
-            # if not supports are printed or layers are synced, there is no need to look at the layerheight,
-            # otherwise look at the layerheight to determine the layer progress
-
-            if v.synced_support or not v.support_material:
-                lm = layer_regex.match(line)
-                if lm:
-                    layer = int(lm.group(1))
+            if line.startswith('; CP'):
+                update_class(line)
             else:
-                lm = layerheight_regex.match(line)
+
+                layer = -1
+                # if not supports are printed or layers are synced, there is no need to look at the layerheight,
+                # otherwise look at the layerheight to determine the layer progress
+
+                if v.synced_support or not v.support_material:
+                    lm = layer_regex.match(line)
+                    if lm:
+                        layer = int(lm.group(1))
+                else:
+                    lm = layerheight_regex.match(line)
+                    if lm:
+                        fl = int(v.first_layer_height * 100)
+                        lv = int((float(lm.group(1)) + 0.001) * 100)
+                        lv = lv - fl
+
+                        lh = int(v.layer_height * 100)
+
+                        if lv % lh == 0:
+                            layer = int(lv / lh)
+                        else:
+                            layer = v.last_parsed_layer
+
                 if lm:
-                    fl = int(v.first_layer_height*100)
-                    lv = int((float(lm.group(1))+0.001) * 100)
-                    lv = lv - fl
+                    if layer >= 0 and layer != v.last_parsed_layer:
+                        v.last_parsed_layer = layer
+                        v.layer_end.append(index)
 
-                    lh = int(v.layer_height * 100)
+                        if layer > 0:
+                            v.skippable_layer.append((v.layer_emptygrid_counter > 0) and (v.layer_toolchange_counter == 0))
+                            v.layer_toolchange_counter = 0
+                            v.layer_emptygrid_counter = 0
+                else:
+                    if not v.p2pp_configend or v.set_tool > 3 or v.p2pp_tool_unconfigged[v.set_tool]:
+                        m = v.regex_p2pp.match(line)
+                        if m:
+                            if m.group(1).startswith("MATERIAL"):
+                                algorithm_process_material_configuration(m.group(1)[9:])
+                            else:
+                                parameters.check_config_parameters(m.group(1), m.group(2))
 
-                    if lv % lh == 0:
-                        layer = int(lv / lh)
-                    else:
-                        layer = v.last_parsed_layer
+        else:
+            try:
+                if line[0] == 'T':
+                    v.block_classification = CLS_TOOL_PURGE
+                    cur_tool = int(line[1])
+                    if v.set_tool != -1 and v.set_tool < 4:
+                        v.p2pp_tool_unconfigged[v.set_tool] = False
+                    v.set_tool = cur_tool
+                    v.m4c_toolchanges.append(cur_tool)
+                    v.m4c_toolchange_source_positions.append(len(v.parsed_gcode))
+            except (TypeError, IndexError):
+                pass
 
-            if layer >= 0 and layer != v.last_parsed_layer:
-                v.last_parsed_layer = layer
-                v.layer_end.append(index)
-
-                if layer > 0:
-                    v.skippable_layer.append((emptygrid > 0) and (toolchange == 0))
-                    toolchange = 0
-                    emptygrid = 0
-
-            update_class(line)
-
-        code = gcode.GCodeCommand(line)
-
-        if code.is_toolchange:
-            cur_tool = int(code.command_value())
-            if v.set_tool != -1 and v.set_tool<4:
-                v.p2pp_tool_unconfigged[v.set_tool] = False
-            v.set_tool = cur_tool
-            v.m4c_toolchanges.append(cur_tool)
-            v.m4c_toolchange_source_positions.append(len(v.parsed_gcode))
-
+        code = gcode.GCodeCommand(line, is_comment)
         code.Class = v.block_classification
-
         v.parsed_gcode.append(code)
 
         if v.block_classification != v.previous_block_classification:
 
-            if v.block_classification == CLS_TOOL_START:
-                toolchange += 1
-
-            if v.block_classification == CLS_EMPTY:
-                emptygrid += 1
-
-            if v.block_classification == CLS_BRIM or v.block_classification == CLS_TOOL_START or v.block_classification == CLS_TOOL_UNLOAD or v.block_classification == CLS_EMPTY:
-                backpass(v.block_classification)
+            if v.block_classification == CLS_BRIM or \
+                    v.block_classification == CLS_TOOL_START or \
+                    v.block_classification == CLS_TOOL_UNLOAD or \
+                    v.block_classification == CLS_EMPTY:
+                idx = backpass_line
+                while idx < len(v.parsed_gcode):
+                    v.parsed_gcode[idx].Class = v.block_classification
+                    idx += 1
 
         if v.tower_measure:
             calculate_tower(code.X, code.Y)
+        else:
+            if code.is_movement_command and check_move_in_tower(code.X, code.Y):
+                backpass_line = len(v.parsed_gcode)-1
 
         if v.block_classification == CLS_ENDGRID or v.block_classification == CLS_ENDPURGE:
             if code.X and code.Y:
@@ -419,9 +410,13 @@ def gcode_parseline(index):
     except IndexError:
         pass
 
+    if g.Command is None:
+        g.issue_command()
+        return
+
     if not g.is_movement_command:
 
-        if g.is_toolchange:
+        if g.Command.startswith('T'):
             gcode_process_toolchange(int(g.command_value()), v.total_material_extruded, v.last_parsed_layer)
             if not v.debug_leaveToolCommands:
                 g.move_to_comment("Color Change")
@@ -474,97 +469,92 @@ def gcode_parseline(index):
             g.issue_command()
             return
 
-    else:   # no gcode movement command
+        if g.Class == CLS_TOOL_UNLOAD:
+            if g.Command == "G4" or (g.Command in ["M900"] and g.get_parameter("K", 0) == 0):
+                g.move_to_comment("tool unload")
 
-        v.keep_speed = g.get_parameter("F", v.keep_speed)
-
-        if g.X:
-            v.previous_purge_keep_x = v.purge_keep_x
-            v.purge_keep_x = g.X
-            if x_coordinate_in_tower(g.X):
-                v.keep_x = g.X
-
-        if g.Y:
-            v.previous_purge_keep_y = v.purge_keep_y
-            v.purge_keep_y = g.Y
-            if y_coordinate_in_tower(g.Y):
-                v.keep_y = g.Y
-
-    if not (g.Class & (CLS_TOOL_PURGE + CLS_TOOL_START + CLS_TOOL_UNLOAD)) and v.current_temp != v.new_temp:
-        gcode.issue_code(v.temp1_stored_command)
-        v.temp1_stored_command = ""
+        g.issue_command()
+        return
 
     previous_block_class = v.parsed_gcode[max(0, index - 1)].Class
     classupdate = g.Class != previous_block_class
 
+    if not (g.Class in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD]) and v.current_temp != v.new_temp:
+        gcode.issue_code(v.temp1_stored_command)
+        v.temp1_stored_command = ""
+
+    # ---- AS OF HERE ONLY MOVEMENT COMMANDS ----
+
+    v.keep_speed = g.get_parameter("F", v.keep_speed)
+
+    if g.X:
+        v.previous_purge_keep_x = v.purge_keep_x
+        v.purge_keep_x = g.X
+        if x_coordinate_in_tower(g.X):
+            v.keep_x = g.X
+
+    if g.Y:
+        v.previous_purge_keep_y = v.purge_keep_y
+        v.purge_keep_y = g.Y
+        if y_coordinate_in_tower(g.Y):
+            v.keep_y = g.Y
+
     if classupdate:
 
-        if previous_block_class & (CLS_TOOL_PURGE + CLS_EMPTY):
-            if v.purge_count > 0:
-                gcode.issue_code(";-- P2PP -- purge {:4.0f}mm <<<\n".format(v.purge_count))
-
-        if g.Class & (CLS_TOOL_PURGE + CLS_EMPTY):
+        if g.Class in [CLS_TOOL_PURGE, CLS_EMPTY]:
             v.purge_count = 0
 
         if g.Class == CLS_BRIM and v.side_wipe and v.bigbrain3d_purge_enabled:
             v.side_wipe_length = v.bigbrain3d_prime * v.bigbrain3d_blob_size
             create_sidewipe_bb3d()
 
-    if g.Class == CLS_TOOL_UNLOAD:
-        if g.Command == "G4" or (g.Command in ["M900"] and g.get_parameter("K", 0) == 0):
+    if g.Class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
+        if v.side_wipe or v.tower_delta or v.full_purge_reduction:
             g.move_to_comment("tool unload")
-
-    if g.is_movement_command:
-
-        if g.Class in [CLS_TOOL_START , CLS_TOOL_UNLOAD]:
-            if v.side_wipe or v.tower_delta or v.full_purge_reduction:
-                g.move_to_comment("tool unload")
+        else:
+            if g.Z:
+                g.remove_x()
+                g.remove_y()
+                g.remove_f()
+                g.remove_e()
             else:
-                if g.Z:
-                    g.remove_parameter("X")
-                    g.remove_parameter("Y")
-                    g.remove_parameter("F")
-                    g.remove_parameter("E")
-                else:
-                    g.move_to_comment("tool unload")
-            g.issue_command()
-            return
+                g.move_to_comment("tool unload")
+        g.issue_command()
+        return
 
-        if g.Class == CLS_TOOL_PURGE and not (v.side_wipe or v.full_purge_reduction) and g.E:
-                _x = g.get_parameter("X", v.current_position_x)
-                _y = g.get_parameter("Y", v.current_position_y)
-                # remove positive extrusions while moving into the tower
-                if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y)) and g.E > 0:
-                    g.remove_parameter("E")
+    if g.Class == CLS_TOOL_PURGE and not (v.side_wipe or v.full_purge_reduction) and g.E:
+        _x = g.get_parameter("X", v.current_position_x)
+        _y = g.get_parameter("Y", v.current_position_y)
+        # remove positive extrusions while moving into the tower
+        if not (coordinate_in_tower(_x, _y) and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y)) and g.E > 0:
+            g.remove_e()
 
-        if not v.full_purge_reduction and not v.side_wipe  and g.E and g.has_parameter("F"):
-            f = int(g.get_parameter("F", 0))
-            if f > v.purgetopspeed:
-                g.update_parameter("F", v.purgetopspeed)
-                g.add_comment(" prugespeed topped")
+    if not v.full_purge_reduction and not v.side_wipe and g.E and g.has_parameter("F"):
+        if v.keep_speed > v.purgetopspeed:
+            g.update_parameter("F", v.purgetopspeed)
+            g.add_comment(" prugespeed topped")
 
-        if v.side_wipe:
-            _x = g.get_parameter("X", v.current_position_x)
-            _y = g.get_parameter("Y", v.current_position_y)
-            if not coordinate_on_bed(_x, _y):
-                g.remove_parameter("X")
-                g.remove_parameter("Y")
+    if v.side_wipe:
+        _x = g.X if g.X else v.current_position_x
+        _y = g.Y if g.Y else v.current_position_y
+        if not coordinate_on_bed(_x, _y):
+            g.remove_x()
+            g.remove_y()
 
     # pathprocessing = sidewipe, fullpurgereduction or tower delta
 
     if v.pathprocessing:
 
-        if g.Class == CLS_TONORMAL:
-            if not g.is_comment():
-                g.move_to_comment("post block processing")
+        if g.Class == CLS_TONORMAL and not g.is_comment():
+            g.move_to_comment("post block processing")
             g.issue_command()
             return
 
         # remove any commands that are part of the purge tower and still perofrm actions WITHIN the tower
-        if g.is_movement_command and g.Class in [CLS_ENDPURGE, CLS_ENDGRID]:
+        if g.Class in [CLS_ENDPURGE, CLS_ENDGRID]:
             if check_move_in_tower(g.X, g.Y):
-                g.remove_parameter("X")
-                g.remove_parameter("Y")
+                g.remove_x()
+                g.remove_y()
 
         # sepcific for FULL_PURGE_REDUCTION
         if v.full_purge_reduction:
@@ -602,7 +592,7 @@ def gcode_parseline(index):
         # since there is no empty path processing, it must be beginning of the
         # empty grid sequence.
 
-        if not v.towerskipped and g.is_movement_command:
+        if not v.towerskipped:
             try:
                 v.towerskipped = v.skippable_layer[v.last_parsed_layer] and check_move_in_tower(g.X, g.Y)
                 if v.towerskipped and v.tower_delta:
@@ -635,18 +625,17 @@ def gcode_parseline(index):
                         else:
                             v.retraction -= 1
                 else:
-                    if g.is_movement_command:
-                        if not g.Z:
-                            g.move_to_comment("tower skipped")
+                    if not g.Z:
+                        g.move_to_comment("tower skipped")
             g.issue_command()
             return
 
         if v.tower_delta:
             if g.E and g.Class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
                 if not inrange(g.X, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']):
-                    g.remove_parameter("E")
+                    g.remove_e()
                 if not inrange(g.Y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy']):
-                    g.remove_parameter("E")
+                    g.remove_e()
 
         if v.full_purge_reduction and g.Class == CLS_NORMAL and classupdate:
             purgetower.purge_generate_sequence()
@@ -663,15 +652,8 @@ def gcode_parseline(index):
 
             v.enterpurge = False
 
-            if g.X:
-                _x = v.previous_purge_keep_x
-            else:
-                _x = v.purge_keep_x
-
-            if g.Y:
-                _y = v.previous_purge_keep_y
-            else:
-                _y = v.purge_keep_y
+            _x = v.previous_purge_keep_x if g.X else v.purge_keep_x
+            _y = v.previous_purge_keep_y if g.Y else v.purge_keep_y
 
             if not coordinate_in_tower(_x, _y):
                 _x = v.purge_keep_x
@@ -707,42 +689,31 @@ def gcode_parseline(index):
             v.current_position_x = _x
             v.current_position_x = _y
 
-            g.remove_parameter("E")
+            g.remove_e()
             if g.get_parameter("X") == _x:
-                g.remove_parameter("X")
+                g.remove_x()
             if len(g.Parameters) == 0:
                 g.move_to_comment("-useless command-")
 
-    if not g.E:
-        g.E = 0
+    if v.expect_retract and (g.X or g.Y):
+        if not v.retraction < 0:
+            if g.E and g.E < 0:
+                purgetower.retract(v.current_tool)
+        v.expect_retract = False
 
-    if g.is_movement_command:
+    if v.retract_move and g.is_retract_command():
+        # This is going to break stuff, G10 cannot take X and Y, what to do?
+        g.update_parameter("X", v.retract_x)
+        g.update_parameter("Y", v.retract_y)
+        v.retract_move = False
 
-        if v.expect_retract and (g.X or g.Y):
-            if not v.retraction < 0:
-                if g.E < 0:
-                    purgetower.retract(v.current_tool)
-            v.expect_retract = False
+    v.current_position_x = g.X if g.X else v.current_position_x
+    v.current_position_y = g.Y if g.Y else v.current_position_y
+    v.current_position_z = g.Z if g.Z else v.current_position_z
 
-        if v.retract_move and g.is_retract_command():
-            # This is going to break stuff, G10 cannot take X and Y, what to do?
-            if v.retract_x:
-                g.update_parameter("X", v.retract_x)
-            else:
-                g.remove_parameter("X")
-            if v.retract_y:
-                g.update_parameter("Y", v.retract_y)
-            else:
-                g.remove_parameter("Y")
-            v.retract_move = False
-
-        v.current_position_x = g.get_parameter("X", v.current_position_x)
-        v.current_position_y = g.get_parameter("Y", v.current_position_y)
-        v.current_position_z = g.get_parameter("Z", v.current_position_z)
-
-        if g.Class == CLS_BRIM and v.full_purge_reduction:
-            g.move_to_comment("replaced by P2PP brim code")
-            g.remove_parameter("E")
+    if g.Class == CLS_BRIM and v.full_purge_reduction:
+        g.move_to_comment("replaced by P2PP brim code")
+        g.remove_e()
 
     if v.side_wipe or v.full_purge_reduction:
         if g.Class in [CLS_TOOL_PURGE, CLS_ENDPURGE, CLS_EMPTY]:
@@ -785,7 +756,7 @@ def gcode_parseline(index):
         else:
             v.retraction = 0
 
-    if (g.X or g.Y) and (g.E > 0) and v.retraction < 0 and abs(v.retraction) > 0.01:
+    if (g.X or g.Y) and (g.E and g.E > 0) and v.retraction < 0 and abs(v.retraction) > 0.01:
         gcode.issue_code(";fixup retracts\n")
         purgetower.unretract(v.current_tool)
         # v.retracted = False
@@ -797,9 +768,8 @@ def gcode_parseline(index):
     if v.accessory_mode:
         pings.check_accessorymode_second(g.E)
 
-    if g.is_movement_command:
-        if (g.E > 0) and v.side_wipe_length == 0:
-            pings.check_connected_ping()
+    if (g.E and g.E > 0) and v.side_wipe_length == 0:
+        pings.check_connected_ping()
 
     v.previous_position_x = v.current_position_x
     v.previous_position_y = v.current_position_y
