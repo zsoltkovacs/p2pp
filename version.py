@@ -27,7 +27,7 @@ releaseinfo = {
     '5.7.0': "Fixup More than 4 color print",
     "5.10.0": "General code restructuring for optimized processing",
     "5.10.1": "further process optimization",
-    "5.10.2": "typo correction oin TOOLSTART processing",
+    "5.10.2": "typo correction in TOOLSTART processing",
     '--- RELEASE INFORMATION': 'END'
 }
 
