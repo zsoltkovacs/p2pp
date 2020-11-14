@@ -31,10 +31,10 @@ def gcode_remove_params(gcode, params):
     result.strip(' ')
     rempar.strip(' ')
     if len(result) < 4:
-        return ';--- P2PP Removed [Removed Parameters] - ' + gcode
+        return ';--- P2PP Removed [Removed Parms] - ' + gcode
 
     if removed:
-        return result + ";--- P2PP Removed [Removed Parameters] - " + rempar
+        return result + ";--- P2PP Removed [Removed Parms] - " + rempar
     else:
         return result
 
@@ -298,8 +298,8 @@ def parse_slic3r_config():
                 retracts = gcode_line[parameter_start + 1:].strip(" ").split(",")
                 v.retract_length = [0.8] * max(len(retracts), 4)
                 for i in range(len(retracts)):
-                    v.retract_length[i] = float(retracts[i])
-                    if v.retract_length[i] == 0.0:
+                    v.retract_length[i] = float(retracts[i])-0.02
+                    if v.retract_length[i] < 0.0:
                         retract_error = True
                         gui.log_warning(
                             "[Printer Settings]->[Extruders 1 -> {} 4]->[Retraction Length] should not be set to zero.".format(i))
@@ -317,9 +317,7 @@ def parse_slic3r_config():
             if parameter_start != -1:
                 gcode_line = gcode_line[parameter_start + 1:].replace(";", "")
                 if "1" in gcode_line:
-                    v.use_firmware_retraction = True
-                else:
-                    v.use_firmware_retraction = False
+                    gui.log_warning("Hardware retraction no longer supported")
             continue
 
         if "use_relative_e_distances" in gcode_line:

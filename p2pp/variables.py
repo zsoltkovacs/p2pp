@@ -144,7 +144,6 @@ volumetric_e = False  # type: bool
 autoaddsplice = False  # type: bool
 autoadded_purge = 0.0  # type: float
 
-use_firmware_retraction = False
 gcode_has_relative_e = False
 absolute_extruder = False  # type : bool
 

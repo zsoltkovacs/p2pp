@@ -7,41 +7,42 @@ __license__ = 'GPLv3 '
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
-import p2pp.gui as gui
 import p2pp.variables as v
+
+formats = ["{}{:0.3f} ", "{}{:0.3f} ", "{}{:0.3f} ", "{}{:0.5f} ", "{}{} ", "{}{} " ]
+
+X = 0
+Y = 1
+Z = 2
+E = 3
+F = 4
+S = 5
+OTHER = 6
+COMMAND = 7
+COMMENT = 8
+MOVEMEMT = 9
+EXTRUDE = 10
+RETRACT = 11
+UNRETRACT = 12
+CLASS = 13
 
 
 class GCodeCommand:
-    Command = None
-    is_movement_command = False
-    Parameters = {}
-    Class = 0
-    Comment = None
-    X = None
-    Y = None
-    Z = None
-    E = None
+
+    Parms = []
 
     def __init__(self, gcode_line, is_comment=False):
 
-        self.Command = None
-        self.Parameters = {}
-        self.is_movement_command = False
-        self.X = None
-        self.Y = None
-        self.Z = None
-        self.E = None
-
-        gcode_line = gcode_line.strip()
+        self.Parms = [None, None, None, None, None, None, "", None,  "", False, False, False, False, 0]
 
         if is_comment:
-            self.Comment = gcode_line[1:]
+            self.Parms[COMMENT] = gcode_line[1:]
             return
         else:
             pos = gcode_line.find(";")
 
             if pos != -1:
-                self.Comment = gcode_line[pos + 1:]
+                self.Parms[COMMENT] = gcode_line[pos + 1:]
                 if pos == 1:
                     return
                 gcode_line = gcode_line[:pos].strip()
@@ -50,224 +51,122 @@ class GCodeCommand:
 
         if len(fields[0]) > 0:
 
-            self.Command = fields[0]
-            self.is_movement_command = self.Command in ['G0', 'G1', 'G10', 'G11']
+            self.Parms[COMMAND] = fields[0]
+            self.Parms[MOVEMEMT] = self.Parms[COMMAND] in ['G0', 'G1']
 
             fields = fields[1:]
-
             while len(fields) > 0:
                 param = fields[0].strip()
                 if len(param) > 0:
-                    p = param[0]
-                    val = param[1:]
-
-                    try:
-                        if "." in val:
-                            val = float(val)
-                        else:
-                            val = int(val)
-                    except ValueError:
-                        pass
-
-                    self.Parameters[p] = val
-
-                    if p == "X":
-                        self.X = val
-                    if p == "Y":
-                        self.Y = val
-                    if p == "Z":
-                        self.Z = val
-                    if p == "E":
-                        self.E = val
+                    idx = "XYZEFS".find(param[0])
+                    if idx >= 0:
+                        val = param[1:]
+                        try:
+                            if "." in val:
+                                val = float(val)
+                            else:
+                                val = int(val)
+                        except ValueError:
+                            pass
+                        self.Parms[idx] = val
+                    else:
+                        self.Parms[OTHER] = self.Parms[OTHER] + " " + param
 
                 fields = fields[1:]
 
+            if self.Parms[E]:
+                self.Parms[RETRACT] = self.Parms[E] < 0
+                self.Parms[UNRETRACT] = self.Parms[E] > 0 and not self.Parms[X] and not self.Parms[Y] and not self.Parms[Z]
+                self.Parms[EXTRUDE] = self.Parms[E] > 0
+
+
     def command_value(self):
-        if self.Command:
-            return self.Command[1:]
+        if self.Parms[COMMAND]:
+            return self.Parms[COMMAND][1:]
         else:
-            return None
+            return 0
+
 
     def __str__(self):
         p = ""
-        # use the same formatting as prusa to ease file compares (X, Y, Z, E, F)
+        if self.Parms[COMMAND]:
+            p = self.Parms[COMMAND] + " "
+            for idx in range(6):
+                if self.Parms[idx]:
+                    letter = "XYZEFS"[idx]
+                    value = self.Parms[idx]
+                    layout = formats[idx]
+                    p = p + layout.format(letter, value)
 
-        sorted_keys = "XYZE"
-        if self.is_movement_command:
-            for key in sorted_keys:
-                if key in self.Parameters:
-                    form = "{} {}"
-                    value = self.Parameters[key]
-                    if (value is None) or (value == ""):
-                        gui.log_warning("GCode error detected, file might not print correctly")
-                        value = ""
+        p = p + self.Parms[OTHER]
 
-                    if type(value) in [int, float]:
-                        if key in "XYZ":
-                            form = "{}{:0.3f} "
-                        if key == "E":
-                            form = "{}{:0.5f} "
+        if self.Parms[COMMENT] != "":
+            p = p + ";" + self.Parms[COMMENT]
 
-                    p = p + form.format(key, value)
+        return p
 
-        for key in self.Parameters:
-            if not self.is_movement_command or key not in sorted_keys:
-                value = self.Parameters[key]
-                if value is None:
-                    value = ""
-
-                p = p + "{}{} ".format(key, value)
-
-        c = self.Command
-        if not c:
-            c = ""
-
-        if not self.Comment:
-            co = ""
-        else:
-            co = ";" + self.Comment
-
-        return ("{} {} {}".format(c, p, co)).strip() + "\n"
-
-    def update_parameter(self, parameter, value):
-        if value:
-            self.Parameters[parameter] = value
-            if parameter == "X":
-                self.X = value
-            if parameter == "Y":
-                self.Y = value
-            if parameter == "Z":
-                self.Z = value
-            if parameter == "E":
-                self.E = value
-        else:
-            self.remove_parameter(parameter)
-
-    def remove_parameter(self, parameter):
-        if parameter in self.Parameters:
-            self.Parameters.pop(parameter)
-
-            if parameter == "X":
-                self.X = None
-            if parameter == "Y":
-                self.Y = None
-            if parameter == "Z":
-                self.Z = None
-            if parameter == "E":
-                self.E = None
-
-    def remove_x(self):
+    def update_parameter(self, pv, value):
         try:
-            self.Parameters.pop('X')
-            self.X = None
-        except KeyError:
+            self.Parms[pv] = value
+        except IndexError:
             pass
 
-    def remove_y(self):
-        try:
-            self.Parameters.pop('Y')
-            self.Y = None
-        except KeyError:
-            pass
-
-    def remove_z(self):
-        try:
-            self.Parameters.pop('Z')
-            self.Z = None
-        except KeyError:
-            pass
-
-    def remove_e(self):
-        try:
-            self.Parameters.pop('E')
-            self.E = None
-        except KeyError:
-            pass
-
-    def remove_f(self):
-        try:
-            self.Parameters.pop('F')
-        except KeyError:
-            pass
+    def remove_parameter(self, pv):
+        self.update_parameter(pv, None)
+        if pv == 3:
+            self.Parms[RETRACT] = None
+            self.Parms[UNRETRACT] = None
+            self.Parms[EXTRUDE] = None
 
     def move_to_comment(self, text):
-        if self.Command:
-            self.Comment = "-- P2PP -- removed [{}] - {}".format(text, self)
-        self.Command = None
-        self.X = None
-        self.Y = None
-        self.Z = None
-        self.E = None
-        self.Parameters.clear()
-        self.is_movement_command = False
-        self.is_toolchange = False
+        if self.Parms[COMMAND]:
+            self.Parms[COMMENT] = "-- P2PP -- removed [{}] - {}".format(text, self)
+        self.Parms[COMMAND] = None
+        self.Parms[COMMAND] = None
+        self.Parms[X] = None
+        self.Parms[Y] = None
+        self.Parms[Z] = None
+        self.Parms[E] = None
+        self.Parms[F] = None
+        self.Parms[S] = None
+        self.Parms[OTHER] = ""
+        self.Parms[RETRACT] = None
+        self.Parms[UNRETRACT] = None
+        self.Parms[EXTRUDE] = None
 
-    def get_comment(self):
-        if not self.Comment:
-            return ""
-        else:
-            return self.Comment
-
-    def has_parameter(self, parametername):
-        return parametername in self.Parameters
-
-    def get_parameter(self, parm, defaultvalue=0):
-        if self.has_parameter(parm):
-            return self.Parameters[parm]
+    def get_parameter(self, pv, defaultvalue=0):
+        if self.Parms[pv]:
+            return self.Parms[pv]
         return defaultvalue
 
-    def issue_command(self, speed=-1):
-        extrusion = 0
-        if self.E:
-            extrusion = self.E * v.extrusion_multiplier * v.extrusion_multiplier_correction
-            if self.is_movement_command:
-                v.total_material_extruded += extrusion
-                v.material_extruded_per_color[ v.current_tool] += extrusion
-                v.purge_count += extrusion
+    def issue_command(self, speed=0):
+        if self.Parms[E] and self.Parms[MOVEMEMT]:
+            extrusion = self.Parms[E] * v.extrusion_multiplier * v.extrusion_multiplier_correction
+            v.total_material_extruded += extrusion
+            v.material_extruded_per_color[v.current_tool] += extrusion
+            v.purge_count += extrusion
 
-                if v.absolute_extruder and v.gcode_has_relative_e:
-                    if v.absolute_counter == -9999 or v.absolute_counter > 3000:
-                        v.processed_gcode.append("G92 E0.00  ; Extruder counter reset")
-                        v.absolute_counter = 0
+            if v.absolute_extruder and v.gcode_has_relative_e:
+                if v.absolute_counter == -9999 or v.absolute_counter > 3000:
+                    v.processed_gcode.append("G92 E0.00  ; Extruder counter reset")
+                    v.absolute_counter = 0
 
-                    v.absolute_counter += self.E
-                    self.update_parameter("E", v.absolute_counter)
+                v.absolute_counter += self.Parms[E]
+                self.update_parameter(E, v.absolute_counter)
 
         if v.absolute_extruder and v.gcode_has_relative_e:
-            if self.Command == "M83":
-                self.Command = "M82"
-            if self.Command == "G92":
-                v.absolute_counter = self.E
+            if self.Parms[COMMAND] == "M83":
+                self.Parms[COMMAND] = "M82"
+            if self.Parms[COMMAND] == "G92":
+                v.absolute_counter = self.Parms[E]
 
         s = str(self)
-        if speed != -1:
+        if speed:
             s = s.replace("%SPEED%", "{:0.0f}".format(speed))
         v.processed_gcode.append(s)
 
     def add_comment(self, text):
-        if self.Comment:
-            self.Comment += text
-        else:
-            self.Comment = text
+        self.Parms[COMMENT] += text
 
-    def is_comment(self):
-        return self.Command is None and not (self.Comment is None)
-
-    def is_xy_positioning(self):
-        return self.is_movement_command and self.X and self.Y and not self.E
-
-    def is_retract_command(self):
-        if self.E:
-            return self.is_movement_command and self.E < 0
-        else:
-            return self.Command == "G10"
-
-    def is_unretract_command(self):
-        if self.E:
-            return self.is_movement_command and self.E > 0 and self.X is None and self.Y is None and self.Z is None
-        else:
-            return self.Command == "G11"
-
-
-def issue_code(s):
-    GCodeCommand(s).issue_command()
+def issue_code(s, is_comment = False):
+    GCodeCommand(s, is_comment).issue_command()

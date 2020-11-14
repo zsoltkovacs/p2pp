@@ -28,7 +28,7 @@ def resetfanspeed():
 
 
 def generate_blob(length, count):
-    issue_code("\n;---- BIGBRAIN3D SIDEWIPE BLOB {} -- purge {:.3f}mm\n".format(count + 1, length))
+    issue_code("\n;---- BIGBRAIN3D SIDEWIPE BLOB {} -- purge {:.3f}mm\n".format(count + 1, length), True)
     # issue_code("M907 X{} ; set motor power\n".format(int(v.purgemotorpower)))
 
     setfanspeed(0)
@@ -68,8 +68,6 @@ def generate_blob(length, count):
 
 
 def create_sidewipe_bb3d():
-    if not v.side_wipe or v.side_wipe_length == 0:
-        return
 
     # purge blobs should all be same size
     purgeleft = v.side_wipe_length % v.bigbrain3d_blob_size
@@ -80,9 +78,9 @@ def create_sidewipe_bb3d():
 
     correction = v.bigbrain3d_blob_size * purgeblobs - v.side_wipe_length
 
-    issue_code(";-------------------------------\n")
-    issue_code("; P2PP BB3DBLOBS: {:.0f} BLOBS\n".format(purgeblobs))
-    issue_code(";-------------------------------\n")
+    issue_code(";-------------------------------\n", True)
+    issue_code("; P2PP BB3DBLOBS: {:.0f} BLOBS\n".format(purgeblobs), True)
+    issue_code(";-------------------------------\n", True)
 
     issue_code(
         "; Req={:.2f}mm  Act={:.2f}mm\n".format(v.side_wipe_length, v.side_wipe_length + correction))
@@ -104,7 +102,7 @@ def create_sidewipe_bb3d():
     issue_code("G1 X{:.3f} F10800  ; go near edge of bed\n".format(v.bigbrain3d_x_position - 30))
     issue_code("G4 S0               ; wait for the print buffer to clear\n")
     issue_code("M907 X{}           ; increase motor power\n".format(v.bigbrain3d_motorpower_high))
-    issue_code("; Generating {} blobs for {}mm of purge".format(purgeblobs, v.side_wipe_length))
+    issue_code("; -- P2PP -- Generating {} blobs for {}mm of purge".format(purgeblobs, v.side_wipe_length), True)
 
     for i in range(purgeblobs):
         generate_blob(v.bigbrain3d_blob_size, i)
@@ -119,7 +117,7 @@ def create_sidewipe_bb3d():
 
     resetfanspeed()
     issue_code("\nM907 X{}           ; reset motor power\n".format(v.bigbrain3d_motorpower_normal))
-    issue_code("\n;-------------------------------\n\n")
+    issue_code("\n;-------------------------------\n\n", True)
 
     v.side_wipe_length = 0
 
@@ -128,64 +126,68 @@ def create_side_wipe():
     if not v.side_wipe or v.side_wipe_length == 0:
         return
 
-    issue_code(";---------------------------\n")
-    issue_code(";  P2PP SIDE WIPE: {:7.3f}mm\n".format(v.side_wipe_length))
-
-    for line in v.before_sidewipe_gcode:
-        issue_code(line + "\n")
-
-    if v.retraction == 0:
-        purgetower.retract(v.current_tool)
-
-    issue_code("G1 F8640\n")
-    issue_code("G0 {} Y{}\n".format(v.side_wipe_loc, v.sidewipe_miny))
-
-    delta_y = abs(v.sidewipe_maxy - v.sidewipe_miny)
-
-    if v.sidewipe_maxy == v.sidewipe_miny:      # no Y movement, just purge
-
-        while v.side_wipe_length > 0:
-            sweep = min(v.side_wipe_length, 50)
-            issue_code("G1 E{:.5f} F{}\n".format(sweep, v.wipe_feedrate))
-            purgetower.largeretract()  # 3mm retraction cycle to dislodge potential stuck filament
-            purgetower.unretract(v.current_tool, v.wipe_feedrate)
-            v.side_wipe_length -= sweep
-
+    if v.bigbrain3d_purge_enabled:
+        create_sidewipe_bb3d()
     else:
 
-        sweep_base_speed = v.wipe_feedrate * 20 * delta_y / 150
-        sweep_length = 20
+        issue_code(";---------------------------\n", True)
+        issue_code(";  P2PP SIDE WIPE: {:7.3f}mm\n".format(v.side_wipe_length), True)
 
-        yrange = [v.sidewipe_maxy, v.sidewipe_miny]
-        rangeidx = 0
-        movefrom = v.sidewipe_miny
-        moveto = yrange[rangeidx]
-        numdiffs = 20
-        purgetower.unretract(v.current_tool)
+        for line in v.before_sidewipe_gcode:
+            issue_code(line + "\n")
 
-        while v.side_wipe_length > 0:
-            sweep = min(v.side_wipe_length, sweep_length)
-            v.side_wipe_length -= sweep_length
-            wipe_speed = min(5000, int(sweep_base_speed / sweep))
+        if v.retraction == 0:
+            purgetower.retract(v.current_tool)
 
-            # split this move in very short moves to allow for faster planning buffer depletion
-            diff = (moveto - movefrom) / numdiffs
+        issue_code("G1 F8640\n")
+        issue_code("G0 {} Y{}\n".format(v.side_wipe_loc, v.sidewipe_miny))
 
-            for i in range(numdiffs):
-                issue_code("G1 {} Y{:.3f} E{:.5f} F{}\n".format(v.side_wipe_loc, movefrom + (i+1)*diff, sweep/numdiffs * v.sidewipe_correction, wipe_speed))
+        delta_y = abs(v.sidewipe_maxy - v.sidewipe_miny)
 
-            # issue_code(
-            #     "G1 {} Y{} E{:.5f} F{}\n".format(v.side_wipe_loc, moveto, sweep * v.sidewipe_correction, wipe_speed))
+        if v.sidewipe_maxy == v.sidewipe_miny:      # no Y movement, just purge
 
-            rangeidx += 1
-            movefrom = moveto
-            moveto = yrange[rangeidx % 2]
+            while v.side_wipe_length > 0:
+                sweep = min(v.side_wipe_length, 50)
+                issue_code("G1 E{:.5f} F{}\n".format(sweep, v.wipe_feedrate))
+                purgetower.largeretract()  # 3mm retraction cycle to dislodge potential stuck filament
+                purgetower.unretract(v.current_tool, v.wipe_feedrate)
+                v.side_wipe_length -= sweep
 
-    for line in v.after_sidewipe_gcode:
-        issue_code(line + "\n")
+        else:
 
-    purgetower.retract(v.current_tool)
-    issue_code("G1 F8640\n")
-    issue_code(";---------------------------\n")
+            sweep_base_speed = v.wipe_feedrate * 20 * delta_y / 150
+            sweep_length = 20
 
-    v.side_wipe_length = 0
+            yrange = [v.sidewipe_maxy, v.sidewipe_miny]
+            rangeidx = 0
+            movefrom = v.sidewipe_miny
+            moveto = yrange[rangeidx]
+            numdiffs = 20
+            purgetower.unretract(v.current_tool)
+
+            while v.side_wipe_length > 0:
+                sweep = min(v.side_wipe_length, sweep_length)
+                v.side_wipe_length -= sweep_length
+                wipe_speed = min(5000, int(sweep_base_speed / sweep))
+
+                # split this move in very short moves to allow for faster planning buffer depletion
+                diff = (moveto - movefrom) / numdiffs
+
+                for i in range(numdiffs):
+                    issue_code("G1 {} Y{:.3f} E{:.5f} F{}\n".format(v.side_wipe_loc, movefrom + (i+1)*diff, sweep/numdiffs * v.sidewipe_correction, wipe_speed))
+
+                # issue_code(
+                #     "G1 {} Y{} E{:.5f} F{}\n".format(v.side_wipe_loc, moveto, sweep * v.sidewipe_correction, wipe_speed))
+
+                rangeidx += 1
+                movefrom = moveto
+                moveto = yrange[rangeidx % 2]
+
+        for line in v.after_sidewipe_gcode:
+            issue_code(line + "\n")
+
+        purgetower.retract(v.current_tool)
+        issue_code("G1 F8640\n")
+        issue_code(";---------------------------\n", True)
+
+        v.side_wipe_length = 0

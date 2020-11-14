@@ -78,16 +78,16 @@ def _purge_calculate_sequences_length():
     sequence_length_brim = 0
 
     for i in solidlayer:
-        if i.E:
-            sequence_length_solid += i.E
+        if i.Parms[gcode.E]:
+            sequence_length_solid += i.Parms[gcode.E]
 
     for i in emptylayer:
-        if i.E:
-            sequence_length_empty += i.E
+        if i.Parms[gcode.E]:
+            sequence_length_empty += i.Parms[gcode.E]
 
     for i in brimlayer:
-        if i.E:
-            sequence_length_brim += i.E
+        if i.Parms[gcode.E]:
+            sequence_length_brim += i.Parms[gcode.E]
 
 
 def _purge_create_sequence(code, pformat, x, y, w, h, step1):
@@ -208,38 +208,28 @@ def _purge_generate_tower_brim(x, y, w, h):
 
 
 def retract(tool, speed=-1):
-    if not v.use_firmware_retraction:
-        length = v.retract_length[tool]
-        if speed > 0:
-            gcode.issue_code("G1 E-{:.2f} F{:.0f}\n".format(v.retract_length[tool], speed))
-        else:
-            gcode.issue_code("G1 E-{:.2f}\n".format(v.retract_length[tool]))
-        v.retraction -= length
+    length = v.retract_length[tool]
+    if speed > 0:
+        gcode.issue_code("G1 E-{:.2f} F{:.0f}\n".format(v.retract_length[tool], speed))
     else:
-        gcode.issue_code("G10\n")
-        v.retraction -= 1
+        gcode.issue_code("G1 E-{:.2f}\n".format(v.retract_length[tool]))
+    v.retraction -= length
+
 
 
 def largeretract():
-    if not v.use_firmware_retraction:
-        gcode.issue_code("G1 E-{:.2f}\n".format(3))
-        v.retraction -= 3
-    else:
-        gcode.issue_code("G10\n")
-        v.retraction -= 1
+    gcode.issue_code("G1 E-{:.2f}\n".format(3))
+    v.retraction -= 3
 
 
 def unretract(tool, speed=-1):
     if v.retraction == 0:
         return
-    if not v.use_firmware_retraction:
-        length = max(-v.retraction, v.retract_length[tool])
-        if speed > 0:
-            gcode.issue_code("G1 E{:.2f} F{:.0f}\n".format(length, speed))
-        else:
-            gcode.issue_code("G1 E{:.2f}\n".format(length))
+    length = max(-v.retraction, v.retract_length[tool])
+    if speed > 0:
+        gcode.issue_code("G1 E{:.2f} F{:.0f}\n".format(length, speed))
     else:
-        gcode.issue_code("G11\n")
+        gcode.issue_code("G1 E{:.2f}\n".format(length))
     v.retraction = 0
 
 
@@ -276,10 +266,10 @@ def purge_generate_sequence():
 
     actual = 0
 
-    gcode.issue_code("; --------------------------------------------------\n")
-    gcode.issue_code("; --- P2PP WIPE SEQUENCE START  FOR {:5.2f}mm\n".format(v.side_wipe_length))
+    gcode.issue_code("; --------------------------------------------------\n", True)
+    gcode.issue_code("; --- P2PP WIPE SEQUENCE START  FOR {:5.2f}mm\n".format(v.side_wipe_length), True)
     gcode.issue_code(
-        "; --- DELTA = {:.2f}\n".format(v.current_position_z - (v.purgelayer + 1) * v.layer_height))
+        "; --- DELTA = {:.2f}\n".format(v.current_position_z - (v.purgelayer + 1) * v.layer_height), True )
     #
     # if v.previous_tool != -1:
     #     index = v.previous_tool * 4 + v.current_tool
@@ -303,10 +293,10 @@ def purge_generate_sequence():
     while v.side_wipe_length > 0:
         next_command = _purge_get_nextcommand_in_sequence()
 
-        last_posx = if_defined(next_command.X, last_posx)
-        last_posy = if_defined(next_command.Y, last_posy)
-        v.side_wipe_length -= if_defined(next_command.E, 0)
-        actual += if_defined(next_command.E, 0)
+        last_posx = if_defined(next_command.Parms[gcode.X], last_posx)
+        last_posy = if_defined(next_command.Parms[gcode.Y], last_posy)
+        v.side_wipe_length -= if_defined(next_command.Parms[gcode.E], 0)
+        actual += if_defined(next_command.Parms[gcode.E], 0)
         next_command.issue_command(getwipespeed())
         _purge_update_sequence_index()
 
@@ -317,9 +307,9 @@ def purge_generate_sequence():
 
     gcode.issue_code(
         "G1 Z{:.2f} F10800\n".format(max(v.current_position_z + 0.6, (v.purgelayer + 1) * v.layer_height) + 0.6))
-    gcode.issue_code("; -------------------------------------\n")
-    gcode.issue_code("; --- P2PP WIPE SEQUENCE END DONE\n")
-    gcode.issue_code("; -------------------------------------\n")
+    gcode.issue_code("; -------------------------------------\n", True)
+    gcode.issue_code("; --- P2PP WIPE SEQUENCE END DONE\n", True)
+    gcode.issue_code("; -------------------------------------\n", True)
 
     # if we extruded more we need to account for that in the total count
 
