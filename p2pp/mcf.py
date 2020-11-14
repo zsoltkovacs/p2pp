@@ -254,6 +254,8 @@ def update_class(gcode_line):
 
     if line_hash == hash_FIRST_LAYER_BRIM_END:
         v.tower_measure = False
+        create_tower_gcode()
+        purgetower.purge_generate_brim()
         v.block_classification = CLS_BRIM_END
         return
 
@@ -409,10 +411,18 @@ def gcode_parseline(index):
     except IndexError:
         pass
 
+    # code independent processing
+
+    if not (g.Class in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD]) and v.current_temp != v.new_temp:
+        gcode.issue_code(v.temp1_stored_command)
+        v.temp1_stored_command = ""
+
+    # filter off comments
     if g.Command is None:
         g.issue_command()
         return
 
+    # procedd none- movement commends
     if not g.is_movement_command:
 
         if g.Command.startswith('T'):
@@ -474,14 +484,14 @@ def gcode_parseline(index):
             g.issue_command()
             return
 
+    # ---- AS OF HERE ONLY MOVEMENT COMMANDS ----
+
     previous_block_class = v.parsed_gcode[max(0, index - 1)].Class
     classupdate = g.Class != previous_block_class
 
-    if not (g.Class in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD]) and v.current_temp != v.new_temp:
-        gcode.issue_code(v.temp1_stored_command)
-        v.temp1_stored_command = ""
 
-    # ---- AS OF HERE ONLY MOVEMENT COMMANDS ----
+
+
 
     v.keep_speed = g.get_parameter("F", v.keep_speed)
 
@@ -553,13 +563,6 @@ def gcode_parseline(index):
             if check_move_in_tower(g.X, g.Y):
                 g.remove_x()
                 g.remove_y()
-
-        # sepcific for FULL_PURGE_REDUCTION
-        if v.full_purge_reduction:
-
-            if g.Class == CLS_BRIM_END:
-                create_tower_gcode()
-                purgetower.purge_generate_brim()
 
         # sepcific for SIDEWIPE
         if v.side_wipe:
