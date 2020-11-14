@@ -22,8 +22,8 @@ from p2pp.gcodeparser import parse_slic3r_config
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
 from p2pp.sidewipe import create_side_wipe, create_sidewipe_bb3d
 
-layer_regex = re.compile("\s*;\s*LAYER\s+(\d)\s*")
-layerheight_regex = re.compile("\s*;\s*LAYERHEIGHT\s+(\d+(\.\d+)?)\s*")
+layer_regex = re.compile(";\s*LAYER\s+(\d+)\s*")
+layerheight_regex = re.compile(";\s*LAYERHEIGHT\s+(\d+(\.\d+)?)\s*")
 
 
 def optimize_tower_skip(skipmax, layersize):
@@ -205,7 +205,7 @@ hash_FIRST_LAYER_BRIM_START = hash("; CP WIPE TOWER FIRST LAYER BRIM START")
 hash_FIRST_LAYER_BRIM_END = hash("; CP WIPE TOWER FIRST LAYER BRIM END")
 hash_EMPTY_GRID_START = hash("; CP EMPTY GRID START")
 hash_EMPTY_GRID_END = hash("; CP EMPTY GRID END")
-hash_TOOLCHANGE_START = hash("'; CP TOOLCHANGE START")
+hash_TOOLCHANGE_START = hash("; CP TOOLCHANGE START")
 hash_TOOLCHANGE_UNLOAD = hash("; CP TOOLCHANGE UNLOAD")
 hash_TOOLCHANGE_WIPE = hash("; CP TOOLCHANGE WIPE")
 hash_TOOLCHANGE_END = hash("; CP TOOLCHANGE END")
@@ -341,7 +341,6 @@ def parse_gcode():
                     if layer >= 0 and layer != v.last_parsed_layer:
                         v.last_parsed_layer = layer
                         v.layer_end.append(index)
-
                         if layer > 0:
                             v.skippable_layer.append((v.layer_emptygrid_counter > 0) and (v.layer_toolchange_counter == 0))
                             v.layer_toolchange_counter = 0
@@ -420,61 +419,60 @@ def gcode_parseline(index):
             gcode_process_toolchange(int(g.command_value()), v.total_material_extruded, v.last_parsed_layer)
             if not v.debug_leaveToolCommands:
                 g.move_to_comment("Color Change")
-            g.issue_command()
             v.toolchange_processed = True
-            return
+        else:
 
-        if g.Command in ["M140", "M190", "M73", "M84", "M201", "M203", "G28", "G90", "M115", "G80", "G21", "M907", "M204"]:
-            g.issue_command()
-            return
-
-        if g.Command in ["M104", "M109"]:
-            if not v.process_temp or g.Class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD]:
-                g.add_comment(" Unprocessed temp ")
+            if g.Command in ["M140", "M190", "M73", "M84", "M201", "M203", "G28", "G90", "M115", "G80", "G21", "M907", "M204"]:
                 g.issue_command()
-                v.new_temp = g.get_parameter("S", v.current_temp)
-                v.current_temp = v.new_temp
-            else:
-                v.new_temp = g.get_parameter("S", v.current_temp)
-                if v.new_temp >= v.current_temp:
-                    g.Command = "M109"
-                    v.temp2_stored_command = g.__str__()
-                    g.move_to_comment("delayed temp rise until after purge {}-->{}".format(v.current_temp, v.new_temp))
+                return
+
+            if g.Command in ["M104", "M109"]:
+                if not v.process_temp or g.Class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD]:
+                    g.add_comment(" Unprocessed temp ")
+                    g.issue_command()
+                    v.new_temp = g.get_parameter("S", v.current_temp)
                     v.current_temp = v.new_temp
                 else:
-                    v.temp1_stored_command = g.__str__()
-                    g.move_to_comment("delayed temp drop until after purge {}-->{}".format(v.current_temp, v.new_temp))
-                    g.issue_command()
-            return
+                    v.new_temp = g.get_parameter("S", v.current_temp)
+                    if v.new_temp >= v.current_temp:
+                        g.Command = "M109"
+                        v.temp2_stored_command = g.__str__()
+                        g.move_to_comment("delayed temp rise until after purge {}-->{}".format(v.current_temp, v.new_temp))
+                        v.current_temp = v.new_temp
+                    else:
+                        v.temp1_stored_command = g.__str__()
+                        g.move_to_comment("delayed temp drop until after purge {}-->{}".format(v.current_temp, v.new_temp))
+                        g.issue_command()
+                return
 
-        if g.Command == "M107":
+            if g.Command == "M107":
+                g.issue_command()
+                v.saved_fanspeed = 0
+                return
+
+            if g.Command == "M106":
+                g.issue_command()
+                v.saved_fanspeed = g.get_parameter("S", v.saved_fanspeed)
+                return
+
+            # flow rate changes have an effect on the filament consumption.  The effect is taken into account for ping generation
+            if g.Command == "M221":
+                v.extrusion_multiplier = float(g.get_parameter("S", v.extrusion_multiplier * 100)) / 100
+                g.issue_command()
+                return
+
+            # feed rate changes in the code are removed as they may interfere with the Palette P2 settings
+            if g.Command in ["M220"]:
+                g.move_to_comment("Feed Rate Adjustments are removed")
+                g.issue_command()
+                return
+
+            if g.Class == CLS_TOOL_UNLOAD:
+                if g.Command == "G4" or (g.Command in ["M900"] and g.get_parameter("K", 0) == 0):
+                    g.move_to_comment("tool unload")
+
             g.issue_command()
-            v.saved_fanspeed = 0
             return
-
-        if g.Command == "M106":
-            g.issue_command()
-            v.saved_fanspeed = g.get_parameter("S", v.saved_fanspeed)
-            return
-
-        # flow rate changes have an effect on the filament consumption.  The effect is taken into account for ping generation
-        if g.Command == "M221":
-            v.extrusion_multiplier = float(g.get_parameter("S", v.extrusion_multiplier * 100)) / 100
-            g.issue_command()
-            return
-
-        # feed rate changes in the code are removed as they may interfere with the Palette P2 settings
-        if g.Command in ["M220"]:
-            g.move_to_comment("Feed Rate Adjustments are removed")
-            g.issue_command()
-            return
-
-        if g.Class == CLS_TOOL_UNLOAD:
-            if g.Command == "G4" or (g.Command in ["M900"] and g.get_parameter("K", 0) == 0):
-                g.move_to_comment("tool unload")
-
-        g.issue_command()
-        return
 
     previous_block_class = v.parsed_gcode[max(0, index - 1)].Class
     classupdate = g.Class != previous_block_class
@@ -720,7 +718,8 @@ def gcode_parseline(index):
             if v.last_parsed_layer < len(v.skippable_layer) and v.skippable_layer[v.last_parsed_layer]:
                 g.move_to_comment("skipped purge")
             else:
-                v.side_wipe_length += g.E
+                if g.E:
+                    v.side_wipe_length += g.E
                 g.move_to_comment("side wipe/full purge")
 
     if v.toolchange_processed:

@@ -40,11 +40,11 @@ class GCodeCommand:
         else:
             pos = gcode_line.find(";")
 
-        if pos != -1:
-            self.Comment = gcode_line[pos + 1:]
-            if pos == 1:
-                return
-            gcode_line = gcode_line[:pos].strip()
+            if pos != -1:
+                self.Comment = gcode_line[pos + 1:]
+                if pos == 1:
+                    return
+                gcode_line = gcode_line[:pos].strip()
 
         fields = gcode_line.split(' ')
 
