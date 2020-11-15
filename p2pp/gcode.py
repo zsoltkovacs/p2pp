@@ -80,13 +80,6 @@ class GCodeCommand:
                 self.Parms[EXTRUDE] = self.Parms[E] > 0
 
 
-    def command_value(self):
-        if self.Parms[COMMAND]:
-            return self.Parms[COMMAND][1:]
-        else:
-            return 0
-
-
     def __str__(self):
         p = ""
         if self.Parms[COMMAND]:

@@ -22,44 +22,41 @@ from p2pp.gcodeparser import parse_slic3r_config
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
 from p2pp.sidewipe import create_side_wipe, create_sidewipe_bb3d
 
-layer_regex = re.compile(";\s*LAYER\s+(\d+)\s*")
-layerheight_regex = re.compile(";\s*LAYERHEIGHT\s+(\d+(\.\d+)?)\s*")
+# layer_regex = re.compile(";LAYER\s+(\d+)\s*")
+# layerheight_regex = re.compile(";LAYERHEIGHT\s+(\d+(\.\d+)?)\s*")
 
 
 def optimize_tower_skip(skipmax, layersize):
-    skipped = 0.0
+
+    max_layers = int(skipmax / layersize)
     skipped_num = 0
 
     if v.side_wipe or v.bigbrain3d_purge_enabled:
-        base = -1
-    else:
         base = 0
+    else:
+        v.skippable_layer[0] = False
+        base = 1
 
-    for idx in range(len(v.skippable_layer) - 1, base, -1):
-        if skipped + 0.005 >= skipmax:
-            v.skippable_layer[idx] = False
-        elif v.skippable_layer[idx]:
-            skipped = skipped + layersize
-            skipped_num += 1
+    for idx in range(len(v.skippable_layer) - 1, base-1, -1):
+        if v.skippable_layer[idx]:
+            if skipped_num < max_layers:
+                skipped_num += 1
+            else:
+                v.skippable_layer[idx] = False
 
     if v.tower_delta:
-        if skipped > 0:
+        if skipped_num > 0:
             gui.log_warning(
-                "Warning: Purge Tower delta in effect: {} Layers or {:-6.2f}mm".format(skipped_num, skipped))
+                "Warning: Purge Tower delta in effect: {} Layers or {:-6.2f}mm".format(skipped_num, skipped_num * layersize))
         else:
             gui.create_logitem("Tower Purge Delta could not be applied to this print")
             for idx in range(len(v.skippable_layer)):
                 v.skippable_layer[idx] = False
             v.tower_delta = False
 
-    if not v.side_wipe and not v.bigbrain3d_purge_enabled:
-        v.skippable_layer[0] = False
 
-
-# ################### GCODE PROCESSING ###########################
 def gcode_process_toolchange(new_tool):
-    # some commands are generated at the end to unload filament,
-    # they appear as a reload of current filament - messing up things
+
     if new_tool == v.current_tool:
         return
 
@@ -207,7 +204,6 @@ hash_TOOLCHANGE_UNLOAD = hash("; CP TOOLCHANGE UNLOAD")
 hash_TOOLCHANGE_WIPE = hash("; CP TOOLCHANGE WIPE")
 hash_TOOLCHANGE_END = hash("; CP TOOLCHANGE END")
 
-
 def update_class(gcode_line):
 
     line_hash = hash(gcode_line)
@@ -293,6 +289,10 @@ def parse_gcode():
     v.previous_block_classification = CLS_NORMAL
     total_line_count = len(v.input_gcode)
 
+    flh = int(v.first_layer_height * 100)
+    olh = int(v.layer_height * 100)
+    use_layer_instead_of_layerheight = v.synced_support or not v.support_material
+
     backpass_line = -1
 
     for index in range(total_line_count):
@@ -314,48 +314,42 @@ def parse_gcode():
 
             if line.startswith('; CP'):
                 update_class(line)
+            elif line.startswith(';L'):
+
+                fields = line.split(' ')
+                layer = None
+
+                if use_layer_instead_of_layerheight and fields[0] == ';LAYER':
+                    try:
+                        layer = int(fields[1])
+                    except (ValueError, IndexError):
+                        pass
+
+                elif fields[0] == ';LAYERHEIGHT':
+                    try:
+                        lv = int((float(fields[1]) + 0.001) * 100)
+                        lv = lv - flh
+                        if lv % olh == 0:
+                            layer = int(lv / olh)
+                    except (ValueError, IndexError):
+                        pass
+
+                if layer is not None:
+                    v.last_parsed_layer = layer
+                    v.layer_end.append(index)
+                    if layer > 0:
+                        v.skippable_layer.append((v.layer_emptygrid_counter > 0) and (v.layer_toolchange_counter == 0))
+                        v.layer_toolchange_counter = 0
+                        v.layer_emptygrid_counter = 0
+
             else:
-
-                layer = -1
-                # if not supports are printed or layers are synced, there is no need to look at the layerheight,
-                # otherwise look at the layerheight to determine the layer progress
-
-                if v.synced_support or not v.support_material:
-                    lm = layer_regex.match(line)
-                    if lm:
-                        layer = int(lm.group(1))
-                else:
-                    lm = layerheight_regex.match(line)
-                    if lm:
-                        fl = int(v.first_layer_height * 100)
-                        lv = int((float(lm.group(1)) + 0.001) * 100)
-                        lv = lv - fl
-
-                        lh = int(v.layer_height * 100)
-
-                        if lv % lh == 0:
-                            layer = int(lv / lh)
+                if not v.p2pp_configend or v.set_tool > 3 or v.p2pp_tool_unconfigged[v.set_tool]:
+                    m = v.regex_p2pp.match(line)
+                    if m:
+                        if m.group(1).startswith("MATERIAL"):
+                            algorithm_process_material_configuration(m.group(1)[9:])
                         else:
-                            layer = v.last_parsed_layer
-
-                if lm:
-                    if layer >= 0 and layer != v.last_parsed_layer:
-
-                        v.last_parsed_layer = layer
-                        v.layer_end.append(index)
-                        if layer > 0:
-                            v.skippable_layer.append((v.layer_emptygrid_counter > 0) and (v.layer_toolchange_counter == 0))
-                            v.layer_toolchange_counter = 0
-                            v.layer_emptygrid_counter = 0
-
-                else:
-                    if not v.p2pp_configend or v.set_tool > 3 or v.p2pp_tool_unconfigged[v.set_tool]:
-                        m = v.regex_p2pp.match(line)
-                        if m:
-                            if m.group(1).startswith("MATERIAL"):
-                                algorithm_process_material_configuration(m.group(1)[9:])
-                            else:
-                                parameters.check_config_parameters(m.group(1), m.group(2))
+                            parameters.check_config_parameters(m.group(1), m.group(2))
 
         else:
             try:
@@ -435,7 +429,7 @@ def gcode_parseline(index):
     if not g.Parms[gcode.MOVEMEMT]:
 
         if g.Parms[gcode.COMMAND].startswith('T'):
-            gcode_process_toolchange(int(g.command_value()))
+            gcode_process_toolchange(int(g.Parms[gcode.COMMAND][1:]))
             if not v.debug_leaveToolCommands:
                 g.move_to_comment("Color Change")
             v.toolchange_processed = True
@@ -936,16 +930,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
                 maf.write(unicode(h))
                 maf.write('\r\n')
             maf.close()
-            #
-            # with io.open(maffile, 'w', newline='\r\n') as maf:
-            #
-            #     for i in range(len(header)):
-            #         h = header[i].strip('\n\r') + "\n"
-            #         if not h.startswith(";"):
-            #             try:
-            #                 maf.write(unicode(h))
-            #             except:
-            #                 maf.write(h)
 
         gui.print_summary(omega_result['summary'])
 
