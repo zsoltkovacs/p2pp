@@ -381,7 +381,7 @@ def parse_gcode():
                 backpass_line = len(v.parsed_gcode)-1
 
         if v.block_classification == CLS_ENDGRID or v.block_classification == CLS_ENDPURGE:
-            if code[gcode.X] and code[gcode.Y]:
+            if code[gcode.X] is not None  and code[gcode.Y]  is not None:
                 if not coordinate_in_tower(code[gcode.X], code[gcode.Y]):
                     v.parsed_gcode[-1][gcode.CLASS] = CLS_NORMAL
                     v.block_classification = CLS_NORMAL
@@ -411,9 +411,6 @@ def gcode_parseline(g):
         gcode.issue_command(g)
         return
 
-
-
-    g[gcode.COMMENT] += "{} Class {} Prev {}".format(classupdate, current_block_class, v.previous_block_classification)
     # procedd none- movement commends
     if not g[gcode.MOVEMEMT]:
 
@@ -484,14 +481,14 @@ def gcode_parseline(g):
     newly_calculated_x = v.current_position_x
     newly_calculated_y = v.current_position_y
 
-    if g[gcode.X]:
+    if g[gcode.X] is not None:
         v.previous_purge_keep_x = v.purge_keep_x
         v.purge_keep_x = g[gcode.X]
         if x_coordinate_in_tower(g[gcode.X]):
             v.keep_x = g[gcode.X]
         newly_calculated_x = g[gcode.X]
 
-    if g[gcode.Y]:
+    if g[gcode.Y]  is not None:
         v.previous_purge_keep_y = v.purge_keep_y
         v.purge_keep_y = g[gcode.Y]
         if y_coordinate_in_tower(g[gcode.Y]):
@@ -511,7 +508,7 @@ def gcode_parseline(g):
         if v.side_wipe or v.tower_delta or v.full_purge_reduction:
             gcode.move_to_comment(g,"tool unload")
         else:
-            if g[gcode.Z]:
+            if g[gcode.Z]  is not None:
                 g[gcode.X] = None
                 g[gcode.Y] = None
                 gcode.remove_extrusion(g)
@@ -525,7 +522,7 @@ def gcode_parseline(g):
         if not coordinate_in_tower(newly_calculated_x, newly_calculated_y) and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y):
             gcode.remove_extrusion(g)
 
-    if not v.full_purge_reduction and not v.side_wipe and g[gcode.E] and g[gcode.F]:
+    if not v.full_purge_reduction and not v.side_wipe and g[gcode.E]  is not None and g[gcode.F]:
         if v.keep_speed > v.purgetopspeed:
             g[gcode.F]=v.purgetopspeed
             g[gcode.COMMENT] += " prugespeed topped"
@@ -609,7 +606,7 @@ def gcode_parseline(g):
             gcode.issue_command(g)
             return
 
-        if g[gcode.E] and v.tower_delta:
+        if g[gcode.E] is not None and v.tower_delta:
             if current_block_class in [CLS_TOOL_UNLOAD, CLS_TOOL_PURGE]:
                 if not inrange(g[gcode.X], v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']) or \
                         not inrange(g[gcode.Y], v.wipe_tower_info['miny'], v.wipe_tower_info['maxy']):
@@ -631,8 +628,8 @@ def gcode_parseline(g):
 
             v.enterpurge = False
 
-            _x = v.previous_purge_keep_x if g[gcode.X] else v.purge_keep_x
-            _y = v.previous_purge_keep_y if g[gcode.Y] else v.purge_keep_y
+            _x = v.previous_purge_keep_x if g[gcode.X] is not None else v.purge_keep_x
+            _y = v.previous_purge_keep_y if g[gcode.Y] is not None else v.purge_keep_y
 
             if not coordinate_in_tower(_x, _y):
                 _x = v.purge_keep_x
@@ -676,7 +673,7 @@ def gcode_parseline(g):
             if len(g) == 0:
                 gcode.move_to_comment(g,"-useless command-")
 
-    if v.expect_retract and (g[gcode.X] or g[gcode.Y]):
+    if v.expect_retract and (g[gcode.X] is not None or g[gcode.Y] is not None):
         if not v.retraction < 0:
             if g[gcode.RETRACT]:
                 purgetower.retract(v.current_tool)
@@ -700,7 +697,7 @@ def gcode_parseline(g):
             if v.last_parsed_layer < len(v.skippable_layer) and v.skippable_layer[v.last_parsed_layer]:
                 gcode.move_to_comment(g, "skipped purge")
             else:
-                if g[gcode.E]:
+                if g[gcode.E] is not None:
                     v.side_wipe_length += g[gcode.E]
                 gcode.move_to_comment(g, "side wipe/full purge")
 
@@ -722,7 +719,7 @@ def gcode_parseline(g):
         g[gcode.E] = min(-v.retraction, g[gcode.E])
         v.retraction += g[gcode.E]
 
-    if (g[gcode.X] or g[gcode.Y]) and g[gcode.EXTRUDE] and v.retraction < 0 and abs(v.retraction) > 0.01:
+    if (g[gcode.X] is not None or g[gcode.Y] is not None) and g[gcode.EXTRUDE] and v.retraction < 0 and abs(v.retraction) > 0.01:
         gcode.issue_code(";--- P2PP --- fixup retracts", True)
         purgetower.unretract(v.current_tool)
         # v.retracted = False

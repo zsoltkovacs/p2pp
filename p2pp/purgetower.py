@@ -78,15 +78,15 @@ def _purge_calculate_sequences_length():
     sequence_length_brim = 0
 
     for i in solidlayer:
-        if i[gcode.E]:
+        if i[gcode.E] is not None:
             sequence_length_solid += i[gcode.E]
 
     for i in emptylayer:
-        if i[gcode.E]:
+        if i[gcode.E] is not None:
             sequence_length_empty += i[gcode.E]
 
     for i in brimlayer:
-        if i[gcode.E]:
+        if i[gcode.E] is not None:
             sequence_length_brim += i[gcode.E]
 
 

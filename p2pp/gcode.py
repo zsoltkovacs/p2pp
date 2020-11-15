@@ -65,9 +65,9 @@ def create_command(gcode_line, is_comment=False, userclass=0):
 
                 fields = fields[1:]
 
-            if return_value[E]:
+            if return_value[E] is not None:
                 return_value[RETRACT] = return_value[E] < 0
-                return_value[UNRETRACT] = return_value[E] > 0 and not return_value[X] and not return_value[Y] and not return_value[Z]
+                return_value[UNRETRACT] = return_value[E] > 0 and return_value[X] is  None and  return_value[Y] is None and  return_value[Z] is None
                 return_value[EXTRUDE] = return_value[E] > 0
 
     return return_value
@@ -76,17 +76,33 @@ def create_command(gcode_line, is_comment=False, userclass=0):
 def create_commandstring(gcode_tupple):
     if gcode_tupple[COMMAND]:
         p = gcode_tupple[COMMAND]
-        if gcode_tupple[X]:
-            p = p + " X{:0.3f}".format(gcode_tupple[X])
-        if gcode_tupple[Y]:
-            p = p + " Y{:0.3f}".format(gcode_tupple[Y])
-        if gcode_tupple[Z]:
-            p = p + " Z{:0.3f}".format(gcode_tupple[Z])
-        if gcode_tupple[E]:
-            p = p + " E{:0.5f}".format(gcode_tupple[E])
-        if gcode_tupple[F]:
+        if gcode_tupple[X] is not None:
+            try:
+                p = p + " X{:0.3f}".format(gcode_tupple[X])
+            except ValueError:
+                p = p + " X{}".format(gcode_tupple[X])
+
+        if gcode_tupple[Y] is not None:
+            try:
+                p = p + " Y{:0.3f}".format(gcode_tupple[Y])
+            except ValueError:
+                p = p + " Y{}".format(gcode_tupple[Y])
+
+        if gcode_tupple[Z] is not None:
+            try:
+                p = p + " Z{:0.3f}".format(gcode_tupple[Z])
+            except ValueError:
+                p = p + " Z{}".format(gcode_tupple[Z])
+
+        if gcode_tupple[E] is not None:
+            try:
+                p = p + " E{:0.5f}".format(gcode_tupple[E])
+            except ValueError:
+                p = p + " E{}".format(gcode_tupple[E])
+
+        if gcode_tupple[F] is not None:
             p = p + " F{}".format(gcode_tupple[F])
-        if gcode_tupple[S]:
+        if gcode_tupple[S] is not None:
             p = p + " S{}".format(gcode_tupple[S])
         if len(gcode_tupple[OTHER]) > 0:
             p = p + " "+gcode_tupple[OTHER]
@@ -132,7 +148,7 @@ def get_parameter(gcode_tupple, pv, defaultvalue=0):
 
 
 def issue_command(gcode_tupple, speed=0):
-    if gcode_tupple[E] and gcode_tupple[MOVEMEMT]:
+    if gcode_tupple[E] is not None and gcode_tupple[MOVEMEMT]:
         extrusion = gcode_tupple[E] * v.extrusion_multiplier * v.extrusion_multiplier_correction
         v.total_material_extruded += extrusion
         v.material_extruded_per_color[v.current_tool] += extrusion
