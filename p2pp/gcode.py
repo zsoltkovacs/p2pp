@@ -70,6 +70,9 @@ def create_command(gcode_line, is_comment=False, userclass=0):
                 return_value[UNRETRACT] = return_value[E] > 0 and return_value[X] is  None and  return_value[Y] is None and  return_value[Z] is None
                 return_value[EXTRUDE] = return_value[E] > 0
 
+            if return_value[MOVEMEMT] and return_value[X] is not None and return_value[Y] is not None:
+                return_value[MOVEMEMT] = 2
+
     return return_value
 
 

@@ -8,7 +8,6 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
 import os
-import re
 import time
 
 import p2pp.gcode as gcode
@@ -22,12 +21,12 @@ from p2pp.gcodeparser import parse_slic3r_config
 from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
 from p2pp.sidewipe import create_side_wipe, create_sidewipe_bb3d
 
+
 # layer_regex = re.compile(";LAYER\s+(\d+)\s*")
 # layerheight_regex = re.compile(";LAYERHEIGHT\s+(\d+(\.\d+)?)\s*")
 
 
 def optimize_tower_skip(max_layers):
-
     skippable = v.skippable_layer.count(True)
 
     idx = 1
@@ -44,9 +43,7 @@ def optimize_tower_skip(max_layers):
         gui.create_logitem("Tower Purge Delta could not be applied to this print")
 
 
-
 def gcode_process_toolchange(new_tool):
-
     if new_tool == v.current_tool:
         return
 
@@ -118,25 +115,15 @@ def coordinate_on_bed(x, y):
 
 
 def x_coordinate_in_tower(x):
-    if x is None:
-        return False
     return inrange(x, v.wipe_tower_info['minx'], v.wipe_tower_info['maxx'])
 
 
 def y_coordinate_in_tower(y):
-    if y is None:
-        return False
     return inrange(y, v.wipe_tower_info['miny'], v.wipe_tower_info['maxy'])
 
 
 def coordinate_in_tower(x, y):
-    return x_coordinate_in_tower(x) and y_coordinate_in_tower(y)
-
-
-def check_move_in_tower(x, y):
-    if x and y:
-        return coordinate_in_tower(x, y)
-    return False
+    return v.wipe_tower_info['minx'] <= x <= v.wipe_tower_info['maxx'] and v.wipe_tower_info['miny'] <= y <= v.wipe_tower_info['maxy']
 
 
 def entertower(layer_hght):
@@ -194,8 +181,8 @@ hash_TOOLCHANGE_UNLOAD = hash("; CP TOOLCHANGE UNLOAD")
 hash_TOOLCHANGE_WIPE = hash("; CP TOOLCHANGE WIPE")
 hash_TOOLCHANGE_END = hash("; CP TOOLCHANGE END")
 
-def update_class(gcode_line):
 
+def update_class(gcode_line):
     line_hash = hash(gcode_line)
 
     if line_hash == hash_EMPTY_GRID_START:
@@ -271,7 +258,6 @@ def create_tower_gcode():
 
 
 def parse_gcode():
-
     v.layer_toolchange_counter = 0
     v.layer_emptygrid_counter = 0
 
@@ -345,8 +331,8 @@ def parse_gcode():
                             parameters.check_config_parameters(m.group(1), m.group(2))
 
         else:
+            is_comment = False
             try:
-                is_comment = False
                 if line[0] == 'T':
                     v.block_classification = CLS_TOOL_PURGE
                     cur_tool = int(line[1])
@@ -377,24 +363,22 @@ def parse_gcode():
         if v.tower_measure:
             calculate_tower(code[gcode.X], code[gcode.Y])
         else:
-            if code[gcode.MOVEMEMT] and check_move_in_tower(code[gcode.X], code[gcode.Y]):
-                backpass_line = len(v.parsed_gcode)-1
+            if code[gcode.MOVEMEMT]==2 and coordinate_in_tower(code[gcode.X], code[gcode.Y]):
+                backpass_line = len(v.parsed_gcode) - 1
 
         if v.block_classification == CLS_ENDGRID or v.block_classification == CLS_ENDPURGE:
-            if code[gcode.X] is not None  and code[gcode.Y]  is not None:
-                if not coordinate_in_tower(code[gcode.X], code[gcode.Y]):
-                    v.parsed_gcode[-1][gcode.CLASS] = CLS_NORMAL
-                    v.block_classification = CLS_NORMAL
+            if code[gcode.MOVEMEMT] == 2 and not coordinate_in_tower(code[gcode.X], code[gcode.Y]):
+                v.parsed_gcode[-1][gcode.CLASS] = CLS_NORMAL
+                v.block_classification = CLS_NORMAL
 
         if v.block_classification == CLS_BRIM_END:
             v.block_classification = CLS_NORMAL
 
 
 def gcode_parseline(g):
-
     current_block_class = g[gcode.CLASS]
     previous_block_class = v.previous_block_classification
-    classupdate = not(current_block_class == previous_block_class)
+    classupdate = not (current_block_class == previous_block_class)
     v.previous_block_classification = current_block_class
 
     if current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD] and v.current_temp != v.new_temp:
@@ -404,9 +388,9 @@ def gcode_parseline(g):
     # filter off comments
     if g[gcode.COMMAND] is None:
         if v.needpurgetower and g[gcode.COMMENT].endswith("BRIM END"):
-                v.needpurgetower = False
-                create_tower_gcode()
-                purgetower.purge_generate_brim()
+            v.needpurgetower = False
+            create_tower_gcode()
+            purgetower.purge_generate_brim()
 
         gcode.issue_command(g)
         return
@@ -417,16 +401,18 @@ def gcode_parseline(g):
         if g[gcode.COMMAND].startswith('T'):
             gcode_process_toolchange(int(g[gcode.COMMAND][1:]))
             if not v.debug_leaveToolCommands:
-                gcode.move_to_comment(g,"Color Change")
+                gcode.move_to_comment(g, "Color Change")
             v.toolchange_processed = True
         else:
             if g[gcode.COMMAND].startswith('M'):
-                if g[gcode.COMMAND] in ["M140", "M190", "M73", "M84", "M201", "M203", "G28", "G90", "M115", "G80", "G21", "M907", "M204"]:
+                if g[gcode.COMMAND] in ["M140", "M190", "M73", "M84", "M201", "M203", "G28", "G90", "M115", "G80",
+                                        "G21", "M907", "M204"]:
                     gcode.issue_command(g)
                     return
 
                 if g[gcode.COMMAND] in ["M104", "M109"]:
-                    if not v.process_temp or current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD]:
+                    if not v.process_temp or current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START,
+                                                                         CLS_TOOL_UNLOAD]:
                         g[gcode.COMMENT] += " Unprocessed temp "
                         gcode.issue_command(g)
                         v.new_temp = gcode.get_parameter(g, gcode.S, v.current_temp)
@@ -436,11 +422,15 @@ def gcode_parseline(g):
                         if v.new_temp >= v.current_temp:
                             g[gcode.COMMAND] = "M109"
                             v.temp2_stored_command = gcode.create_commandstring(g)
-                            gcode.move_to_comment(g, "delayed temp rise until after purge {}-->{}".format(v.current_temp, v.new_temp))
+                            gcode.move_to_comment(g,
+                                                  "delayed temp rise until after purge {}-->{}".format(v.current_temp,
+                                                                                                       v.new_temp))
                             v.current_temp = v.new_temp
                         else:
                             v.temp1_stored_command = gcode.create_commandstring(g)
-                            gcode.move_to_comment(g,"delayed temp drop until after purge {}-->{}".format(v.current_temp, v.new_temp))
+                            gcode.move_to_comment(g,
+                                                  "delayed temp drop until after purge {}-->{}".format(v.current_temp,
+                                                                                                       v.new_temp))
                             gcode.issue_command(g)
                     return
 
@@ -462,19 +452,18 @@ def gcode_parseline(g):
 
                 # feed rate changes in the code are removed as they may interfere with the Palette P2 settings
                 if g[gcode.COMMAND] in ["M220"]:
-                    gcode.move_to_comment(g,"Feed Rate Adjustments are removed")
+                    gcode.move_to_comment(g, "Feed Rate Adjustments are removed")
                     gcode.issue_command(g)
                     return
 
             if current_block_class == CLS_TOOL_UNLOAD:
                 if g[gcode.COMMAND] in ["G4", "M900"]:
-                    gcode.move_to_comment(g,"tool unload")
+                    gcode.move_to_comment(g, "tool unload")
 
             gcode.issue_command(g)
             return
 
     # ---- AS OF HERE ONLY MOVEMENT COMMANDS ----
-
 
     v.keep_speed = gcode.get_parameter(g, gcode.F, v.keep_speed)
 
@@ -488,7 +477,7 @@ def gcode_parseline(g):
             v.keep_x = g[gcode.X]
         newly_calculated_x = g[gcode.X]
 
-    if g[gcode.Y]  is not None:
+    if g[gcode.Y] is not None:
         v.previous_purge_keep_y = v.purge_keep_y
         v.purge_keep_y = g[gcode.Y]
         if y_coordinate_in_tower(g[gcode.Y]):
@@ -506,9 +495,9 @@ def gcode_parseline(g):
 
     if current_block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
         if v.side_wipe or v.tower_delta or v.full_purge_reduction:
-            gcode.move_to_comment(g,"tool unload")
+            gcode.move_to_comment(g, "tool unload")
         else:
-            if g[gcode.Z]  is not None:
+            if g[gcode.Z] is not None:
                 g[gcode.X] = None
                 g[gcode.Y] = None
                 gcode.remove_extrusion(g)
@@ -519,12 +508,13 @@ def gcode_parseline(g):
         return
 
     if current_block_class == CLS_TOOL_PURGE and not (v.side_wipe or v.full_purge_reduction) and g[gcode.EXTRUDE]:
-        if not coordinate_in_tower(newly_calculated_x, newly_calculated_y) and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y):
+        if not coordinate_in_tower(newly_calculated_x, newly_calculated_y) and coordinate_in_tower(v.purge_keep_x,
+                                                                                                   v.purge_keep_y):
             gcode.remove_extrusion(g)
 
-    if not v.full_purge_reduction and not v.side_wipe and g[gcode.E]  is not None and g[gcode.F]:
+    if not v.full_purge_reduction and not v.side_wipe and g[gcode.E] is not None and g[gcode.F]:
         if v.keep_speed > v.purgetopspeed:
-            g[gcode.F]=v.purgetopspeed
+            g[gcode.F] = v.purgetopspeed
             g[gcode.COMMENT] += " prugespeed topped"
 
     # pathprocessing = sidewipe, fullpurgereduction or tower delta
@@ -532,7 +522,7 @@ def gcode_parseline(g):
     if v.pathprocessing:
 
         if current_block_class == CLS_TONORMAL and g[gcode.COMMAND]:
-            gcode.move_to_comment(g,"--P2PP-- post block processing")
+            gcode.move_to_comment(g, "--P2PP-- post block processing")
             gcode.issue_command(g)
             return
 
@@ -543,7 +533,7 @@ def gcode_parseline(g):
 
             # side wipe does not need a brim
             if current_block_class == CLS_BRIM:
-                gcode.move_to_comment(g,"--P2PP-- side wipe - removed")
+                gcode.move_to_comment(g, "--P2PP-- side wipe - removed")
                 gcode.issue_command(g)
                 return
 
@@ -556,7 +546,7 @@ def gcode_parseline(g):
 
         # remove any commands that are part of the purge tower and still perofrm actions WITHIN the tower
         if current_block_class in [CLS_ENDPURGE, CLS_ENDGRID]:
-            if check_move_in_tower(g[gcode.X], g[gcode.Y]):
+            if g[gcode.MOVEMEMT] == 2 and coordinate_in_tower(g[gcode.X], g[gcode.Y]):
                 g[gcode.X] = None
                 g[gcode.Y] = None
             else:
@@ -577,7 +567,7 @@ def gcode_parseline(g):
 
         if not v.towerskipped:
             try:
-                v.towerskipped = v.skippable_layer[v.last_parsed_layer] and check_move_in_tower(g[gcode.X], g[gcode.Y])
+                v.towerskipped = v.skippable_layer[v.last_parsed_layer] and g[gcode.MOVEMEMT] == 2 and coordinate_in_tower(g[gcode.X], g[gcode.Y])
                 if v.towerskipped and v.tower_delta:
                     v.cur_tower_z_delta += v.layer_height
                     gcode.issue_code(";-------------------------------------", True)
@@ -611,7 +601,6 @@ def gcode_parseline(g):
                 if not inrange(g[gcode.X], v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']) or \
                         not inrange(g[gcode.Y], v.wipe_tower_info['miny'], v.wipe_tower_info['maxy']):
                     gcode.remove_extrusion(g)
-
 
         if classupdate and v.full_purge_reduction and current_block_class == CLS_NORMAL:
             purgetower.purge_generate_sequence()
@@ -669,9 +658,9 @@ def gcode_parseline(g):
             if g[gcode.X] == _x:
                 g[gcode.X] = None
 
-            ##### NNED REVISITING
+            # NNED REVISITING
             if len(g) == 0:
-                gcode.move_to_comment(g,"-useless command-")
+                gcode.move_to_comment(g, "-useless command-")
 
     if v.expect_retract and (g[gcode.X] is not None or g[gcode.Y] is not None):
         if not v.retraction < 0:
@@ -719,7 +708,8 @@ def gcode_parseline(g):
         g[gcode.E] = min(-v.retraction, g[gcode.E])
         v.retraction += g[gcode.E]
 
-    if (g[gcode.X] is not None or g[gcode.Y] is not None) and g[gcode.EXTRUDE] and v.retraction < 0 and abs(v.retraction) > 0.01:
+    if (g[gcode.X] is not None or g[gcode.Y] is not None) and g[gcode.EXTRUDE] and v.retraction < 0 and abs(
+            v.retraction) > 0.01:
         gcode.issue_code(";--- P2PP --- fixup retracts", True)
         purgetower.unretract(v.current_tool)
         # v.retracted = False
