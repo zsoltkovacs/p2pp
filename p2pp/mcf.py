@@ -85,7 +85,7 @@ def gcode_process_toolchange(new_tool):
                 else:
                     gui.log_warning("Warning: Short splice (<{}mm) Length:{:-3.2f} Layer:{} Input:{}".
                                     format(v.min_splice_length, length, v.last_parsed_layer, v.current_tool + 1))
-                    v.processed_gcode.append("WARNING")
+                    v.processed_gcode.append("; SHORT SPLICDE WARNING")
                     filamentshortage = v.min_splice_length - v.splice_length[-1]
                     v.filament_short[new_tool] = max(v.filament_short[new_tool], filamentshortage)
 
@@ -393,22 +393,27 @@ def parse_gcode():
 def gcode_parseline(g):
 
     current_block_class = g[gcode.CLASS]
+    previous_block_class = v.previous_block_classification
+    classupdate = not(current_block_class == previous_block_class)
+    v.previous_block_classification = current_block_class
 
     if current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD] and v.current_temp != v.new_temp:
         gcode.issue_code(v.temp1_stored_command)
         v.temp1_stored_command = ""
 
-    if g[gcode.COMMENT].startswith("; CP WIPE TOWER FIRST LAYER BRIM END"):
-        print(current_block_class)
-    if current_block_class == CLS_BRIM_END and v.full_purge_reduction:
-        create_tower_gcode()
-        purgetower.purge_generate_brim()
-
     # filter off comments
     if g[gcode.COMMAND] is None:
+        if v.needpurgetower and g[gcode.COMMENT].endswith("BRIM END"):
+                v.needpurgetower = False
+                create_tower_gcode()
+                purgetower.purge_generate_brim()
+
         gcode.issue_command(g)
         return
 
+
+
+    g[gcode.COMMENT] += "{} Class {} Prev {}".format(classupdate, current_block_class, v.previous_block_classification)
     # procedd none- movement commends
     if not g[gcode.MOVEMEMT]:
 
@@ -473,10 +478,8 @@ def gcode_parseline(g):
 
     # ---- AS OF HERE ONLY MOVEMENT COMMANDS ----
 
-    previous_block_class = v.previous_block_classification
-    classupdate = current_block_class != previous_block_class
 
-    v.keep_speed = gcode.get_parameter(g,gcode.F, v.keep_speed)
+    v.keep_speed = gcode.get_parameter(g, gcode.F, v.keep_speed)
 
     newly_calculated_x = v.current_position_x
     newly_calculated_y = v.current_position_y
@@ -611,6 +614,7 @@ def gcode_parseline(g):
                 if not inrange(g[gcode.X], v.wipe_tower_info['minx'], v.wipe_tower_info['maxx']) or \
                         not inrange(g[gcode.Y], v.wipe_tower_info['miny'], v.wipe_tower_info['maxy']):
                     gcode.remove_extrusion(g)
+
 
         if classupdate and v.full_purge_reduction and current_block_class == CLS_NORMAL:
             purgetower.purge_generate_sequence()
@@ -879,7 +883,6 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
                 pass
 
             gcode_parseline(v.parsed_gcode[idx])
-            v.previous_block_classification = v.parsed_gcode[idx][gcode.CLASS]
             idx = idx + 1
 
             if idx > 100000:

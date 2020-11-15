@@ -254,6 +254,7 @@ def check_config_parameters(keyword, value):
         if not v.wipe_remove_sparse_layers:
             gui.create_logitem("Full purge reduction configured")
             v.full_purge_reduction = True
+            v.needpurgetower = True
         else:
             gui.log_warning("FULL PURGE TOWER REDUCTION feature mode not compatible with sparse wipe tower in PS")
             v.full_purge_reduction = False

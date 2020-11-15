@@ -90,6 +90,7 @@ purge_keep_x = None
 purge_keep_y = None
 previous_purge_keep_x = None
 previous_purge_keep_y = None
+needpurgetower = False
 
 before_sidewipe_gcode = []
 after_sidewipe_gcode = []

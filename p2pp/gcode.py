@@ -25,9 +25,9 @@ UNRETRACT = 12
 CLASS = 13
 
 
-def create_command(gcode_line, is_comment=False):
+def create_command(gcode_line, is_comment=False, userclass=0):
 
-    return_value = [None, None, None, None, None, None, "", None,  "", False, False, False, False, 0]
+    return_value = [None, None, None, None, None, None, "", None, "", False, False, False, False, userclass]
 
     if is_comment:
         return_value[COMMENT] = gcode_line[1:]
