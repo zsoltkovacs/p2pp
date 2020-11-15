@@ -158,9 +158,5 @@ def issue_command(gcode_tupple, speed=0):
     v.processed_gcode.append(s)
 
 
-def add_comment(gcode_tupple, text):
-    gcode_tupple[COMMENT] += text
-
-
 def issue_code(code_string, is_comment = False):
-   issue_command(create_command(code_string, is_comment))
+    issue_command(create_command(code_string, is_comment))

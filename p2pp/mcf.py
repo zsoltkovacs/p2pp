@@ -26,33 +26,23 @@ from p2pp.sidewipe import create_side_wipe, create_sidewipe_bb3d
 # layerheight_regex = re.compile(";LAYERHEIGHT\s+(\d+(\.\d+)?)\s*")
 
 
-def optimize_tower_skip(skipmax, layersize):
+def optimize_tower_skip(max_layers):
 
-    max_layers = int(skipmax / layersize)
-    skipped_num = 0
+    skippable = v.skippable_layer.count(True)
 
-    if v.side_wipe or v.bigbrain3d_purge_enabled:
-        base = 0
-    else:
-        v.skippable_layer[0] = False
-        base = 1
-
-    for idx in range(len(v.skippable_layer) - 1, base-1, -1):
+    idx = 1
+    while skippable > max_layers:
         if v.skippable_layer[idx]:
-            if skipped_num < max_layers:
-                skipped_num += 1
-            else:
-                v.skippable_layer[idx] = False
+            v.skippable_layer[idx] = False
+            skippable -= 1
+        idx += 1
 
-    if v.tower_delta:
-        if skipped_num > 0:
-            gui.log_warning(
-                "Warning: Purge Tower delta in effect: {} Layers or {:-6.2f}mm".format(skipped_num, skipped_num * layersize))
-        else:
-            gui.create_logitem("Tower Purge Delta could not be applied to this print")
-            for idx in range(len(v.skippable_layer)):
-                v.skippable_layer[idx] = False
-            v.tower_delta = False
+    if skippable > 0:
+        gui.log_warning(
+            "Tower delta in effect: {} Layers or {:.2f}mm".format(skippable, skippable * v.layer_height))
+    else:
+        gui.create_logitem("Tower Purge Delta could not be applied to this print")
+
 
 
 def gcode_process_toolchange(new_tool):
@@ -435,12 +425,12 @@ def gcode_parseline(g):
 
                 if g[gcode.COMMAND] in ["M104", "M109"]:
                     if not v.process_temp or current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD]:
-                        gcode.add_comment(g," Unprocessed temp ")
+                        g[gcode.COMMENT] += " Unprocessed temp "
                         gcode.issue_command(g)
                         v.new_temp = gcode.get_parameter(g, gcode.S, v.current_temp)
                         v.current_temp = v.new_temp
                     else:
-                        v.new_temp = gcode.get_parameter(g,gcode.S, v.current_temp)
+                        v.new_temp = gcode.get_parameter(g, gcode.S, v.current_temp)
                         if v.new_temp >= v.current_temp:
                             g[gcode.COMMAND] = "M109"
                             v.temp2_stored_command = gcode.create_commandstring(g)
@@ -535,7 +525,7 @@ def gcode_parseline(g):
     if not v.full_purge_reduction and not v.side_wipe and g[gcode.E] and g[gcode.F]:
         if v.keep_speed > v.purgetopspeed:
             g[gcode.F]=v.purgetopspeed
-            gcode.add_comment(g, " prugespeed topped")
+            g[gcode.COMMENT] += " prugespeed topped"
 
     # pathprocessing = sidewipe, fullpurgereduction or tower delta
 
@@ -868,10 +858,8 @@ def generate(input_file, output_file, printer_profile, splice_offset, silent):
     else:
 
         if v.tower_delta:
-            optimize_tower_skip(v.max_tower_z_delta, v.layer_height)
-
-        if v.side_wipe:
-            optimize_tower_skip(9999, v.layer_height)
+            v.skippable_layer[0] = False
+            optimize_tower_skip(int(v.max_tower_z_delta / v.layer_height))
 
         gui.create_logitem("Generate processed GCode")
 
