@@ -69,9 +69,9 @@ def patchup_toolchanges():
         except IndexError:
             old = v.parsed_gcode[v.m4c_toolchange_source_positions[-1]]
 
-        _ip = calculate_input_index(idx, int(old.Parms[gcode.COMMAND][1:]))
-        v.parsed_gcode[v.m4c_toolchange_source_positions[idx]] = gcode.GCodeCommand(
-            "T{} ; INPUT MAPPING MORE THAN 4 COLORS {} --> {}".format(_ip, _ip, int(old.Parms[gcode.COMMAND][1:])))
+        _ip = calculate_input_index(idx, int(old[gcode.COMMAND][1:]))
+        v.parsed_gcode[v.m4c_toolchange_source_positions[idx]] = gcode.create_command(
+            "T{} ; INPUT MAPPING MORE THAN 4 COLORS {} --> {}".format(_ip, _ip, int(old[gcode.COMMAND][1:])))
 
 
 def calculate_loadscheme():

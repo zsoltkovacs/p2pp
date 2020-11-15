@@ -9,8 +9,6 @@ __email__ = 'P2PP@pandora.be'
 
 import p2pp.variables as v
 
-formats = ["{}{:0.3f} ", "{}{:0.3f} ", "{}{:0.3f} ", "{}{:0.5f} ", "{}{} ", "{}{} " ]
-
 X = 0
 Y = 1
 Z = 2
@@ -27,32 +25,25 @@ UNRETRACT = 12
 CLASS = 13
 
 
-class GCodeCommand:
+def create_command(gcode_line, is_comment=False):
 
-    Parms = []
+    return_value = [None, None, None, None, None, None, "", None,  "", False, False, False, False, 0]
 
-    def __init__(self, gcode_line, is_comment=False):
+    if is_comment:
+        return_value[COMMENT] = gcode_line[1:]
+    else:
+        pos = gcode_line.find(";")
 
-        self.Parms = [None, None, None, None, None, None, "", None,  "", False, False, False, False, 0]
-
-        if is_comment:
-            self.Parms[COMMENT] = gcode_line[1:]
-            return
-        else:
-            pos = gcode_line.find(";")
-
-            if pos != -1:
-                self.Parms[COMMENT] = gcode_line[pos + 1:]
-                if pos == 1:
-                    return
-                gcode_line = gcode_line[:pos].strip()
+        if pos != -1:
+            return_value[COMMENT] = gcode_line[pos + 1:]
+            gcode_line = gcode_line[:pos].strip()
 
         fields = gcode_line.split(' ')
 
         if len(fields[0]) > 0:
 
-            self.Parms[COMMAND] = fields[0]
-            self.Parms[MOVEMEMT] = self.Parms[COMMAND] in ['G0', 'G1']
+            return_value[COMMAND] = fields[0]
+            return_value[MOVEMEMT] = return_value[COMMAND] in ['G0', 'G1']
 
             fields = fields[1:]
             while len(fields) > 0:
@@ -68,98 +59,108 @@ class GCodeCommand:
                                 val = int(val)
                         except ValueError:
                             pass
-                        self.Parms[idx] = val
+                        return_value[idx] = val
                     else:
-                        self.Parms[OTHER] = self.Parms[OTHER] + " " + param
+                        return_value[OTHER] = return_value[OTHER] + " " + param
 
                 fields = fields[1:]
 
-            if self.Parms[E]:
-                self.Parms[RETRACT] = self.Parms[E] < 0
-                self.Parms[UNRETRACT] = self.Parms[E] > 0 and not self.Parms[X] and not self.Parms[Y] and not self.Parms[Z]
-                self.Parms[EXTRUDE] = self.Parms[E] > 0
+            if return_value[E]:
+                return_value[RETRACT] = return_value[E] < 0
+                return_value[UNRETRACT] = return_value[E] > 0 and not return_value[X] and not return_value[Y] and not return_value[Z]
+                return_value[EXTRUDE] = return_value[E] > 0
+
+    return return_value
 
 
-    def __str__(self):
-        p = ""
-        if self.Parms[COMMAND]:
-            p = self.Parms[COMMAND] + " "
-            for idx in range(6):
-                if self.Parms[idx]:
-                    letter = "XYZEFS"[idx]
-                    value = self.Parms[idx]
-                    layout = formats[idx]
-                    p = p + layout.format(letter, value)
+def create_commandstring(gcode_tupple):
+    if gcode_tupple[COMMAND]:
+        p = gcode_tupple[COMMAND]
+        if gcode_tupple[X]:
+            p = p + " X{:0.3f}".format(gcode_tupple[X])
+        if gcode_tupple[Y]:
+            p = p + " Y{:0.3f}".format(gcode_tupple[Y])
+        if gcode_tupple[Z]:
+            p = p + " Z{:0.3f}".format(gcode_tupple[Z])
+        if gcode_tupple[E]:
+            p = p + " E{:0.5f}".format(gcode_tupple[E])
+        if gcode_tupple[F]:
+            p = p + " F{}".format(gcode_tupple[F])
+        if gcode_tupple[S]:
+            p = p + " S{}".format(gcode_tupple[S])
+        if len(gcode_tupple[OTHER]) > 0:
+            p = p + " "+gcode_tupple[OTHER]
+        if gcode_tupple[COMMENT] != "":
+            p = p + " ;" + gcode_tupple[COMMENT]
+    else:
+        if gcode_tupple[COMMENT] != "":
+            p = ";" + gcode_tupple[COMMENT]
+        else:
+            p = ""
+    return p
 
-        p = p + self.Parms[OTHER]
 
-        if self.Parms[COMMENT] != "":
-            p = p + ";" + self.Parms[COMMENT]
+def remove_extrusion(gcode_tupple):
+    gcode_tupple[E] = None
+    gcode_tupple[RETRACT] = None
+    gcode_tupple[UNRETRACT] = None
+    gcode_tupple[EXTRUDE] = None
 
-        return p
 
-    def update_parameter(self, pv, value):
-        try:
-            self.Parms[pv] = value
-        except IndexError:
-            pass
+def move_to_comment(gcode_tupple, text):
+    if gcode_tupple[COMMAND]:
+        gcode_tupple[COMMENT] = "-- P2PP -- removed [{}] - {}".format(text, create_commandstring(gcode_tupple))
+    else:
+        gcode_tupple[COMMENT] = ""
+    gcode_tupple[COMMAND] = None
+    gcode_tupple[X] = None
+    gcode_tupple[Y] = None
+    gcode_tupple[Z] = None
+    gcode_tupple[E] = None
+    gcode_tupple[F] = None
+    gcode_tupple[S] = None
+    gcode_tupple[OTHER] = ""
+    gcode_tupple[RETRACT] = None
+    gcode_tupple[UNRETRACT] = None
+    gcode_tupple[EXTRUDE] = None
 
-    def remove_parameter(self, pv):
-        self.update_parameter(pv, None)
-        if pv == 3:
-            self.Parms[RETRACT] = None
-            self.Parms[UNRETRACT] = None
-            self.Parms[EXTRUDE] = None
 
-    def move_to_comment(self, text):
-        if self.Parms[COMMAND]:
-            self.Parms[COMMENT] = "-- P2PP -- removed [{}] - {}".format(text, self)
-        self.Parms[COMMAND] = None
-        self.Parms[COMMAND] = None
-        self.Parms[X] = None
-        self.Parms[Y] = None
-        self.Parms[Z] = None
-        self.Parms[E] = None
-        self.Parms[F] = None
-        self.Parms[S] = None
-        self.Parms[OTHER] = ""
-        self.Parms[RETRACT] = None
-        self.Parms[UNRETRACT] = None
-        self.Parms[EXTRUDE] = None
+def get_parameter(gcode_tupple, pv, defaultvalue=0):
+    if gcode_tupple[pv]:
+        return gcode_tupple[pv]
+    return defaultvalue
 
-    def get_parameter(self, pv, defaultvalue=0):
-        if self.Parms[pv]:
-            return self.Parms[pv]
-        return defaultvalue
 
-    def issue_command(self, speed=0):
-        if self.Parms[E] and self.Parms[MOVEMEMT]:
-            extrusion = self.Parms[E] * v.extrusion_multiplier * v.extrusion_multiplier_correction
-            v.total_material_extruded += extrusion
-            v.material_extruded_per_color[v.current_tool] += extrusion
-            v.purge_count += extrusion
-
-            if v.absolute_extruder and v.gcode_has_relative_e:
-                if v.absolute_counter == -9999 or v.absolute_counter > 3000:
-                    v.processed_gcode.append("G92 E0.00  ; Extruder counter reset")
-                    v.absolute_counter = 0
-
-                v.absolute_counter += self.Parms[E]
-                self.update_parameter(E, v.absolute_counter)
+def issue_command(gcode_tupple, speed=0):
+    if gcode_tupple[E] and gcode_tupple[MOVEMEMT]:
+        extrusion = gcode_tupple[E] * v.extrusion_multiplier * v.extrusion_multiplier_correction
+        v.total_material_extruded += extrusion
+        v.material_extruded_per_color[v.current_tool] += extrusion
+        v.purge_count += extrusion
 
         if v.absolute_extruder and v.gcode_has_relative_e:
-            if self.Parms[COMMAND] == "M83":
-                self.Parms[COMMAND] = "M82"
-            if self.Parms[COMMAND] == "G92":
-                v.absolute_counter = self.Parms[E]
+            if v.absolute_counter == -9999 or v.absolute_counter > 3000:
+                v.processed_gcode.append("G92 E0.00  ; Extruder counter reset")
+                v.absolute_counter = 0
 
-        s = str(self)
-        if speed:
-            s = s.replace("%SPEED%", "{:0.0f}".format(speed))
-        v.processed_gcode.append(s)
+            v.absolute_counter += gcode_tupple[E]
+            gcode_tupple[E] = v.absolute_counter
 
-    def add_comment(self, text):
-        self.Parms[COMMENT] += text
+    if v.absolute_extruder and v.gcode_has_relative_e:
+        if gcode_tupple[COMMAND] == "M83":
+            gcode_tupple[COMMAND] = "M82"
+        if gcode_tupple[COMMAND] == "G92":
+            v.absolute_counter = gcode_tupple[E]
 
-def issue_code(s, is_comment = False):
-    GCodeCommand(s, is_comment).issue_command()
+    s = create_commandstring(gcode_tupple)
+    if speed:
+        s = s.replace("%SPEED%", "{:0.0f}".format(speed))
+    v.processed_gcode.append(s)
+
+
+def add_comment(gcode_tupple, text):
+    gcode_tupple[COMMENT] += text
+
+
+def issue_code(code_string, is_comment = False):
+   issue_command(create_command(code_string, is_comment))
