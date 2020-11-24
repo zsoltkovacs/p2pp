@@ -88,7 +88,7 @@ def gcode_process_toolchange(new_tool):
     v.current_tool = new_tool
 
 
-def calculate_temp_wait_position(x,y):
+def calculate_temp_wait_position():
     x_offset = 2 + 4 * v.extrusion_width
     y_offset = 2 + 8 * v.extrusion_width
 
@@ -103,7 +103,6 @@ def calculate_temp_wait_position(x,y):
         pos_y = v.wipe_tower_info_maxy - y_offset
 
     return [pos_x, pos_y]
-
 
 
 def inrange(number, low, high):
@@ -366,9 +365,9 @@ def parse_gcode():
             add_point_to_tower(code[gcode.X], code[gcode.Y])
 
         if v.side_wipe_towerdefined and (code[gcode.MOVEMENT] & 3) == 3:
-                if coordinate_in_tower(code[gcode.X], code[gcode.Y]):
-                    code[gcode.MOVEMENT] += 256
-                    backpass_line = len(v.parsed_gcode) - 1
+            if coordinate_in_tower(code[gcode.X], code[gcode.Y]):
+                code[gcode.MOVEMENT] += 256
+                backpass_line = len(v.parsed_gcode) - 1
 
         if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
             if ((code[gcode.MOVEMENT] & 3) == 3) and not coordinate_in_tower(code[gcode.X], code[gcode.Y]):
@@ -478,13 +477,13 @@ def gcode_parseline(g):
     else:
         gcode_x_position = v.current_position_x
 
-    if  g[gcode.MOVEMENT] & 2:
+    if g[gcode.MOVEMENT] & 2:
         v.previous_purge_keep_y = v.purge_keep_y
         gcode_y_position = v.purge_keep_y = g[gcode.Y]
     else:
         gcode_y_position = v.current_position_y
 
-    if  g[gcode.MOVEMENT] & 4:
+    if g[gcode.MOVEMENT] & 4:
         v.keep_z = g[gcode.Z]
 
     # this goes for all situations: START and UNLOAD are not needed
@@ -493,7 +492,7 @@ def gcode_parseline(g):
         gcode.issue_command(g)
         return
 
-    #--------------------- TOWER DELTA PROCESSING
+    # --------------------- TOWER DELTA PROCESSING
     if v.tower_delta:
 
         if classupdate:
@@ -559,7 +558,7 @@ def gcode_parseline(g):
             gcode.issue_command(g)
             return
 
-    #--------------------- FULL PURGE PROCESSING
+    # --------------------- FULL PURGE PROCESSING
     if v.full_purge_reduction:
 
         if classupdate:
@@ -607,7 +606,7 @@ def gcode_parseline(g):
             else:
                 v.retraction += g[gcode.E]
 
-    #--------------------- NO TOWER PROCESSING
+    # --------------------- NO TOWER PROCESSING
     if not v.pathprocessing:
 
         if classupdate:
@@ -644,7 +643,7 @@ def gcode_parseline(g):
                 purgetower.retract(v.current_tool, 3000)
 
             if v.temp2_stored_command != "":
-                wait_location = calculate_temp_wait_position(v.purge_keep_x, v.purge_keep_y)
+                wait_location = calculate_temp_wait_position()
                 gcode.issue_code(
                     "G1 X{:.3f} Y{:.3f} F8640; temp wait position\n".format(wait_location[0], wait_location[0]))
                 gcode.issue_code(v.temp2_stored_command)
@@ -656,7 +655,7 @@ def gcode_parseline(g):
             if g[gcode.X] == _x:
                 g[gcode.X] = None
 
-    #--------------------- GLOBAL PROCEDDING
+    # --------------------- GLOBAL PROCEDDING
 
     if g[gcode.UNRETRACT]:
         g[gcode.E] = min(-v.retraction, g[gcode.E])
@@ -671,7 +670,7 @@ def gcode_parseline(g):
 
     gcode.issue_command(g)
 
-    #--------------------- PING PROCESSING
+    # --------------------- PING PROCESSING
 
     if v.accessory_mode:
         pings.check_accessorymode_second(g[gcode.E])
@@ -685,7 +684,7 @@ def gcode_parseline(g):
 
 # Generate the file and glue it all together!
 
-def generate(input_file, output_file, printer_profile, splice_offset, silent):
+def generate(input_file, output_file, printer_profile, splice_offset):
     starttime = time.time()
     v.printer_profile_string = printer_profile
     basename = os.path.basename(input_file)

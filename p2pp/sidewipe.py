@@ -83,7 +83,7 @@ def create_sidewipe_bb3d(length):
     issue_code(";-------------------------------", True)
 
     issue_code(
-        "; Req={:.2f}mm  Act={:.2f}mm".format(v.length, length + correction))
+        "; Req={:.2f}mm  Act={:.2f}mm".format(length, length + correction))
     issue_code("; Purge difference {:.2f}mm".format(correction))
     issue_code(";-------------------------------")
 
@@ -119,22 +119,21 @@ def create_sidewipe_bb3d(length):
     issue_code("\nM907 X{}           ; reset motor power".format(v.bigbrain3d_motorpower_normal))
     issue_code("\n;-------------------------------\n", True)
 
-    length = 0
-
 
 def create_side_wipe():
     if not v.side_wipe or v.side_wipe_length == 0:
         return
 
     if v.bigbrain3d_purge_enabled:
-        create_sidewipe_bb3d()
+        create_sidewipe_bb3d(v.side_wipe_length)
+        v.side_wipe_length = 0
     else:
 
         issue_code(";---------------------------", True)
         issue_code(";  P2PP SIDE WIPE: {:7.3f}mm".format(v.side_wipe_length), True)
 
         for line in v.before_sidewipe_gcode:
-            issue_code(line )
+            issue_code(line)
 
         if v.retraction == 0:
             purgetower.retract(v.current_tool)
@@ -184,7 +183,7 @@ def create_side_wipe():
                 moveto = yrange[rangeidx % 2]
 
         for line in v.after_sidewipe_gcode:
-            issue_code(line )
+            issue_code(line)
 
         purgetower.retract(v.current_tool)
         issue_code("G1 F8640")

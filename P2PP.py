@@ -88,7 +88,6 @@ def main(args):
                  args['output_file'],
                  args['printer_profile'],
                  args['splice_offset'],
-                 args['silent']
                  )
 
 

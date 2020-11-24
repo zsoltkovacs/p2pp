@@ -133,7 +133,7 @@ def parse_slic3r_config():
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 try:
-                    if (int(gcode_line[parameter_start + 1:].strip()) == 1):
+                    if int(gcode_line[parameter_start + 1:].strip()) == 1:
                         gui.log_warning("[Print Settings][Multiple Extruders][Wipe Tower]Prime all printing extruders MUST be turned off")
                         gui.log_warning("THIS FILE WILL NOT PRINT CORRECTLY")
                 except [ValueError, IndexError]:
@@ -286,7 +286,7 @@ def parse_slic3r_config():
                         gui.log_warning(
                             "[Printer Settings]->[Extruders 1 -> {}]->[Retraction]->[Lift Z] should not be set to zero.".format(i))
                 if lift_error:
-                    gui.log_warning( "Generated file might not print correctly")
+                    gui.log_warning("Generated file might not print correctly")
             continue
 
         # TVDE: needs to be expanded to be able to support more than 4 colors

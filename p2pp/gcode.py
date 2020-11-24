@@ -25,7 +25,6 @@ UNRETRACT = 12
 CLASS = 13
 
 
-
 def create_command(gcode_line, is_comment=False, userclass=0):
 
     return_value = [None, None, None, None, None, None, "", None, "", False, False, False, False, userclass]
@@ -191,5 +190,5 @@ def issue_command(gcode_tupple, speed=0):
     v.processed_gcode.append(s)
 
 
-def issue_code(code_string, is_comment = False):
+def issue_code(code_string, is_comment=False):
     issue_command(create_command(code_string, is_comment))

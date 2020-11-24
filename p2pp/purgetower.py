@@ -216,7 +216,6 @@ def retract(tool, speed=-1):
     v.retraction -= length
 
 
-
 def largeretract():
     gcode.issue_code("G1 E-{:.2f}".format(3))
     v.retraction -= 3
@@ -270,7 +269,7 @@ def purge_generate_sequence():
     gcode.issue_code("; --------------------------------------------------", True)
     gcode.issue_code("; --- P2PP WIPE SEQUENCE START  FOR {:5.2f}mm".format(v.side_wipe_length), True)
     gcode.issue_code(
-        "; --- DELTA = {:.2f}".format(v.current_position_z - (v.purgelayer + 1) * v.layer_height), True )
+        "; --- DELTA = {:.2f}".format(v.current_position_z - (v.purgelayer + 1) * v.layer_height), True)
     #
     # if v.previous_tool != -1:
     #     index = v.previous_tool * 4 + v.current_tool
