@@ -67,23 +67,23 @@ def generate_blob(length, count):
         issue_code("G1 X{:.3f} F10800  ; WHACKAAAAA!!!!".format(v.bigbrain3d_x_position - v.bigbrain3d_left * 20))
 
 
-def create_sidewipe_bb3d():
+def create_sidewipe_bb3d(length):
 
     # purge blobs should all be same size
-    purgeleft = v.side_wipe_length % v.bigbrain3d_blob_size
-    purgeblobs = int(v.side_wipe_length / v.bigbrain3d_blob_size)
+    purgeleft = length % v.bigbrain3d_blob_size
+    purgeblobs = int(length / v.bigbrain3d_blob_size)
 
     if purgeleft > 1:
         purgeblobs += 1
 
-    correction = v.bigbrain3d_blob_size * purgeblobs - v.side_wipe_length
+    correction = v.bigbrain3d_blob_size * purgeblobs - length
 
     issue_code(";-------------------------------", True)
     issue_code("; P2PP BB3DBLOBS: {:.0f} BLOBS".format(purgeblobs), True)
     issue_code(";-------------------------------", True)
 
     issue_code(
-        "; Req={:.2f}mm  Act={:.2f}mm".format(v.side_wipe_length, v.side_wipe_length + correction))
+        "; Req={:.2f}mm  Act={:.2f}mm".format(v.length, length + correction))
     issue_code("; Purge difference {:.2f}mm".format(correction))
     issue_code(";-------------------------------")
 
@@ -102,7 +102,7 @@ def create_sidewipe_bb3d():
     issue_code("G1 X{:.3f} F10800  ; go near edge of bed".format(v.bigbrain3d_x_position - 30))
     issue_code("G4 S0               ; wait for the print buffer to clear")
     issue_code("M907 X{}           ; increase motor power".format(v.bigbrain3d_motorpower_high))
-    issue_code("; -- P2PP -- Generating {} blobs for {}mm of purge".format(purgeblobs, v.side_wipe_length), True)
+    issue_code("; -- P2PP -- Generating {} blobs for {}mm of purge".format(purgeblobs, length), True)
 
     for i in range(purgeblobs):
         generate_blob(v.bigbrain3d_blob_size, i)
@@ -119,7 +119,7 @@ def create_sidewipe_bb3d():
     issue_code("\nM907 X{}           ; reset motor power".format(v.bigbrain3d_motorpower_normal))
     issue_code("\n;-------------------------------\n", True)
 
-    v.side_wipe_length = 0
+    length = 0
 
 
 def create_side_wipe():

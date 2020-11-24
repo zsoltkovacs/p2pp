@@ -85,6 +85,7 @@ toolchange_processed = False
 enterpurge = False
 variable_layer = False
 save_unprocessed = False
+side_wipe_towerdefined = False
 
 purge_keep_x = None
 purge_keep_y = None
@@ -106,11 +107,13 @@ bed_shape_rect = True
 
 # wipe_feedrates = {}
 
-wipe_tower_info = {'minx': 9999,
-                   'miny': 9999,
-                   'maxx': -9999,
-                   'maxy': -9999
-                   }
+wipe_tower_info_minx = 9999
+wipe_tower_info_miny = 9999
+wipe_tower_info_maxx = -9999
+wipe_tower_info_maxy = -9999
+wipe_tower_xsize = 0
+wipe_tower_ysize = 0
+
 
 wipetower_posx = 0.0  # type: float
 wipetower_posy = 0.0  # type: float
@@ -188,6 +191,7 @@ infill_speed = 0.0
 keep_hopspec = 0
 keep_hopcorrection = 0
 last_parsed_layer = -1
+current_layer_is_skippable = False
 
 process_temp = False
 current_temp = 0
@@ -199,6 +203,7 @@ block_classification = 0
 previous_block_classification = 0
 
 pathprocessing = False
+uses_prusa_tower = False
 
 retract_move = False
 
@@ -208,8 +213,8 @@ min_tower_delta = 0.0
 retract_x = None
 retract_y = None
 
-keep_x = 0.0
-keep_y = 0.0
+
+keep_z = 0.0
 
 saved_fanspeed = 0
 ignore_warnings = False
@@ -218,6 +223,7 @@ purge_sequence_x = 0
 purge_sequence_y = 0
 
 backpassed = False
+post_tower = False
 
 # prusa side wipe contraption
 bigbrain3d_x_position = 256.5
@@ -238,7 +244,6 @@ tower_measure = False
 expect_retract = False
 
 keep_speed = 0
-purge_count = 0.0
 
 purgetopspeed = 99999
 wipe_remove_sparse_layers = False
@@ -259,19 +264,19 @@ classes = {
     0: "Undefined     ",
     1: "Normal GCode  ",
     2: "TChange START ",
-    3: "TCHange UNLOAD",
-    4: "TChange PURGE ",
-    5: "Empty Grid    ",
-    6: "First Empty   ",
-    7: "BRIM          ",
-    8: "BRIM END      ",
-    9: "END GRID      ",
-    10: "COMMENT ONLY  ",
-    11: "END PURGE     ",
-    12: "TOOL COMMAND  ",
-    99: "RETURN TO NORM"
+    4: "TCHange UNLOAD",
+    8: "TChange PURGE ",
+    16: "Empty Grid    ",
+    32: "BRIM          ",
+    64: "BRIM END      ",
+    128: "END GRID      ",
+    256: "COMMENT ONLY  ",
+    512: "END PURGE     ",
+    1024: "TOOL COMMAND  ",
+    2048: "RETURN TO NORM"
 
 }
+
 
 # more than 4 color prints
 
@@ -301,3 +306,5 @@ layer_end = []
 
 layer_toolchange_counter = 0
 layer_emptygrid_counter = 0
+
+
