@@ -30,12 +30,12 @@ def create_command(gcode_line, is_comment=False, userclass=0):
     return_value = [None, None, None, None, None, None, "", None, "", False, False, False, False, userclass]
 
     if is_comment:
-        return_value[COMMENT] = gcode_line[1:]
+        return_value[COMMENT] = gcode_line
     else:
         pos = gcode_line.find(";")
 
         if pos != -1:
-            return_value[COMMENT] = gcode_line[pos + 1:]
+            return_value[COMMENT] = gcode_line[pos:]
             gcode_line = gcode_line[:pos].strip()
 
         fields = gcode_line.split(' ')
@@ -110,10 +110,10 @@ def create_commandstring(gcode_tupple):
         if len(gcode_tupple[OTHER]) > 0:
             p = p + " "+gcode_tupple[OTHER]
         if gcode_tupple[COMMENT] != "":
-            p = p + " ;" + gcode_tupple[COMMENT]
+            p = p + " " + gcode_tupple[COMMENT]
     else:
         if gcode_tupple[COMMENT] != "":
-            p = ";" + gcode_tupple[COMMENT]
+            p = gcode_tupple[COMMENT]
         else:
             p = ""
     # try:
@@ -141,7 +141,7 @@ def remove_extrusion(gcode_tupple):
 
 def move_to_comment(gcode_tupple, text):
     if gcode_tupple[COMMAND]:
-        gcode_tupple[COMMENT] = "-- P2PP -- removed [{}] - {}".format(text, create_commandstring(gcode_tupple))
+        gcode_tupple[COMMENT] = "; [{}] - {}".format(text, create_commandstring(gcode_tupple))
     else:
         gcode_tupple[COMMENT] = ""
     gcode_tupple[COMMAND] = None

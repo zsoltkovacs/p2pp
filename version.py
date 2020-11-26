@@ -32,6 +32,7 @@ releaseinfo = {
     "5.12.0": "further memory usage optimization, speed optimization",
     "5.13.0": "weekend development cut off with some bugfixes",
     "5.14.0": "rewrite path processing routines",
+    "5.15.0": "taken care to retain empty comments",
     '--- RELEASE INFORMATION': 'END'
 }
 

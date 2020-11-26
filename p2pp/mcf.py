@@ -404,7 +404,7 @@ def gcode_parseline(g):
         if g[gcode.COMMAND].startswith('T'):
             gcode_process_toolchange(int(g[gcode.COMMAND][1:]))
             if not v.debug_leaveToolCommands:
-                gcode.move_to_comment(g, "Color Change")
+                gcode.move_to_comment(g, "--P2PP-- Color Change")
             v.toolchange_processed = True
         else:
             if g[gcode.COMMAND].startswith('M'):
@@ -426,13 +426,13 @@ def gcode_parseline(g):
                             g[gcode.COMMAND] = "M109"
                             v.temp2_stored_command = gcode.create_commandstring(g)
                             gcode.move_to_comment(g,
-                                                  "delayed temp rise until after purge {}-->{}".format(v.current_temp,
+                                                  "--P2PP-- delayed temp rise until after purge {}-->{}".format(v.current_temp,
                                                                                                        v.new_temp))
                             v.current_temp = v.new_temp
                         else:
                             v.temp1_stored_command = gcode.create_commandstring(g)
                             gcode.move_to_comment(g,
-                                                  "delayed temp drop until after purge {}-->{}".format(v.current_temp,
+                                                  "--P2PP-- delayed temp drop until after purge {}-->{}".format(v.current_temp,
                                                                                                        v.new_temp))
                             gcode.issue_command(g)
                     return
@@ -455,13 +455,13 @@ def gcode_parseline(g):
 
                 # feed rate changes in the code are removed as they may interfere with the Palette P2 settings
                 if g[gcode.COMMAND] in ["M220"]:
-                    gcode.move_to_comment(g, "Feed Rate Adjustments are removed")
+                    gcode.move_to_comment(g, "--P2PP-- Feed Rate Adjustments are removed")
                     gcode.issue_command(g)
                     return
 
             if current_block_class == CLS_TOOL_UNLOAD:
                 if g[gcode.COMMAND] in ["G4", "M900"]:
-                    gcode.move_to_comment(g, "tool unload")
+                    gcode.move_to_comment(g, "--P2PP-- tool unload")
 
             gcode.issue_command(g)
             return
@@ -488,7 +488,7 @@ def gcode_parseline(g):
 
     # this goes for all situations: START and UNLOAD are not needed
     if current_block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
-        gcode.move_to_comment(g, "tool unload")
+        gcode.move_to_comment(g, "--P2PP-- tool unload")
         gcode.issue_command(g)
         return
 
@@ -602,7 +602,7 @@ def gcode_parseline(g):
             v.retract_move = False
 
             if v.retraction <= - v.retract_length[v.current_tool]:
-                gcode.move_to_comment(g, "Double Retract")
+                gcode.move_to_comment(g, "--P2PP-- Double Retract")
             else:
                 v.retraction += g[gcode.E]
 
@@ -695,6 +695,7 @@ def generate(input_file, output_file, printer_profile, splice_offset):
 
     try:
         # python 3.x
+        # noinspection PyArgumentList
         opf = open(input_file, encoding='utf-8')
     except TypeError:
         try:
@@ -878,6 +879,7 @@ def generate(input_file, output_file, printer_profile, splice_offset):
 
             for h in header:
                 h = h.strip('\r\n')
+                # noinspection PyTypeChecker
                 maf.write(unicode(h))
                 maf.write('\r\n')
             maf.close()
