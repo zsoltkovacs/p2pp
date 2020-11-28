@@ -406,6 +406,8 @@ def gcode_parseline(g):
             if not v.debug_leaveToolCommands:
                 gcode.move_to_comment(g, "--P2PP-- Color Change")
             v.toolchange_processed = True
+            gcode.issue_command(g)
+            return
         else:
             if g[gcode.COMMAND].startswith('M'):
                 if g[gcode.COMMAND] in ["M140", "M190", "M73", "M84", "M201", "M203", "G28", "G90", "M115", "G80",
@@ -610,21 +612,25 @@ def gcode_parseline(g):
     if not v.pathprocessing:
 
         if classupdate:
-            if v.previous_block_classification == CLS_TOOL_UNLOAD:
-                gcode.issue_code("G1 Z{} ;P2PP correct z-moves".format(v.keep_z))
 
             if current_block_class in [CLS_TOOL_PURGE, CLS_EMPTY]:
                 if v.acc_ping_left <= 0:
                     pings.check_accessorymode_first()
                 v.enterpurge = True
 
+        if v.toolchange_processed:
+            gcode.issue_code("G1 Z{} ;P2PP correct z-moves".format(v.keep_z))
+            v.toolchange_processed = False
+
+
         if current_block_class == CLS_TOOL_PURGE:
-            if g[gcode.E] > 0 and gcode_x_position != v.purge_keep_y and gcode_y_position != v.purge_keep_y \
+
+            if g[gcode.EXTRUDE] and gcode_x_position != v.purge_keep_y and gcode_y_position != v.purge_keep_y \
                     and not coordinate_in_tower(gcode_x_position, gcode_y_position) \
                     and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y):
                 gcode.remove_extrusion(g)
 
-            if g[gcode.F] > v.purgetopspeed and g[gcode.E]:
+            if g[gcode.F] is not None and g[gcode.F] > v.purgetopspeed and g[gcode.E]:
                 g[gcode.F] = v.purgetopspeed
                 g[gcode.COMMENT] += " prugespeed topped"
 

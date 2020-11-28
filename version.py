@@ -11,7 +11,7 @@ __status__ = 'BETA'
 
 # general version info
 MajorVersion = 5
-MinorVersion = 13
+MinorVersion = 16
 Build = 0
 
 releaseinfo = {
@@ -33,6 +33,7 @@ releaseinfo = {
     "5.13.0": "weekend development cut off with some bugfixes",
     "5.14.0": "rewrite path processing routines",
     "5.15.0": "taken care to retain empty comments",
+    "5.16.0": "fixup Z-move after unload",
     '--- RELEASE INFORMATION': 'END'
 }
 
