@@ -213,6 +213,9 @@ min_tower_delta = 0.0
 retract_x = None
 retract_y = None
 
+purge_pos_x = 0
+purge_pos_y = 0
+
 keep_z = 0.0
 
 saved_fanspeed = 0

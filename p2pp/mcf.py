@@ -490,6 +490,9 @@ def gcode_parseline(g):
 
     # this goes for all situations: START and UNLOAD are not needed
     if current_block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
+        if g[gcode.MOVEMENT] & 3 == 3:
+            v.purge_pos_x = g[gcode.X]
+            v.purge_pos_y = g[gcode.Y]
         gcode.move_to_comment(g, "--P2PP-- tool unload")
         gcode.issue_command(g)
         return
@@ -619,6 +622,7 @@ def gcode_parseline(g):
                 v.enterpurge = True
 
         if v.toolchange_processed:
+            gcode.issue_code("G1 X{:.3f} Y{:.3f} F8640; P2PP tower realign\n".format(v.purge_pos_x, v.purge_pos_y))
             gcode.issue_code("G1 Z{} ;P2PP correct z-moves".format(v.keep_z))
             v.toolchange_processed = False
 
