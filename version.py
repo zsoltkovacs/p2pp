@@ -11,7 +11,7 @@ __status__ = 'BETA'
 
 # general version info
 MajorVersion = 5
-MinorVersion = 17
+MinorVersion = 18
 Build = 0
 
 releaseinfo = {
@@ -35,6 +35,7 @@ releaseinfo = {
     "5.15.0": "taken care to retain empty comments",
     "5.16.0": "fixup Z-move after unload",
     "5.17.0": "fixup error when doing unprocessed tower entry",
+    "5.18.0": "MAF file is generated as BINARY file",
     '--- RELEASE INFORMATION': 'END'
 }
 

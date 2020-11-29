@@ -112,7 +112,7 @@ def inrange(number, low, high):
 
 
 def y_on_bed(y):
-    return inrange(y, v.bed_origin_y, v.bed_origin_y + v.bed_size_y)
+    return inrange(y, v.bed_origin_y <= y <= v.bed_origin_y + v.bed_size_y)
 
 
 def x_on_bed(x):
@@ -120,7 +120,7 @@ def x_on_bed(x):
 
 
 def coordinate_on_bed(x, y):
-    return x_on_bed(x) and y_on_bed(y)
+    return (v.bed_origin_x <= x <= v.bed_origin_y + v.bed_size_x) and (v.bed_origin_y <= y <= v.bed_origin_y + v.bed_size_y)
 
 
 def x_coordinate_in_tower(x):
@@ -355,9 +355,9 @@ def parse_gcode():
             if v.block_classification == CLS_TOOL_START or \
                     v.block_classification == CLS_TOOL_UNLOAD or \
                     v.block_classification == CLS_EMPTY:
-                if backpass_line > -1:
+                if backpass_line > len(v.parsed_gcode)-11:
                     while backpass_line < len(v.parsed_gcode):
-                        v.parsed_gcode[backpass_line][gcode.CLASS] = v.block_classification
+                        v.parsed_gcode[backpass_line][gcode.CLASS] = v.block_classification+100
                         backpass_line += 1
                     backpass_line = -1
 
@@ -475,22 +475,18 @@ def gcode_parseline(g):
 
     if g[gcode.MOVEMENT] & 1:
         v.previous_purge_keep_x = v.purge_keep_x
-        gcode_x_position = v.purge_keep_x = g[gcode.X]
-    else:
-        gcode_x_position = v.current_position_x
+        v.purge_keep_x = g[gcode.X]
 
     if g[gcode.MOVEMENT] & 2:
         v.previous_purge_keep_y = v.purge_keep_y
-        gcode_y_position = v.purge_keep_y = g[gcode.Y]
-    else:
-        gcode_y_position = v.current_position_y
+        v.purge_keep_y = g[gcode.Y]
 
     if g[gcode.MOVEMENT] & 4:
         v.keep_z = g[gcode.Z]
 
     # this goes for all situations: START and UNLOAD are not needed
     if current_block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
-        gcode.move_to_comment(g, "--P2PP-- tool unload")
+        gcode.move_to_comment(g, "--P2PP-- tool unload2")
         gcode.issue_command(g)
         return
 
@@ -653,7 +649,7 @@ def gcode_parseline(g):
 
     # --------------------- PING PROCESSING
 
-    if v.accessory_mode:
+    if v.accessory_mode and g[gcode.EXTRUDE]:
         pings.check_accessorymode_second(g[gcode.E])
     else:
         if g[gcode.EXTRUDE] and v.side_wipe_length == 0:
@@ -856,13 +852,13 @@ def generate(input_file, output_file, printer_profile, splice_offset):
                 maffile = pre + ".maf"
             gui.create_logitem("Generating PALETTE MAF/MSF file: " + maffile)
 
-            maf = open(maffile, 'w')
+            maf = open(maffile, 'wb')
 
             for h in header:
-                h = h.strip('\r\n')
-                # noinspection PyTypeChecker
-                maf.write(unicode(h))
-                maf.write('\r\n')
+                h = h.strip("\r\n")
+                maf.write(h.encode('ascii'))
+                maf.write("\r\n".encode('ascii'))
+
             maf.close()
 
         gui.print_summary(omega_result['summary'])
