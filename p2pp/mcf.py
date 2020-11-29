@@ -490,9 +490,6 @@ def gcode_parseline(g):
 
     # this goes for all situations: START and UNLOAD are not needed
     if current_block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
-        if g[gcode.MOVEMENT] & 3 == 3:
-            v.purge_pos_x = g[gcode.X]
-            v.purge_pos_y = g[gcode.Y]
         gcode.move_to_comment(g, "--P2PP-- tool unload")
         gcode.issue_command(g)
         return
@@ -622,35 +619,6 @@ def gcode_parseline(g):
                 v.enterpurge = True
 
         if v.toolchange_processed:
-            gcode.issue_code("G1 X{:.3f} Y{:.3f} F8640; P2PP tower realign\n".format(v.purge_pos_x, v.purge_pos_y))
-            gcode.issue_code("G1 Z{} ;P2PP correct z-moves".format(v.keep_z))
-            v.toolchange_processed = False
-
-
-        if current_block_class == CLS_TOOL_PURGE:
-
-            if g[gcode.EXTRUDE] and gcode_x_position != v.purge_keep_y and gcode_y_position != v.purge_keep_y \
-                    and not coordinate_in_tower(gcode_x_position, gcode_y_position) \
-                    and coordinate_in_tower(v.purge_keep_x, v.purge_keep_y):
-                gcode.remove_extrusion(g)
-
-            if g[gcode.F] is not None and g[gcode.F] > v.purgetopspeed and g[gcode.E]:
-                g[gcode.F] = v.purgetopspeed
-                g[gcode.COMMENT] += " prugespeed topped"
-
-        if v.enterpurge:
-
-            v.enterpurge = False
-
-            _x = v.previous_purge_keep_x if g[gcode.X] is not None else v.purge_keep_x
-            _y = v.previous_purge_keep_y if g[gcode.Y] is not None else v.purge_keep_y
-
-            if not coordinate_in_tower(_x, _y):
-                _x = v.purge_keep_x
-                _y = v.purge_keep_y
-
-            if v.retraction == 0:
-                purgetower.retract(v.current_tool, 3000)
 
             if v.temp2_stored_command != "":
                 wait_location = calculate_temp_wait_position()
@@ -658,12 +626,16 @@ def gcode_parseline(g):
                     "G1 X{:.3f} Y{:.3f} F8640; temp wait position\n".format(wait_location[0], wait_location[0]))
                 gcode.issue_code(v.temp2_stored_command)
                 v.temp2_stored_command = ""
-                gcode.issue_code(
-                    "G1 X{:.3f} Y{:.3f} F8640; P2PP Inserted to realign\n".format(_x, _y))
+                gcode.issue_code("G1 X{:.3f} Y{:.3f} F8640; P2PP tower realign\n".format(v.purge_keep_x, v.purge_keep_y))
 
-            gcode.remove_extrusion(g)
-            if g[gcode.X] == _x:
-                g[gcode.X] = None
+            gcode.issue_code("G1 Z{} ;P2PP correct z-moves".format(v.keep_z))
+
+            v.toolchange_processed = False
+
+        if current_block_class == CLS_TOOL_PURGE:
+            if g[gcode.F] is not None and g[gcode.F] > v.purgetopspeed and g[gcode.E]:
+                g[gcode.F] = v.purgetopspeed
+                g[gcode.COMMENT] += " prugespeed topped"
 
     # --------------------- GLOBAL PROCEDDING
 

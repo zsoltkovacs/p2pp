@@ -11,7 +11,7 @@ __status__ = 'BETA'
 
 # general version info
 MajorVersion = 5
-MinorVersion = 16
+MinorVersion = 17
 Build = 0
 
 releaseinfo = {
@@ -34,6 +34,7 @@ releaseinfo = {
     "5.14.0": "rewrite path processing routines",
     "5.15.0": "taken care to retain empty comments",
     "5.16.0": "fixup Z-move after unload",
+    "5.17.0": "fixup error when doing unprocessed tower entry",
     '--- RELEASE INFORMATION': 'END'
 }
 
