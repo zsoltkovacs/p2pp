@@ -626,7 +626,6 @@ def gcode_parseline(g):
                     "G1 X{:.3f} Y{:.3f} F8640; temp wait position\n".format(wait_location[0], wait_location[0]))
                 gcode.issue_code(v.temp2_stored_command)
                 v.temp2_stored_command = ""
-                gcode.issue_code("G1 X{:.3f} Y{:.3f} F8640; P2PP tower realign\n".format(v.purge_keep_x, v.purge_keep_y))
 
             gcode.issue_code("G1 Z{} ;P2PP correct z-moves".format(v.keep_z))
 
