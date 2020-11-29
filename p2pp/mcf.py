@@ -112,7 +112,7 @@ def inrange(number, low, high):
 
 
 def y_on_bed(y):
-    return inrange(y, v.bed_origin_y <= y <= v.bed_origin_y + v.bed_size_y)
+    return inrange(y, v.bed_origin_y, v.bed_origin_y + v.bed_size_y)
 
 
 def x_on_bed(x):
@@ -429,13 +429,13 @@ def gcode_parseline(g):
                             v.temp2_stored_command = gcode.create_commandstring(g)
                             gcode.move_to_comment(g,
                                                   "--P2PP-- delayed temp rise until after purge {}-->{}".format(v.current_temp,
-                                                                                                       v.new_temp))
+                                                                                                                v.new_temp))
                             v.current_temp = v.new_temp
                         else:
                             v.temp1_stored_command = gcode.create_commandstring(g)
                             gcode.move_to_comment(g,
                                                   "--P2PP-- delayed temp drop until after purge {}-->{}".format(v.current_temp,
-                                                                                                       v.new_temp))
+                                                                                                                v.new_temp))
                             gcode.issue_command(g)
                     return
 
