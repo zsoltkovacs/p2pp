@@ -296,9 +296,6 @@ m4c_numberoffilaments = 4
 m4c_headerinfo = []
 
 regex_p2pp = re.compile("^;\s*P2PP\s+([^=]+)=?(.*)$")
-p2pp_configend = False
-p2pp_tool_unconfigged = [True, True, True, True]
-
 
 # conversion to absolute extruder:
 

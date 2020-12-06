@@ -18,7 +18,7 @@ import p2pp.pings as pings
 import p2pp.purgetower as purgetower
 import p2pp.variables as v
 from p2pp.gcodeparser import parse_slic3r_config
-from p2pp.omega import header_generate_omega, algorithm_process_material_configuration
+from p2pp.omega import header_generate_omega
 from p2pp.sidewipe import create_side_wipe, create_sidewipe_bb3d
 
 
@@ -283,9 +283,6 @@ def parse_gcode():
 
         if line.startswith(';'):
 
-            # try finding a P2PP configuration command
-            # until config_end command is encountered
-
             is_comment = True
 
             if line.startswith('; CP'):  # code block assignment
@@ -319,23 +316,15 @@ def parse_gcode():
                         v.layer_toolchange_counter = 0
                         v.layer_emptygrid_counter = 0
 
-            else:
-                if not v.p2pp_configend or v.set_tool > 3 or v.p2pp_tool_unconfigged[v.set_tool]:
-                    m = v.regex_p2pp.match(line)
-                    if m:
-                        if m.group(1).startswith("MATERIAL"):
-                            algorithm_process_material_configuration(m.group(1)[9:])
-                        else:
-                            parameters.check_config_parameters(m.group(1), m.group(2))
-
         else:
             is_comment = False
             try:
                 if line[0] == 'T':
-                    v.block_classification = CLS_TOOL_PURGE
+                    if v.set_tool == -1:
+                        v.block_classification = CLS_NORMAL
+                    else:
+                        v.block_classification = CLS_TOOL_PURGE
                     cur_tool = int(line[1])
-                    if v.set_tool != -1 and v.set_tool < 4:
-                        v.p2pp_tool_unconfigged[v.set_tool] = False
                     v.set_tool = cur_tool
                     v.m4c_toolchanges.append(cur_tool)
                     v.m4c_toolchange_source_positions.append(len(v.parsed_gcode))
@@ -402,10 +391,12 @@ def gcode_parseline(g):
     if g[gcode.MOVEMENT] == 0:
 
         if g[gcode.COMMAND].startswith('T'):
+            ct = v.current_tool
             gcode_process_toolchange(int(g[gcode.COMMAND][1:]))
-            if not v.debug_leaveToolCommands:
-                gcode.move_to_comment(g, "--P2PP-- Color Change")
-            v.toolchange_processed = True
+            if ct != -1:
+                if not v.debug_leaveToolCommands:
+                    gcode.move_to_comment(g, "--P2PP-- Color Change")
+                v.toolchange_processed = True
             gcode.issue_command(g)
             return
         else:
@@ -500,7 +491,7 @@ def gcode_parseline(g):
                 entertower(v.last_parsed_layer * v.layer_height + v.first_layer_height)
                 return
 
-            if current_block_class == CLS_EMPTY and not v.towerskipped and v.current_layer_is_skippable:
+            if current_block_class == CLS_EMPTY and not v.towerskipped:
                 v.towerskipped = (g[gcode.MOVEMENT] & 256) == 256
                 if not v.towerskipped:
                     entertower(v.last_parsed_layer * v.layer_height + v.first_layer_height)

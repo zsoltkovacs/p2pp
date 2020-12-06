@@ -30,9 +30,6 @@ def check_config_parameters(keyword, value):
     if value is None:
         value = ""
 
-    if keyword == "CONFIGEND":
-        v.p2pp_configend = True
-
     if keyword == "TEMPERATURECONTROL":
         v.process_temp = True
 
@@ -77,12 +74,6 @@ def check_config_parameters(keyword, value):
     if keyword == "SPLICEOFFSET":
         v.splice_offset = floatparameter(value)
         gui.create_logitem("Splice Offset set tofiloverride {:-5.2f}mm".format(v.splice_offset))
-        return
-
-    if keyword == "PROFILETYPEOVERRIDE":
-        v.filament_type[v.set_tool] = value
-        v.used_filament_types.append(v.filament_type[v.set_tool])
-        v.used_filament_types = list(dict.fromkeys(v.used_filament_types))
         return
 
     if keyword == "EXTRUSIONMULTIPLIERCORRECTION":

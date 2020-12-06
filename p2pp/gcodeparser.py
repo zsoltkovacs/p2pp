@@ -12,6 +12,8 @@ import re
 
 import p2pp.gui as gui
 import p2pp.variables as v
+import p2pp.parameters as parameters
+from p2pp.omega import algorithm_process_material_configuration
 
 
 def gcode_remove_params(gcode, params):
@@ -226,6 +228,33 @@ def parse_slic3r_config():
 
             continue
 
+        if gcode_line.startswith("; start_filament_gcode "):
+            parameter_start = gcode_line.find("=")
+            gcode_value = gcode_line[parameter_start + 2:].strip()
+            fields = gcode_value.split("\";\"")
+            if len(fields) >= 4:
+                for i in range(len(fields)):
+                    lines = fields[0].split("\\n")
+                    for line in lines:
+                        if line.startswith(";P2PP PROFILETYPEOVERRIDE="):
+                            value = line[26:]
+                            v.filament_type[i] = value
+                            v.used_filament_types.append(v.filament_type[i])
+                            v.used_filament_types = list(dict.fromkeys(v.used_filament_types))
+            continue
+
+        if gcode_line.startswith("; start_gcode "):
+            parameter_start = gcode_line.find("=")
+            gcode_value = gcode_line[parameter_start + 2:].strip()
+            lines = gcode_value.split("\\n")
+            for line in lines:
+                m = v.regex_p2pp.match(line)
+                if m:
+                    if m.group(1).startswith("MATERIAL"):
+                        algorithm_process_material_configuration(m.group(1)[9:])
+                    else:
+                        parameters.check_config_parameters(m.group(1), m.group(2))
+
         if gcode_line.startswith("; extruder_colour") or gcode_line.startswith("; filament_colour"):
             filament_colour = ''
             parameter_start = gcode_line.find("=")
@@ -254,6 +283,10 @@ def parse_slic3r_config():
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 filament_string = gcode_line[parameter_start + 1:].strip(" ").split(";")
+                for i in range(len(filament_string)):
+                    if v.filament_type[i] != "-":
+                        filament_string[i] = v.filament_type[i]
+
                 v.m4c_numberoffilaments = len(filament_string)
                 if v.m4c_numberoffilaments == 4:
                     v.filament_type = filament_string

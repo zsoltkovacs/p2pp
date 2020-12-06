@@ -11,7 +11,7 @@ __status__ = 'BETA'
 
 # general version info
 MajorVersion = 5
-MinorVersion = 18
+MinorVersion = 19
 Build = 0
 
 releaseinfo = {
@@ -36,6 +36,7 @@ releaseinfo = {
     "5.16.0": "fixup Z-move after unload",
     "5.17.0": "fixup error when doing unprocessed tower entry",
     "5.18.0": "MAF file is generated as BINARY file",
+    "5.19.0": "update to config parsin from prusa settings instead of parsing in full file",
     '--- RELEASE INFORMATION': 'END'
 }
 
