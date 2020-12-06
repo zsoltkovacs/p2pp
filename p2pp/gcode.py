@@ -23,7 +23,8 @@ EXTRUDE = 10
 RETRACT = 11
 UNRETRACT = 12
 CLASS = 13
-#           A   B   C   D  E  F   G   H   I   J   K   L   M   N   O   P   Q   R  S   T   U  V   W   X  Y  Z
+
+# PARAM     A   B   C   D  E  F   G   H   I   J   K   L   M   N   O   P   Q   R  S   T   U  V   W   X  Y  Z
 parmidx = [-1, -1, -1, -1, 3, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 5, -1, -1, -1, -1, 0, 1, 2]
 
 

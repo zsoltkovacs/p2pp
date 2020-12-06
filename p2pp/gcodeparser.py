@@ -108,7 +108,7 @@ def get_bedshape(line):
         v.bed_shape_rect = False
 
 
-def parse_slic3r_config():
+def parse_prusaslicer_config():
     for idx in range(len(v.input_gcode) - 1, -1, -1):
 
         gcode_line = v.input_gcode[idx]
@@ -126,7 +126,7 @@ def parse_slic3r_config():
                 v.ps_version = s2[-1]
                 gui.create_logitem("File was created with PS version:{}".format(v.ps_version))
                 if v.ps_version < "2.2":
-                    gui.log_warning("This version of P2PP is optimized to work with PS2.2 and PS2.3!")
+                    gui.log_warning("This version of P2PP is optimized to work with PS2.2 and higher!")
             except [ValueError, IndexError]:
                 pass
             continue
@@ -231,7 +231,7 @@ def parse_slic3r_config():
         if gcode_line.startswith("; start_filament_gcode "):
             parameter_start = gcode_line.find("=")
             gcode_value = gcode_line[parameter_start + 2:].strip()
-            fields = gcode_value.split("\";\"")
+            fields = split_csv_strings(gcode_value)
             if len(fields) >= 4:
                 for i in range(len(fields)):
                     lines = fields[0].split("\\n")

@@ -16,7 +16,7 @@ import p2pp.p2_m4c as m4c
 import p2pp.pings as pings
 import p2pp.purgetower as purgetower
 import p2pp.variables as v
-from p2pp.gcodeparser import parse_slic3r_config
+from p2pp.gcodeparser import parse_prusaslicer_config
 from p2pp.omega import header_generate_omega
 from p2pp.sidewipe import create_side_wipe, create_sidewipe_bb3d
 
@@ -247,7 +247,6 @@ def update_class(line_hash):
         return
 
 
-
 def parse_gcode():
     v.layer_toolchange_counter = 0
     v.layer_emptygrid_counter = 0
@@ -402,7 +401,6 @@ def gcode_parselines():
             gcode.issue_code(v.temp1_stored_command)
             v.temp1_stored_command = ""
 
-
         # ---- SECOND SECTION HANDLES COMMENTS AND NONE-MOVEMENT COMMANDS ----
 
         if g[gcode.COMMAND] is None:
@@ -429,26 +427,27 @@ def gcode_parselines():
 
                 elif g[gcode.COMMAND].startswith('M'):
                     if g[gcode.COMMAND] in ["M104", "M109"]:
-                        if not v.process_temp or current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START,
-                                                                             CLS_TOOL_UNLOAD]:
-                            g[gcode.COMMENT] += " Unprocessed temp "
-                            v.new_temp = gcode.get_parameter(g, gcode.S, v.current_temp)
-                            v.current_temp = v.new_temp
-                        else:
-                            v.new_temp = gcode.get_parameter(g, gcode.S, v.current_temp)
-                            if v.new_temp >= v.current_temp:
-                                g[gcode.COMMAND] = "M109"
-                                v.temp2_stored_command = gcode.create_commandstring(g)
-                                gcode.move_to_comment(g,
-                                                      "--P2PP-- delayed temp rise until after purge {}-->{}".format(v.current_temp,
-                                                                                                                    v.new_temp))
+                        if v.process_temp:
+                            if current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START,
+                                                                                 CLS_TOOL_UNLOAD]:
+                                g[gcode.COMMENT] += " Unprocessed temp "
+                                v.new_temp = gcode.get_parameter(g, gcode.S, v.current_temp)
                                 v.current_temp = v.new_temp
-
                             else:
-                                v.temp1_stored_command = gcode.create_commandstring(g)
-                                gcode.move_to_comment(g,
-                                                      "--P2PP-- delayed temp drop until after purge {}-->{}".format(v.current_temp,
-                                                                                                                    v.new_temp))
+                                v.new_temp = gcode.get_parameter(g, gcode.S, v.current_temp)
+                                if v.new_temp >= v.current_temp:
+                                    g[gcode.COMMAND] = "M109"
+                                    v.temp2_stored_command = gcode.create_commandstring(g)
+                                    gcode.move_to_comment(g,
+                                                          "--P2PP-- delayed temp rise until after purge {}-->{}".format(v.current_temp,
+                                                                                                                        v.new_temp))
+                                    v.current_temp = v.new_temp
+
+                                else:
+                                    v.temp1_stored_command = gcode.create_commandstring(g)
+                                    gcode.move_to_comment(g,
+                                                          "--P2PP-- delayed temp drop until after purge {}-->{}".format(v.current_temp,
+                                                                                                                        v.new_temp))
                     elif g[gcode.COMMAND] == "M107":
                         v.saved_fanspeed = 0
 
@@ -456,7 +455,7 @@ def gcode_parselines():
                         v.saved_fanspeed = gcode.get_parameter(g, gcode.S, v.saved_fanspeed)
 
                     elif g[gcode.COMMAND] == "M221":
-                        v.extrusion_multiplier = float(gcode.get_parameter(g, gcode.S, v.extrusion_multiplier * 100)) / 100
+                        v.extrusion_multiplier = float(gcode.get_parameter(g, gcode.S, v.extrusion_multiplier * 100.0)) / 100.0
 
                     elif g[gcode.COMMAND] == "M220":
                         gcode.move_to_comment(g, "--P2PP-- Feed Rate Adjustments are removed")
@@ -711,7 +710,7 @@ def generate(input_file, output_file, printer_profile, splice_offset):
 
     gui.create_logitem("Analyzing Prusa Slicer Configuration")
     gui.progress_string(2)
-    parse_slic3r_config()
+    parse_prusaslicer_config()
 
     gui.create_logitem("Analyzing Layers / Functional blocks")
     gui.progress_string(4)
@@ -770,7 +769,7 @@ def generate(input_file, output_file, printer_profile, splice_offset):
     if v.autoaddsplice and not v.full_purge_reduction and not v.side_wipe:
         gui.log_warning("AUTOADDPURGE only works with SIDEWIPE and FULLPURGEREDUCTION")
 
-    if (len(v.skippable_layer) == 0):
+    if len(v.skippable_layer) == 0:
         gui.log_warning("LAYER configuration is missing.")
     else:
         if v.tower_delta:
