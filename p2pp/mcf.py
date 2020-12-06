@@ -521,7 +521,7 @@ def gcode_parselines():
                 continue
 
             if current_block_class == CLS_TOOL_PURGE:
-                if g[gcode.F] and  g[gcode.F] > v.purgetopspeed:
+                if g[gcode.F] and g[gcode.F] > v.purgetopspeed:
                     g[gcode.F] = v.purgetopspeed
 
         # --------------------- SIDE WIPE PROCESSING
@@ -828,6 +828,6 @@ def generate(input_file, output_file, printer_profile, splice_offset):
 
         gui.print_summary(omega_result['summary'])
 
-    gui.progress_string(100)
+    gui.progress_string(101)
     if (len(v.process_warnings) > 0 and not v.ignore_warnings) or v.consolewait:
         gui.close_button_enable()

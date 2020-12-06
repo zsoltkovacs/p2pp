@@ -32,13 +32,11 @@ def create_command(gcode_line, is_comment=False, userclass=0):
     if is_comment:
         return_value[COMMENT] = gcode_line
     else:
-        pos = gcode_line.find(";")
+        comsplit = gcode_line.split(";",1)
+        if len(comsplit) == 2:
+            return_value[COMMENT] = comsplit[1]
 
-        if pos != -1:
-            return_value[COMMENT] = gcode_line[pos:]
-            gcode_line = gcode_line[:pos].strip()
-
-        fields = gcode_line.split(' ')
+        fields = comsplit[0].split(" ")
 
         if len(fields[0]) > 0:
 

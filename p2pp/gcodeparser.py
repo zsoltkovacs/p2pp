@@ -284,9 +284,8 @@ def parse_slic3r_config():
             if parameter_start != -1:
                 filament_string = gcode_line[parameter_start + 1:].strip(" ").split(";")
                 for i in range(len(filament_string)):
-                    if v.filament_type[i] != "-":
+                    if v.filament_type[i] != "":
                         filament_string[i] = v.filament_type[i]
-
                 v.m4c_numberoffilaments = len(filament_string)
                 if v.m4c_numberoffilaments == 4:
                     v.filament_type = filament_string
@@ -295,7 +294,6 @@ def parse_slic3r_config():
                     v.used_filament_types = list(set(filament_string))
                     if len(v.used_filament_types) > 1:
                         gui.log_warning("Prints with more than 4 colors should be of one filament type only!")
-                        gui.log_warning("This file will not print correctly")
                     v.filament_type = filament_string
 
             if v.m4c_numberoffilaments > 4:
