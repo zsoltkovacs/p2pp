@@ -196,9 +196,7 @@ hash_TOOLCHANGE_WIPE = hash("TOOLCHANGE WIPE")
 hash_TOOLCHANGE_END = hash("TOOLCHANGE END")
 
 
-def update_class(gcode_line):
-
-    line_hash = hash(gcode_line)  # drop "; CP "
+def update_class(line_hash):
 
     if line_hash == hash_EMPTY_GRID_START:
         v.block_classification = CLS_EMPTY
@@ -283,7 +281,7 @@ def parse_gcode():
             is_comment = True
 
             if line.startswith('; CP'):  # code block assignment
-                update_class(line[5:])
+                update_class(hash(line[5:]))
 
             elif line.startswith(';LAYER'):  # Layer instructions
 
@@ -328,9 +326,7 @@ def parse_gcode():
             except (TypeError, IndexError):
                 pass
 
-        code = gcode.create_command(line, is_comment)
-        code[gcode.CLASS] = v.block_classification
-
+        code = gcode.create_command(line, is_comment, v.block_classification)
         v.parsed_gcode.append(code)
 
         if v.block_classification != v.previous_block_classification:
@@ -408,13 +404,14 @@ def gcode_parselines():
 
 
         # ---- SECOND SECTION HANDLES COMMENTS AND NONE-MOVEMENT COMMANDS ----
+
         if g[gcode.COMMAND] is None:
             if v.needpurgetower and g[gcode.COMMENT].endswith("BRIM END"):
                 v.needpurgetower = False
                 create_tower_gcode()
                 purgetower.purge_generate_brim()
-                gcode.issue_command(g)
-                continue
+            gcode.issue_command(g)
+            continue
 
         elif g[gcode.MOVEMENT] == 0:
 

@@ -23,19 +23,21 @@ EXTRUDE = 10
 RETRACT = 11
 UNRETRACT = 12
 CLASS = 13
+#           A   B   C   D  E  F   G   H   I   J   K   L   M   N   O   P   Q   R  S   T   U  V   W   X  Y  Z
+parmidx = [-1, -1, -1, -1, 3, 4, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 5, -1, -1, -1, -1, 0, 1, 2]
 
 
 def create_command(gcode_line, is_comment=False, userclass=0):
 
-    return_value = [None, None, None, None, None, None, "", None, "", False, False, False, False, userclass]
+    return_value = [None, None, None, None, None, None, "", None, "", 0, False, False, False, userclass]
 
     if is_comment:
         return_value[COMMENT] = gcode_line
     else:
 
-        comsplit = gcode_line.split(";",1 )
+        comsplit = gcode_line.split(";", 1)
         if len(comsplit) == 2:
-            return_value[COMMENT] = comsplit[1]
+            return_value[COMMENT] = ";"+comsplit[1]
 
         fields = comsplit[0].strip().split(" ")
 
@@ -43,34 +45,30 @@ def create_command(gcode_line, is_comment=False, userclass=0):
 
             return_value[COMMAND] = fields[0]
 
-            parmcount = 0
-            fields = fields[1:]
-            while len(fields) > 0:
-                param = fields[0].strip()
-                if len(param) > 0:
-                    idx = "XYZEFS".find(param[0])
+            param_coefficient = 0
+            for i in range(1, len(fields)):
+                param = fields[i]
+
+                try:
+                    idx = parmidx[ord(param[0])-0x41]
                     if idx >= 0:
-                        parmcount += 2**idx
-                        val = param[1:]
-                        try:
-                            if "." in val:
-                                val = float(val)
-                            else:
-                                val = int(val)
-                        except ValueError:
-                            pass
+                        val = float(param[1:])
+                        param_coefficient += 2 ** idx
                         return_value[idx] = val
                     else:
                         return_value[OTHER] = return_value[OTHER] + " " + param
+                except (IndexError, ValueError):
+                    return_value[OTHER] = return_value[OTHER] + " " + param
 
-                fields = fields[1:]
-
-            if return_value[COMMAND] in ['G0', 'G1']:
-                return_value[MOVEMENT] = (parmcount & 31)
-                if return_value[E] is not None:
-                    return_value[RETRACT] = return_value[E] < 0
-                    return_value[UNRETRACT] = return_value[E] > 0 and (return_value[MOVEMENT] & 7) == 0    # no XYZ
-                    return_value[EXTRUDE] = return_value[E] > 0
+            check = (param_coefficient & 31)
+            if check and return_value[COMMAND] in ['G0', 'G1']:
+                return_value[MOVEMENT] = check
+                if param_coefficient & 8:
+                    if return_value[E] < 0:
+                        return_value[RETRACT] = True
+                    else:
+                        return_value[UNRETRACT] = (return_value[MOVEMENT] & 7) == 0    # no XYZ
+                        return_value[EXTRUDE] = True
 
     return return_value
 
@@ -79,29 +77,13 @@ def create_commandstring(gcode_tupple):
     if gcode_tupple[COMMAND]:
         p = gcode_tupple[COMMAND]
         if gcode_tupple[X] is not None:
-            try:
-                p = p + " X{:0.3f}".format(gcode_tupple[X])
-            except ValueError:
-                p = p + " X{}".format(gcode_tupple[X])
-
+            p = p + " X{:0.3f}".format(gcode_tupple[X])
         if gcode_tupple[Y] is not None:
-            try:
-                p = p + " Y{:0.3f}".format(gcode_tupple[Y])
-            except ValueError:
-                p = p + " Y{}".format(gcode_tupple[Y])
-
+            p = p + " Y{:0.3f}".format(gcode_tupple[Y])
         if gcode_tupple[Z] is not None:
-            try:
-                p = p + " Z{:0.3f}".format(gcode_tupple[Z])
-            except ValueError:
-                p = p + " Z{}".format(gcode_tupple[Z])
-
+            p = p + " Z{:0.3f}".format(gcode_tupple[Z])
         if gcode_tupple[E] is not None:
-            try:
-                p = p + " E{:0.5f}".format(gcode_tupple[E])
-            except ValueError:
-                p = p + " E{}".format(gcode_tupple[E])
-
+            p = p + " E{:0.5f}".format(gcode_tupple[E])
         if gcode_tupple[F] is not None:
             p = p + " F{}".format(gcode_tupple[F])
         if gcode_tupple[S] is not None:
@@ -111,35 +93,19 @@ def create_commandstring(gcode_tupple):
         if gcode_tupple[COMMENT] != "":
             p = p + " " + gcode_tupple[COMMENT]
     else:
-        if gcode_tupple[COMMENT] != "":
-            p = gcode_tupple[COMMENT]
-        else:
-            p = ""
+        p = gcode_tupple[COMMENT]
+
     # try:
     #     p = p + ";\t{} - ".format(gcode_tupple[CLASS])+v.classes[gcode_tupple[CLASS]]
     # except KeyError:
     #     p = p + "\tUnknown class {}".format(gcode_tupple[CLASS])
 
-    if gcode_tupple[MOVEMENT] & 1:
-        v.current_position_x = gcode_tupple[X]
-    if gcode_tupple[MOVEMENT] & 2:
-        v.current_position_y = gcode_tupple[Y]
-    if gcode_tupple[MOVEMENT] & 4:
-        v.current_position_z = gcode_tupple[Z]
-
     return p
-
-
-def remove_extrusion(gcode_tupple):
-    gcode_tupple[E] = None
-    gcode_tupple[RETRACT] = None
-    gcode_tupple[UNRETRACT] = None
-    gcode_tupple[EXTRUDE] = None
-    gcode_tupple[MOVEMENT] = gcode_tupple[MOVEMENT] & 504
 
 
 def move_to_comment(gcode_tupple, text):
     if gcode_tupple[COMMAND]:
+        gcode_tupple[COMMENT] = ""
         gcode_tupple[COMMENT] = "; [{}] - {}".format(text, create_commandstring(gcode_tupple))
     else:
         gcode_tupple[COMMENT] = ""
@@ -158,26 +124,34 @@ def move_to_comment(gcode_tupple, text):
 
 
 def get_parameter(gcode_tupple, pv, defaultvalue=0):
-    if gcode_tupple[pv]:
+    if gcode_tupple[pv] is not None:
         return gcode_tupple[pv]
     return defaultvalue
 
 
 def issue_command(gcode_tupple, speed=0):
-    if gcode_tupple[MOVEMENT] & 8:  # movement WITH extrusion
-        extrusion = gcode_tupple[E] * v.extrusion_multiplier * v.extrusion_multiplier_correction
-        v.total_material_extruded += extrusion
-        v.material_extruded_per_color[v.current_tool] += extrusion
 
-        if v.absolute_extruder and v.gcode_has_relative_e:
-            if v.absolute_counter == -9999 or v.absolute_counter > 3000:
-                v.processed_gcode.append("G92 E0.00  ; Extruder counter reset")
-                v.absolute_counter = 0
+    if gcode_tupple[MOVEMENT]:
+        if gcode_tupple[MOVEMENT] & 8:  # movement WITH extrusion
+            extrusion = gcode_tupple[E] * v.extrusion_multiplier
+            v.total_material_extruded += extrusion
+            v.material_extruded_per_color[v.current_tool] += extrusion
 
-            v.absolute_counter += gcode_tupple[E]
-            gcode_tupple[E] = v.absolute_counter
+            if v.absolute_extruder:
+                if v.absolute_counter == -9999 or v.absolute_counter > 3000:
+                    v.processed_gcode.append("G92 E0.00  ; Extruder counter reset")
+                    v.absolute_counter = 0
+                v.absolute_counter += gcode_tupple[E]
+                gcode_tupple[E] = v.absolute_counter
 
-    if v.absolute_extruder and v.gcode_has_relative_e:
+        if gcode_tupple[MOVEMENT] & 1:
+            v.current_position_x = gcode_tupple[X]
+        if gcode_tupple[MOVEMENT] & 2:
+            v.current_position_y = gcode_tupple[Y]
+        if gcode_tupple[MOVEMENT] & 4:
+            v.current_position_z = gcode_tupple[Z]
+
+    elif v.absolute_extruder:
         if gcode_tupple[COMMAND] == "M83":
             gcode_tupple[COMMAND] = "M82"
         if gcode_tupple[COMMAND] == "G92":
@@ -186,6 +160,7 @@ def issue_command(gcode_tupple, speed=0):
     s = create_commandstring(gcode_tupple)
     if speed:
         s = s.replace("%SPEED%", "{:0.0f}".format(speed))
+
     v.processed_gcode.append(s)
 
 

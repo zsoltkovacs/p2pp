@@ -355,10 +355,8 @@ def parse_slic3r_config():
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 gcode_line = gcode_line[parameter_start + 1:].replace(";", "")
-                if "1" in gcode_line:
-                    v.gcode_has_relative_e = True
-                else:
-                    v.gcode_has_relative_e = False
+                if not  "1" in gcode_line:
+                    gui.log_warning("P2PP reauires input file with RELATIVE extrusion")
             continue
 
         # TVDE: needs to be expanded to be able to support more than 4 colors
