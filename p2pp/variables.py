@@ -202,9 +202,6 @@ temp2_stored_command = ""
 block_classification = 0
 previous_block_classification = 0
 
-pathprocessing = False
-uses_prusa_tower = False
-
 retract_move = False
 
 max_tower_delta = 0.0

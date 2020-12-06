@@ -21,10 +21,6 @@ from p2pp.omega import header_generate_omega
 from p2pp.sidewipe import create_side_wipe, create_sidewipe_bb3d
 
 
-# layer_regex = re.compile(";LAYER\s+(\d+)\s*")
-# layerheight_regex = re.compile(";LAYERHEIGHT\s+(\d+(\.\d+)?)\s*")
-
-
 def optimize_tower_skip(max_layers):
     skippable = v.skippable_layer.count(True)
 
@@ -156,6 +152,26 @@ def entertower(layer_hght):
             gcode.issue_code("G1 F{}".format(v.wipe_feedrate))
 
 
+def add_point_to_tower(x, y):
+    if x:
+        v.wipe_tower_info_minx = min(v.wipe_tower_info_minx, x)
+        v.wipe_tower_info_maxx = max(v.wipe_tower_info_maxx, x)
+    if y:
+        v.wipe_tower_info_miny = min(v.wipe_tower_info_miny, y)
+        v.wipe_tower_info_maxy = max(v.wipe_tower_info_maxy, y)
+
+
+def create_tower_gcode():
+    purgetower.purge_create_layers(v.wipe_tower_info_minx, v.wipe_tower_info_miny, v.wipe_tower_xsize,
+                                   v.wipe_tower_ysize)
+    gui.create_logitem(
+        " Purge Tower :X{:.2f} Y{:.2f}  W{:.2f} H{:.2f}".format(v.wipe_tower_info_minx, v.wipe_tower_info_miny,
+                                                                v.wipe_tower_xsize, v.wipe_tower_ysize))
+    gui.create_logitem(
+        " Layer Length Solid={:.2f}mm   Sparse={:.2f}mm".format(purgetower.sequence_length_solid,
+                                                                purgetower.sequence_length_empty))
+
+
 CLS_UNDEFINED = 0
 CLS_NORMAL = 1
 CLS_TOOL_START = 2
@@ -232,25 +248,6 @@ def update_class(gcode_line):
         v.block_classification = CLS_BRIM_END
         return
 
-
-def add_point_to_tower(x, y):
-    if x:
-        v.wipe_tower_info_minx = min(v.wipe_tower_info_minx, x)
-        v.wipe_tower_info_maxx = max(v.wipe_tower_info_maxx, x)
-    if y:
-        v.wipe_tower_info_miny = min(v.wipe_tower_info_miny, y)
-        v.wipe_tower_info_maxy = max(v.wipe_tower_info_maxy, y)
-
-
-def create_tower_gcode():
-    purgetower.purge_create_layers(v.wipe_tower_info_minx, v.wipe_tower_info_miny, v.wipe_tower_xsize,
-                                   v.wipe_tower_ysize)
-    gui.create_logitem(
-        " Purge Tower :X{:.2f} Y{:.2f}  W{:.2f} H{:.2f}".format(v.wipe_tower_info_minx, v.wipe_tower_info_miny,
-                                                                v.wipe_tower_xsize, v.wipe_tower_ysize))
-    gui.create_logitem(
-        " Layer Length Solid={:.2f}mm   Sparse={:.2f}mm".format(purgetower.sequence_length_solid,
-                                                                purgetower.sequence_length_empty))
 
 
 def parse_gcode():
@@ -524,11 +521,11 @@ def gcode_parselines():
                 continue
 
             if current_block_class == CLS_TOOL_PURGE:
-                if g[gcode.F] > v.purgetopspeed:
+                if g[gcode.F] and  g[gcode.F] > v.purgetopspeed:
                     g[gcode.F] = v.purgetopspeed
 
         # --------------------- SIDE WIPE PROCESSING
-        if v.side_wipe:
+        elif v.side_wipe:
 
             if classupdate:
 
@@ -560,7 +557,7 @@ def gcode_parselines():
                 continue
 
         # --------------------- FULL PURGE PROCESSING
-        if v.full_purge_reduction:
+        elif v.full_purge_reduction:
 
             if classupdate:
 
@@ -608,7 +605,7 @@ def gcode_parselines():
                     v.retraction += g[gcode.E]
 
         # --------------------- NO TOWER PROCESSING
-        if not v.pathprocessing:
+        else:
 
             if classupdate:
 
@@ -661,13 +658,15 @@ def gcode_parselines():
         v.previous_position_x = v.current_position_x
         v.previous_position_y = v.current_position_y
 
-    #finalize by defining the last splice length
+    # LAST STEP IS ADDING AN EXTRA TOOL UNLOAD TO DETERMINE THE LENGTH OF THE LAST SPLICE
     gcode_process_toolchange(-1)
 
+# -- MAIN ROUTINE --- GLUES ALL THE PROCESSING ROUTINED
+# -- FILE READING / FIRST PASS / SECOND PASS / FILE WRITING
 
-# Generate the file and glue it all together!
 
 def generate(input_file, output_file, printer_profile, splice_offset):
+
     starttime = time.time()
     v.printer_profile_string = printer_profile
     basename = os.path.basename(input_file)
@@ -707,98 +706,86 @@ def generate(input_file, output_file, printer_profile, splice_offset):
     if v.save_unprocessed:
         pre, ext = os.path.splitext(input_file)
         of = pre + "_unprocessed" + ext
-        gui.create_logitem("Saving original (unprocessed) code to: " + of)
+        gui.create_logitem("Saving unpocessed code to: " + of)
         opf = open(of, "w")
         opf.writelines(v.input_gcode)
         opf.close()
 
     v.input_gcode = [item.strip() for item in v.input_gcode]
 
-    gui.create_logitem("Analyzing slicer parameters")
+    gui.create_logitem("Analyzing Prusa Slicer Configuration")
     gui.progress_string(2)
     parse_slic3r_config()
 
-    gui.create_logitem("Pre-parsing GCode")
+    gui.create_logitem("Analyzing Layers / Functional blocks")
     gui.progress_string(4)
     parse_gcode()
 
     v.input_gcode = None
 
     if v.bed_size_x == -9999 or v.bed_size_y == -9999 or v.bed_origin_x == -9999 or v.bed_origin_y == -9999:
-        gui.log_warning("Bedsize not correctly defined.  The generated file may NOT print correctly")
+        gui.log_warning("Bedsize incorrectly defined.")
     else:
+        if v.bed_shape_rect and v.bed_shape_warning:
+            gui.create_logitem("Manual bed size override, PrusaSlicer Bedshape configuration ignored.")
         gui.create_logitem("Bed origin ({:3.1f}mm, {:3.1f}mm)".format(v.bed_origin_x, v.bed_origin_y))
         gui.create_logitem("Bed zise   ({:3.1f}mm, {:3.1f}mm)".format(v.bed_size_x, v.bed_size_y))
-        if v.bed_shape_rect and v.bed_shape_warning:
-            gui.create_logitem("Manual bed size override, Prusa Bedshape parameters ignored.")
-
-    gui.create_logitem("")
 
     if v.tower_delta or v.full_purge_reduction and v.variable_layer:
-        gui.log_warning("Variable layers are not compatible with fullpruge/tower delta")
+        gui.log_warning("Variable layers are incompatible with FULLPURGE / TOWER DELTA")
 
     if v.process_temp and v.side_wipe:
-        gui.log_warning("TEMPERATURECONTROL and Side Wipe / BigBrain3D are not compatible")
+        gui.log_warning("TEMPERATURECONTROL and SIDEWIPE / BigBrain3D are incompatible")
 
     if v.palette_plus:
         if v.palette_plus_ppm == -9:
-            gui.log_warning("P+ parameter P+PPM not set correctly in startup GCODE")
+            gui.log_warning("P+ parameter P+PPM incorrectly set up in startup GCODE")
         if v.palette_plus_loading_offset == -9:
-            gui.log_warning("P+ parameter P+LOADINGOFFSET not set correctly in startup GCODE")
+            gui.log_warning("P+ parameter P+LOADINGOFFSET incorrectly set up in startup GCODE")
 
     v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
     v.tower_delta = v.max_tower_z_delta > 0
 
-    gui.create_logitem("Creating tool usage information")
+    gui.create_logitem("`Analyzing tool loading scheme`")
     m4c.calculate_loadscheme()
 
     if v.side_wipe:
 
         if v.skirts and v.ps_version >= "2.2":
             gui.log_warning("SIDEWIPE and SKIRTS are NOT compatible in PS2.2 or later")
-            gui.log_warning("THIS FILE WILL NOT PRINT CORRECTLY")
 
         if v.wipe_remove_sparse_layers:
             gui.log_warning("SIDE WIPE mode not compatible with sparse wipe tower in PS")
             gui.log_warning("Use Tower Delta instead")
-            gui.log_warning("THIS FILE WILL NOT PRINT CORRECTLY")
 
         gui.create_logitem("Side wipe activated", "blue")
 
         if v.full_purge_reduction:
-            gui.log_warning("Full Purge Reduction is not compatible with Side Wipe, performing Side Wipe")
+            gui.log_warning("FULLURGEREDUCTION is incompatible with SIDEWIPE, parameter ignored")
             v.full_purge_reduction = False
 
     if v.full_purge_reduction:
-        v.side_wipe = False
-        gui.create_logitem("Full Tower Reduction activated", "blue")
-        if v.tower_delta:
-            gui.log_warning("Full Purge Reduction is not compatible with Tower Delta, performing Full Purge Reduction")
-            v.tower_delta = False
 
-    v.pathprocessing = (v.tower_delta or v.full_purge_reduction or v.side_wipe)
-    v.uses_prusa_tower = not (v.full_purge_reduction or v.side_wipe)
+        if v.tower_delta:
+            gui.log_warning("FULLPURGEREDUCTION is incompatible with TOWERDELTA")
+            v.tower_delta = False
+        gui.create_logitem("FULLPURGEREDUCTION activated", "blue")
 
     if v.autoaddsplice and not v.full_purge_reduction and not v.side_wipe:
-        gui.log_warning("AUTOADDPURGE only works with side wipe and fullpurgereduction at this moment")
+        gui.log_warning("AUTOADDPURGE only works with SIDEWIPE and FULLPURGEREDUCTION")
 
-    if (len(v.skippable_layer) == 0) and v.pathprocessing:
+    if (len(v.skippable_layer) == 0):
         gui.log_warning("LAYER configuration is missing.")
-        gui.log_warning("Check the P2PP documentation for furhter info.")
     else:
-
         if v.tower_delta:
             v.skippable_layer[0] = False
-            optimize_tower_skip(int(v.max_tower_z_delta / v.layer_height))
+        optimize_tower_skip(int(v.max_tower_z_delta / v.layer_height))
 
         gui.create_logitem("Generate processed GCode")
         gcode_parselines()
         v.processtime = time.time() - starttime
         omega_result = header_generate_omega(_taskName)
         header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
-
-
-
 
         # write the output file
         ######################
