@@ -13,7 +13,6 @@ import time
 import p2pp.gcode as gcode
 import p2pp.gui as gui
 import p2pp.p2_m4c as m4c
-import p2pp.parameters as parameters
 import p2pp.pings as pings
 import p2pp.purgetower as purgetower
 import p2pp.variables as v
@@ -182,6 +181,7 @@ hash_TOOLCHANGE_END = hash("TOOLCHANGE END")
 
 
 def update_class(gcode_line):
+
     line_hash = hash(gcode_line)  # drop "; CP "
 
     if line_hash == hash_EMPTY_GRID_START:
@@ -370,284 +370,299 @@ def parse_gcode():
     v.side_wipe_towerdefined = False
 
 
-def gcode_parseline(g):
-    current_block_class = g[gcode.CLASS]
+def gcode_parselines():
 
-    if current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD] and v.current_temp != v.new_temp:
-        gcode.issue_code(v.temp1_stored_command)
-        v.temp1_stored_command = ""
+    idx = 0
+    total_line_count = len(v.parsed_gcode)
+    v.retraction = 0
+    v.last_parsed_layer = -1
+    v.previous_block_classification = v.parsed_gcode[0][gcode.CLASS]
 
-    # filter off comments
-    if g[gcode.COMMAND] is None:
-        if v.needpurgetower and g[gcode.COMMENT].endswith("BRIM END"):
-            v.needpurgetower = False
-            create_tower_gcode()
-            purgetower.purge_generate_brim()
+    for process_line_count in range(total_line_count):
 
-        gcode.issue_command(g)
-        return
+        try:
+            if process_line_count >= v.layer_end[0]:
+                v.last_parsed_layer += 1
+                v.layer_end.pop(0)
+                v.current_layer_is_skippable = v.skippable_layer[v.last_parsed_layer]
+                if v.current_layer_is_skippable:
+                    v.cur_tower_z_delta += v.layer_height
+        except IndexError:
+            pass
 
-    # procedd none- movement commends
-    if g[gcode.MOVEMENT] == 0:
+        g = v.parsed_gcode[idx]
 
-        if g[gcode.COMMAND].startswith('T'):
-            ct = v.current_tool
-            gcode_process_toolchange(int(g[gcode.COMMAND][1:]))
-            if ct != -1:
-                if not v.debug_leaveToolCommands:
-                    gcode.move_to_comment(g, "--P2PP-- Color Change")
-                v.toolchange_processed = True
-            gcode.issue_command(g)
-            return
-        else:
-            if g[gcode.COMMAND].startswith('M'):
-                if g[gcode.COMMAND] in ["M140", "M190", "M73", "M84", "M201", "M203", "G28", "G90", "M115", "G80",
-                                        "G21", "M907", "M204"]:
-                    gcode.issue_command(g)
-                    return
+        idx = idx + 1
 
-                if g[gcode.COMMAND] in ["M104", "M109"]:
-                    if not v.process_temp or current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START,
-                                                                         CLS_TOOL_UNLOAD]:
-                        g[gcode.COMMENT] += " Unprocessed temp "
-                        gcode.issue_command(g)
-                        v.new_temp = gcode.get_parameter(g, gcode.S, v.current_temp)
-                        v.current_temp = v.new_temp
-                    else:
-                        v.new_temp = gcode.get_parameter(g, gcode.S, v.current_temp)
-                        if v.new_temp >= v.current_temp:
-                            g[gcode.COMMAND] = "M109"
-                            v.temp2_stored_command = gcode.create_commandstring(g)
-                            gcode.move_to_comment(g,
-                                                  "--P2PP-- delayed temp rise until after purge {}-->{}".format(v.current_temp,
-                                                                                                                v.new_temp))
+        if idx > 100000:
+            v.parsed_gcode = v.parsed_gcode[idx:]
+            idx = 0
+
+        if process_line_count % 10000 == 0:
+            gui.progress_string(50 + 50 * process_line_count // total_line_count)
+
+        current_block_class = g[gcode.CLASS]
+
+        # ---- FIRST SECTION HANDLES DELAYED TEMPERATURE COMMANDS ----
+
+        if current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD] and v.current_temp != v.new_temp:
+            gcode.issue_code(v.temp1_stored_command)
+            v.temp1_stored_command = ""
+
+
+        # ---- SECOND SECTION HANDLES COMMENTS AND NONE-MOVEMENT COMMANDS ----
+        if g[gcode.COMMAND] is None:
+            if v.needpurgetower and g[gcode.COMMENT].endswith("BRIM END"):
+                v.needpurgetower = False
+                create_tower_gcode()
+                purgetower.purge_generate_brim()
+                gcode.issue_command(g)
+                continue
+
+        elif g[gcode.MOVEMENT] == 0:
+
+            if g[gcode.COMMAND].startswith('T'):
+                ct = v.current_tool
+                gcode_process_toolchange(int(g[gcode.COMMAND][1:]))
+                if ct != -1:
+                    if not v.debug_leaveToolCommands:
+                        gcode.move_to_comment(g, "--P2PP-- Color Change")
+                    v.toolchange_processed = True
+            else:
+                if current_block_class == CLS_TOOL_UNLOAD:
+                    if g[gcode.COMMAND] in ["G4", "M900"]:
+                        gcode.move_to_comment(g, "--P2PP-- tool unload")
+
+                elif g[gcode.COMMAND].startswith('M'):
+                    if g[gcode.COMMAND] in ["M104", "M109"]:
+                        if not v.process_temp or current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START,
+                                                                             CLS_TOOL_UNLOAD]:
+                            g[gcode.COMMENT] += " Unprocessed temp "
+                            gcode.issue_command(g)
+                            v.new_temp = gcode.get_parameter(g, gcode.S, v.current_temp)
                             v.current_temp = v.new_temp
                         else:
-                            v.temp1_stored_command = gcode.create_commandstring(g)
-                            gcode.move_to_comment(g,
-                                                  "--P2PP-- delayed temp drop until after purge {}-->{}".format(v.current_temp,
-                                                                                                                v.new_temp))
-                            gcode.issue_command(g)
-                    return
+                            v.new_temp = gcode.get_parameter(g, gcode.S, v.current_temp)
+                            if v.new_temp >= v.current_temp:
+                                g[gcode.COMMAND] = "M109"
+                                v.temp2_stored_command = gcode.create_commandstring(g)
+                                gcode.move_to_comment(g,
+                                                      "--P2PP-- delayed temp rise until after purge {}-->{}".format(v.current_temp,
+                                                                                                                    v.new_temp))
+                                v.current_temp = v.new_temp
 
-                if g[gcode.COMMAND] == "M107":
-                    gcode.issue_command(g)
-                    v.saved_fanspeed = 0
-                    return
+                            else:
+                                v.temp1_stored_command = gcode.create_commandstring(g)
+                                gcode.move_to_comment(g,
+                                                      "--P2PP-- delayed temp drop until after purge {}-->{}".format(v.current_temp,
+                                                                                                                    v.new_temp))
+                    elif g[gcode.COMMAND] == "M107":
+                        v.saved_fanspeed = 0
 
-                if g[gcode.COMMAND] == "M106":
-                    gcode.issue_command(g)
-                    v.saved_fanspeed = gcode.get_parameter(g, gcode.S, v.saved_fanspeed)
-                    return
+                    elif g[gcode.COMMAND] == "M106":
+                        v.saved_fanspeed = gcode.get_parameter(g, gcode.S, v.saved_fanspeed)
 
-                # flow rate changes have an effect on the filament consumption.  The effect is taken into account for ping generation
-                if g[gcode.COMMAND] == "M221":
-                    v.extrusion_multiplier = float(gcode.get_parameter(g, gcode.S, v.extrusion_multiplier * 100)) / 100
-                    gcode.issue_command(g)
-                    return
+                    elif g[gcode.COMMAND] == "M221":
+                        v.extrusion_multiplier = float(gcode.get_parameter(g, gcode.S, v.extrusion_multiplier * 100)) / 100
 
-                # feed rate changes in the code are removed as they may interfere with the Palette P2 settings
-                if g[gcode.COMMAND] in ["M220"]:
-                    gcode.move_to_comment(g, "--P2PP-- Feed Rate Adjustments are removed")
-                    gcode.issue_command(g)
-                    return
-
-            if current_block_class == CLS_TOOL_UNLOAD:
-                if g[gcode.COMMAND] in ["G4", "M900"]:
-                    gcode.move_to_comment(g, "--P2PP-- tool unload")
+                    elif g[gcode.COMMAND] == "M220":
+                        gcode.move_to_comment(g, "--P2PP-- Feed Rate Adjustments are removed")
 
             gcode.issue_command(g)
-            return
+            continue
 
-    # ---- AS OF HERE ONLY MOVEMENT COMMANDS ----
+        # ---- AS OF HERE ONLY MOVEMENT COMMANDS ----
 
-    classupdate = current_block_class != v.previous_block_classification
-    v.previous_block_classification = current_block_class
+        classupdate = current_block_class != v.previous_block_classification
+        v.previous_block_classification = current_block_class
 
-    if g[gcode.MOVEMENT] & 1:
-        v.previous_purge_keep_x = v.purge_keep_x
-        v.purge_keep_x = g[gcode.X]
+        if g[gcode.MOVEMENT] & 1:
+            v.previous_purge_keep_x = v.purge_keep_x
+            v.purge_keep_x = g[gcode.X]
 
-    if g[gcode.MOVEMENT] & 2:
-        v.previous_purge_keep_y = v.purge_keep_y
-        v.purge_keep_y = g[gcode.Y]
+        if g[gcode.MOVEMENT] & 2:
+            v.previous_purge_keep_y = v.purge_keep_y
+            v.purge_keep_y = g[gcode.Y]
 
-    if g[gcode.MOVEMENT] & 4:
-        v.keep_z = g[gcode.Z]
+        if g[gcode.MOVEMENT] & 4:
+            v.keep_z = g[gcode.Z]
 
-    # this goes for all situations: START and UNLOAD are not needed
-    if current_block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
-        gcode.move_to_comment(g, "--P2PP-- tool unload2")
-        gcode.issue_command(g)
-        return
+        # this goes for all situations: START and UNLOAD are not needed
+        if current_block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
+            gcode.move_to_comment(g, "--P2PP-- tool unload2")
+            gcode.issue_command(g)
+            continue
 
-    # --------------------- TOWER DELTA PROCESSING
-    if v.tower_delta:
+        # --------------------- TOWER DELTA PROCESSING
+        if v.tower_delta:
 
-        if classupdate:
+            if classupdate:
+
+                if current_block_class == CLS_TOOL_PURGE:
+                    gcode.issue_command(g)
+                    entertower(v.last_parsed_layer * v.layer_height + v.first_layer_height)
+                    continue
+
+                if current_block_class == CLS_EMPTY and not v.towerskipped:
+                    v.towerskipped = (g[gcode.MOVEMENT] & 256) == 256
+                    if not v.towerskipped:
+                        entertower(v.last_parsed_layer * v.layer_height + v.first_layer_height)
+
+                if v.previous_block_classification in [CLS_ENDPURGE, CLS_ENDGRID]:
+                    if v.towerskipped:
+                        gcode.issue_code("G1 Z{:.2f} F10810    ".format(v.keep_z))
+                        v.towerskipped = False
+
+            if current_block_class == CLS_TONORMAL:
+                gcode.move_to_comment(g, "--P2PP-- post block processing")
+                gcode.issue_command(g)
+                continue
+
+            if v.towerskipped:
+                gcode.move_to_comment(g, "--P2PP-- tower skipped")
+                gcode.issue_command(g)
+                continue
 
             if current_block_class == CLS_TOOL_PURGE:
-                gcode.issue_command(g)
-                entertower(v.last_parsed_layer * v.layer_height + v.first_layer_height)
-                return
+                if g[gcode.F] > v.purgetopspeed:
+                    g[gcode.F] = v.purgetopspeed
 
-            if current_block_class == CLS_EMPTY and not v.towerskipped:
+        # --------------------- SIDE WIPE PROCESSING
+        if v.side_wipe:
+
+            if classupdate:
+
+                if current_block_class == CLS_BRIM and v.bigbrain3d_purge_enabled:
+                    create_sidewipe_bb3d(v.bigbrain3d_prime * v.bigbrain3d_blob_size)
+
+            if not v.towerskipped and (g[gcode.MOVEMENT] & 3) == 3:
                 v.towerskipped = (g[gcode.MOVEMENT] & 256) == 256
-                if not v.towerskipped:
-                    entertower(v.last_parsed_layer * v.layer_height + v.first_layer_height)
 
-            if v.previous_block_classification in [CLS_ENDPURGE, CLS_ENDGRID]:
-                if v.towerskipped:
-                    gcode.issue_code("G1 Z{:.2f} F10810    ".format(v.keep_z))
+            if v.towerskipped and current_block_class == CLS_NORMAL and (g[gcode.MOVEMENT] & 3) == 3:
+                if coordinate_on_bed(g[gcode.X], g[gcode.Y]):
+
+                    v.towerskipped = False
+                    if v.toolchange_processed and v.side_wipe_length:
+                        create_side_wipe()
+                        v.toolchange_processed = False
+
+            if not v.side_wipe_towerdefined:
+                if (g[gcode.MOVEMENT] & 7) == 3 and coordinate_in_tower(g[gcode.X], g[gcode.Y]):
+                    v.towerskipped = True
+                    v.side_wipe_towerdefined = True
+
+            if v.towerskipped:
+                if current_block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE]:
+                    if g[gcode.EXTRUDE]:
+                        v.side_wipe_length += g[gcode.E]
+                gcode.move_to_comment(g, "--P2PP-- side wipe skipped")
+                gcode.issue_command(g)
+                continue
+
+        # --------------------- FULL PURGE PROCESSING
+        if v.full_purge_reduction:
+
+            if classupdate:
+
+                if v.previous_block_classification == CLS_ENDGRID:
                     v.towerskipped = False
 
-        if current_block_class == CLS_TONORMAL:
-            gcode.move_to_comment(g, "--P2PP-- post block processing")
-            gcode.issue_command(g)
-            return
+            if not v.towerskipped and current_block_class == CLS_EMPTY and v.current_layer_is_skippable:
+                v.towerskipped = (g[gcode.MOVEMENT] & 256) == 256
 
-        if v.towerskipped:
-            gcode.move_to_comment(g, "--P2PP-- tower skipped")
-            gcode.issue_command(g)
-            return
-
-        if current_block_class == CLS_TOOL_PURGE:
-            if g[gcode.F] > v.purgetopspeed:
-                g[gcode.F] = v.purgetopspeed
-
-    # --------------------- SIDE WIPE PROCESSING
-    if v.side_wipe:
-
-        if classupdate:
-
-            if current_block_class == CLS_BRIM and v.bigbrain3d_purge_enabled:
-                create_sidewipe_bb3d(v.bigbrain3d_prime * v.bigbrain3d_blob_size)
-
-        if not v.towerskipped and (g[gcode.MOVEMENT] & 3) == 3:
-            v.towerskipped = (g[gcode.MOVEMENT] & 256) == 256
-
-        if v.towerskipped and current_block_class == CLS_NORMAL and (g[gcode.MOVEMENT] & 3) == 3:
-            if coordinate_on_bed(g[gcode.X], g[gcode.Y]):
-
-                v.towerskipped = False
-                if v.toolchange_processed and v.side_wipe_length:
-                    create_side_wipe()
-                    v.toolchange_processed = False
-
-        if not v.side_wipe_towerdefined:
-            if (g[gcode.MOVEMENT] & 7) == 3 and coordinate_in_tower(g[gcode.X], g[gcode.Y]):
-                v.towerskipped = True
-                v.side_wipe_towerdefined = True
-
-        if v.towerskipped:
-            if current_block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE]:
-                if g[gcode.EXTRUDE]:
-                    v.side_wipe_length += g[gcode.E]
-            gcode.move_to_comment(g, "--P2PP-- side wipe skipped")
-            gcode.issue_command(g)
-            return
-
-    # --------------------- FULL PURGE PROCESSING
-    if v.full_purge_reduction:
-
-        if classupdate:
-
-            if v.previous_block_classification == CLS_ENDGRID:
-                v.towerskipped = False
-
-        if not v.towerskipped and current_block_class == CLS_EMPTY and v.current_layer_is_skippable:
-            v.towerskipped = (g[gcode.MOVEMENT] & 256) == 256
-
-        if v.towerskipped or current_block_class in [CLS_TONORMAL, CLS_BRIM, CLS_ENDGRID]:
-            gcode.move_to_comment(g, "--P2PP-- full purge skipped")
-            gcode.issue_command(g)
-            return
-
-        if current_block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE, CLS_EMPTY]:
-            if g[gcode.EXTRUDE]:
-                v.side_wipe_length += g[gcode.E]
-            gcode.move_to_comment(g, "--P2PP-- full purge skipped")
-            gcode.issue_command(g)
-            return
-
-        if v.toolchange_processed and current_block_class == CLS_NORMAL:
-            if v.side_wipe_length and (g[gcode.MOVEMENT] & 3) == 3 and not (g[gcode.MOVEMENT] & 256) == 256:
-                purgetower.purge_generate_sequence()
-                v.toolchange_processed = False
-            else:
+            if v.towerskipped or current_block_class in [CLS_TONORMAL, CLS_BRIM, CLS_ENDGRID]:
                 gcode.move_to_comment(g, "--P2PP-- full purge skipped")
                 gcode.issue_command(g)
-                return
+                continue
 
-        if v.expect_retract and (g[gcode.MOVEMENT] & 3):
-            v.expect_retract = False
-            if v.retraction >= 0 and g[gcode.RETRACT]:
-                purgetower.retract(v.current_tool)
+            if current_block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE, CLS_EMPTY]:
+                if g[gcode.EXTRUDE]:
+                    v.side_wipe_length += g[gcode.E]
+                gcode.move_to_comment(g, "--P2PP-- full purge skipped")
+                gcode.issue_command(g)
+                continue
 
-        if v.retract_move and g[gcode.RETRACT]:
-            g[gcode.X] = v.retract_x
-            g[gcode.Y] = v.retract_y
-            g[gcode.MOVEMENT] |= 3
-            v.retract_move = False
+            if v.toolchange_processed and current_block_class == CLS_NORMAL:
+                if v.side_wipe_length and (g[gcode.MOVEMENT] & 3) == 3 and not (g[gcode.MOVEMENT] & 256) == 256:
+                    purgetower.purge_generate_sequence()
+                    v.toolchange_processed = False
+                else:
+                    gcode.move_to_comment(g, "--P2PP-- full purge skipped")
+                    gcode.issue_command(g)
+                    continue
 
-            if v.retraction <= - v.retract_length[v.current_tool]:
-                gcode.move_to_comment(g, "--P2PP-- Double Retract")
-            else:
-                v.retraction += g[gcode.E]
+            if v.expect_retract and (g[gcode.MOVEMENT] & 3):
+                v.expect_retract = False
+                if v.retraction >= 0 and g[gcode.RETRACT]:
+                    purgetower.retract(v.current_tool)
 
-    # --------------------- NO TOWER PROCESSING
-    if not v.pathprocessing:
+            if v.retract_move and g[gcode.RETRACT]:
+                g[gcode.X] = v.retract_x
+                g[gcode.Y] = v.retract_y
+                g[gcode.MOVEMENT] |= 3
+                v.retract_move = False
 
-        if classupdate:
+                if v.retraction <= - v.retract_length[v.current_tool]:
+                    gcode.move_to_comment(g, "--P2PP-- Double Retract")
+                else:
+                    v.retraction += g[gcode.E]
 
-            if current_block_class in [CLS_TOOL_PURGE, CLS_EMPTY]:
-                if v.acc_ping_left <= 0:
-                    pings.check_accessorymode_first()
-                v.enterpurge = True
+        # --------------------- NO TOWER PROCESSING
+        if not v.pathprocessing:
 
-        if v.toolchange_processed:
+            if classupdate:
 
-            if v.temp2_stored_command != "":
-                wait_location = calculate_temp_wait_position()
-                gcode.issue_code(
-                    "G1 X{:.3f} Y{:.3f} F8640; temp wait position\n".format(wait_location[0], wait_location[0]))
-                gcode.issue_code(v.temp2_stored_command)
-                v.temp2_stored_command = ""
+                if current_block_class in [CLS_TOOL_PURGE, CLS_EMPTY]:
+                    if v.acc_ping_left <= 0:
+                        pings.check_accessorymode_first()
+                    v.enterpurge = True
 
-            gcode.issue_code("G1 Z{} ;P2PP correct z-moves".format(v.keep_z))
+            if v.toolchange_processed:
 
-            v.toolchange_processed = False
+                if v.temp2_stored_command != "":
+                    wait_location = calculate_temp_wait_position()
+                    gcode.issue_code(
+                        "G1 X{:.3f} Y{:.3f} F8640; temp wait position\n".format(wait_location[0], wait_location[0]))
+                    gcode.issue_code(v.temp2_stored_command)
+                    v.temp2_stored_command = ""
 
-        if current_block_class == CLS_TOOL_PURGE:
-            if g[gcode.F] is not None and g[gcode.F] > v.purgetopspeed and g[gcode.E]:
-                g[gcode.F] = v.purgetopspeed
-                g[gcode.COMMENT] += " prugespeed topped"
+                gcode.issue_code("G1 Z{} ;P2PP correct z-moves".format(v.keep_z))
 
-    # --------------------- GLOBAL PROCEDDING
+                v.toolchange_processed = False
 
-    if g[gcode.UNRETRACT]:
-        g[gcode.E] = min(-v.retraction, g[gcode.E])
-        v.retraction += g[gcode.E]
+            if current_block_class == CLS_TOOL_PURGE:
+                if g[gcode.F] is not None and g[gcode.F] > v.purgetopspeed and g[gcode.E]:
+                    g[gcode.F] = v.purgetopspeed
+                    g[gcode.COMMENT] += " prugespeed topped"
 
-    if g[gcode.RETRACT]:
-        g[gcode.E] = +g[gcode.E]
-        v.retraction += g[gcode.E]
+        # --------------------- GLOBAL PROCEDDING
 
-    if (g[gcode.MOVEMENT] & 3) and g[gcode.EXTRUDE] and v.retraction < -0.01:
-        purgetower.unretract(v.current_tool, -1, ";--- P2PP --- fixup retracts")
+        if g[gcode.UNRETRACT]:
+            g[gcode.E] = min(-v.retraction, g[gcode.E])
+            v.retraction += g[gcode.E]
 
-    gcode.issue_command(g)
+        if g[gcode.RETRACT]:
+            g[gcode.E] = +g[gcode.E]
+            v.retraction += g[gcode.E]
 
-    # --------------------- PING PROCESSING
+        if (g[gcode.MOVEMENT] & 3) and g[gcode.EXTRUDE] and v.retraction < -0.01:
+            purgetower.unretract(v.current_tool, -1, ";--- P2PP --- fixup retracts")
 
-    if v.accessory_mode and g[gcode.EXTRUDE]:
-        pings.check_accessorymode_second(g[gcode.E])
-    else:
-        if g[gcode.EXTRUDE] and v.side_wipe_length == 0:
-            pings.check_connected_ping()
+        gcode.issue_command(g)
 
-    v.previous_position_x = v.current_position_x
-    v.previous_position_y = v.current_position_y
+        # --------------------- PING PROCESSING
+
+        if v.accessory_mode and g[gcode.EXTRUDE]:
+            pings.check_accessorymode_second(g[gcode.E])
+        else:
+            if g[gcode.EXTRUDE] and v.side_wipe_length == 0:
+                pings.check_connected_ping()
+
+        v.previous_position_x = v.current_position_x
+        v.previous_position_y = v.current_position_y
+
+    #finalize by defining the last splice length
+    gcode_process_toolchange(-1)
 
 
 # Generate the file and glue it all together!
@@ -777,41 +792,13 @@ def generate(input_file, output_file, printer_profile, splice_offset):
             optimize_tower_skip(int(v.max_tower_z_delta / v.layer_height))
 
         gui.create_logitem("Generate processed GCode")
-
-        total_line_count = len(v.parsed_gcode)
-        v.retraction = 0
-        v.last_parsed_layer = -1
-        v.previous_block_classification = v.parsed_gcode[0][gcode.CLASS]
-        idx = 0
-
-        for process_line_count in range(total_line_count):
-
-            try:
-                if process_line_count >= v.layer_end[0]:
-                    v.last_parsed_layer += 1
-                    v.layer_end.pop(0)
-                    v.current_layer_is_skippable = v.skippable_layer[v.last_parsed_layer]
-                    if v.current_layer_is_skippable:
-                        v.cur_tower_z_delta += v.layer_height
-            except IndexError:
-                pass
-
-            gcode_parseline(v.parsed_gcode[idx])
-            idx = idx + 1
-
-            if idx > 100000:
-                v.parsed_gcode = v.parsed_gcode[idx:]
-                idx = 0
-
-            if process_line_count % 10000 == 0:
-                gui.progress_string(50 + 50 * process_line_count // total_line_count)
-
-        v.parsed_gcode = None
+        gcode_parselines()
         v.processtime = time.time() - starttime
-
-        gcode_process_toolchange(-1)
         omega_result = header_generate_omega(_taskName)
         header = omega_result['header'] + omega_result['summary'] + omega_result['warnings']
+
+
+
 
         # write the output file
         ######################
