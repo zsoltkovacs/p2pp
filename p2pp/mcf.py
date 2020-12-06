@@ -432,7 +432,6 @@ def gcode_parselines():
                         if not v.process_temp or current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START,
                                                                              CLS_TOOL_UNLOAD]:
                             g[gcode.COMMENT] += " Unprocessed temp "
-                            gcode.issue_command(g)
                             v.new_temp = gcode.get_parameter(g, gcode.S, v.current_temp)
                             v.current_temp = v.new_temp
                         else:

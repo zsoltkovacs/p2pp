@@ -85,11 +85,10 @@ def create_commandstring(gcode_tupple):
         if gcode_tupple[E] is not None:
             p = p + " E{:0.5f}".format(gcode_tupple[E])
         if gcode_tupple[F] is not None:
-            p = p + " F{}".format(gcode_tupple[F])
+            p = p + " F{}".format(int(gcode_tupple[F]))
         if gcode_tupple[S] is not None:
-            p = p + " S{}".format(gcode_tupple[S])
-        if len(gcode_tupple[OTHER]) > 0:
-            p = p + " "+gcode_tupple[OTHER]
+            p = p + " S{}".format(int(gcode_tupple[S]))
+        p = p + gcode_tupple[OTHER]
         if gcode_tupple[COMMENT] != "":
             p = p + " " + gcode_tupple[COMMENT]
     else:
