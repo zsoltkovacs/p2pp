@@ -40,7 +40,7 @@ releaseinfo = {
     "5.20.0": "updated parseline routine to prevent repetitive function call",
     "5.21.0": "small correction in gui and filemant type processing",
     "5.22.0": "corrected tower delta",
-    "5.22.0": "better tower detection",
+    "5.23.0": "better tower detection",
     '--- RELEASE INFORMATION': 'END'
 }
 
