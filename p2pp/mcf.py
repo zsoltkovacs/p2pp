@@ -33,9 +33,9 @@ def optimize_tower_skip(max_layers):
 
     if skippable > 0:
         gui.log_warning(
-            "Tower delta in effect: {} Layers or {:.2f}mm".format(skippable, skippable * v.layer_height))
+            "TOWERDELTA in effect for {} Layers or {:.2f}mm".format(skippable, skippable * v.layer_height))
     else:
-        gui.create_logitem("Tower Purge Delta could not be applied to this print")
+        gui.create_logitem("TOWERDELTA could not be applied to this print")
 
 
 def gcode_process_toolchange(new_tool):
@@ -98,36 +98,6 @@ def calculate_temp_wait_position():
         pos_y = v.wipe_tower_info_maxy - y_offset
 
     return [pos_x, pos_y]
-
-
-def inrange(number, low, high):
-    if number is None:
-        return True
-    return low <= number <= high
-
-
-def y_on_bed(y):
-    return inrange(y, v.bed_origin_y, v.bed_origin_y + v.bed_size_y)
-
-
-def x_on_bed(x):
-    return inrange(x, v.bed_origin_x, v.bed_origin_x + v.bed_size_x)
-
-
-def coordinate_on_bed(x, y):
-    return (v.bed_origin_x <= x <= v.bed_origin_y + v.bed_size_x) and (v.bed_origin_y <= y <= v.bed_origin_y + v.bed_size_y)
-
-
-def x_coordinate_in_tower(x):
-    return inrange(x, v.wipe_tower_info_minx, v.wipe_tower_info_maxx)
-
-
-def y_coordinate_in_tower(y):
-    return inrange(y, v.wipe_tower_info_miny, v.wipe_tower_info_maxy)
-
-
-def coordinate_in_tower(x, y):
-    return v.wipe_tower_info_minx <= x <= v.wipe_tower_info_maxx and v.wipe_tower_info_miny <= y <= v.wipe_tower_info_maxy
 
 
 def entertower(layer_hght):
@@ -201,26 +171,21 @@ def update_class(line_hash):
     if line_hash == hash_EMPTY_GRID_START:
         v.block_classification = CLS_EMPTY
         v.layer_emptygrid_counter += 1
-        return
 
-    if line_hash == hash_EMPTY_GRID_END:
+    elif line_hash == hash_EMPTY_GRID_END:
         v.block_classification = CLS_ENDGRID
-        return
 
-    if line_hash == hash_TOOLCHANGE_START:
+    elif line_hash == hash_TOOLCHANGE_START:
         v.block_classification = CLS_TOOL_START
         v.layer_toolchange_counter += 1
-        return
 
-    if line_hash == hash_TOOLCHANGE_UNLOAD:
+    elif line_hash == hash_TOOLCHANGE_UNLOAD:
         v.block_classification = CLS_TOOL_UNLOAD
-        return
 
-    if line_hash == hash_TOOLCHANGE_WIPE:
+    elif line_hash == hash_TOOLCHANGE_WIPE:
         v.block_classification = CLS_TOOL_PURGE
-        return
 
-    if line_hash == hash_TOOLCHANGE_END:
+    elif line_hash == hash_TOOLCHANGE_END:
         if v.previous_block_classification == CLS_TOOL_UNLOAD:
             v.block_classification = CLS_NORMAL
         else:
@@ -228,14 +193,12 @@ def update_class(line_hash):
                 v.block_classification = CLS_ENDPURGE
             else:
                 v.block_classification = CLS_TONORMAL
-        return
 
-    if line_hash == hash_FIRST_LAYER_BRIM_START:
+    elif line_hash == hash_FIRST_LAYER_BRIM_START:
         v.block_classification = CLS_BRIM
         v.tower_measure = True
-        return
 
-    if line_hash == hash_FIRST_LAYER_BRIM_END:
+    elif line_hash == hash_FIRST_LAYER_BRIM_END:
         v.tower_measure = False
         v.wipe_tower_info_minx -= 2 * v.extrusion_width
         v.wipe_tower_info_maxx += 2 * v.extrusion_width
@@ -244,7 +207,6 @@ def update_class(line_hash):
         v.wipe_tower_xsize = v.wipe_tower_info_maxx - v.wipe_tower_info_minx
         v.wipe_tower_ysize = v.wipe_tower_info_maxy - v.wipe_tower_info_miny
         v.block_classification = CLS_BRIM_END
-        return
 
 
 def parse_gcode():
@@ -330,7 +292,7 @@ def parse_gcode():
 
         if v.block_classification != v.previous_block_classification:
 
-            if v.block_classification in [CLS_TOOL_START, CLS_TOOL_UNLOAD , CLS_EMPTY, CLS_BRIM]:
+            if v.block_classification in [CLS_TOOL_START, CLS_TOOL_UNLOAD, CLS_EMPTY, CLS_BRIM]:
                 for idx in range(backpass_line, len(v.parsed_gcode)):
                     v.parsed_gcode[idx][gcode.CLASS] = v.block_classification
 
@@ -342,7 +304,8 @@ def parse_gcode():
                 backpass_line = len(v.parsed_gcode) - 1
 
             if v.side_wipe_towerdefined:
-                if coordinate_in_tower(code[gcode.X], code[gcode.Y]):
+                if ((v.wipe_tower_info_minx <= code[gcode.X] <= v.wipe_tower_info_maxx) and \
+                                                     (v.wipe_tower_info_miny <= code[gcode.Y] <= v.wipe_tower_info_maxy)):
                     code[gcode.MOVEMENT] += 256
 
         if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
@@ -424,7 +387,7 @@ def gcode_parselines():
                     if g[gcode.COMMAND] in ["M104", "M109"]:
                         if v.process_temp:
                             if current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START,
-                                                                                 CLS_TOOL_UNLOAD]:
+                                                           CLS_TOOL_UNLOAD]:
                                 g[gcode.COMMENT] += " Unprocessed temp "
                                 v.new_temp = gcode.get_parameter(g, gcode.S, v.current_temp)
                                 v.current_temp = v.new_temp
@@ -505,7 +468,6 @@ def gcode_parselines():
                 gcode.issue_command(g)
                 continue
 
-
             if current_block_class == CLS_TOOL_PURGE:
                 if g[gcode.F] is not None and g[gcode.F] > v.purgetopspeed and g[gcode.E]:
                     g[gcode.F] = v.purgetopspeed
@@ -523,14 +485,15 @@ def gcode_parselines():
                 v.towerskipped = (g[gcode.MOVEMENT] & 256) == 256
 
             if v.towerskipped and current_block_class == CLS_NORMAL and (g[gcode.MOVEMENT] & 3) == 3:
-                if coordinate_on_bed(g[gcode.X], g[gcode.Y]):
+                if (v.bed_origin_x <= g[gcode.X] <= v.bed_max_x) and (v.bed_origin_y <= g[gcode.Y] <= v.bed_max_y):
                     v.towerskipped = False
                     if v.toolchange_processed and v.side_wipe_length:
                         create_side_wipe()
                         v.toolchange_processed = False
 
             if not v.side_wipe_towerdefined:
-                if (g[gcode.MOVEMENT] & 7) == 3 and coordinate_in_tower(g[gcode.X], g[gcode.Y]):
+                if (g[gcode.MOVEMENT] & 7) == 3 and ((v.wipe_tower_info_minx <= g[gcode.X] <= v.wipe_tower_info_maxx) and
+                                                     (v.wipe_tower_info_miny <= g[gcode.Y] <= v.wipe_tower_info_maxy)):
                     v.towerskipped = True
                     v.side_wipe_towerdefined = True
 
@@ -717,6 +680,9 @@ def generate(input_file, output_file, printer_profile, splice_offset):
         gui.create_logitem("Bed origin ({:3.1f}mm, {:3.1f}mm)".format(v.bed_origin_x, v.bed_origin_y))
         gui.create_logitem("Bed zise   ({:3.1f}mm, {:3.1f}mm)".format(v.bed_size_x, v.bed_size_y))
 
+    v.bed_max_x = v.bed_origin_x + v.bed_size_x
+    v.bed_max_y = v.bed_origin_y + v.bed_size_y
+
     if v.tower_delta or v.full_purge_reduction and v.variable_layer:
         gui.log_warning("Variable layers are incompatible with FULLPURGE / TOWER DELTA")
 
@@ -729,7 +695,7 @@ def generate(input_file, output_file, printer_profile, splice_offset):
         if v.palette_plus_loading_offset == -9:
             gui.log_warning("P+ parameter P+LOADINGOFFSET incorrectly set up in startup GCODE")
 
-    v.side_wipe = not coordinate_on_bed(v.wipetower_posx, v.wipetower_posy)
+    v.side_wipe = not ((v.bed_origin_x <= v.wipetower_posx <= v.bed_max_x) and (v.bed_origin_y <= v.wipetower_posy <= v.bed_max_y))
     v.tower_delta = v.max_tower_z_delta > 0
 
     gui.create_logitem("`Analyzing tool loading scheme`")
