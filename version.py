@@ -38,7 +38,7 @@ releaseinfo = {
     "5.18.0": "MAF file is generated as BINARY file",
     "5.19.0": "update to config parsin from prusa settings instead of parsing in full file",
     "5.20.0": "updated parseline routine to prevent repetitive function call",
-    "5.21.0": "small correction in gui and filemant type processing˚",
+    "5.21.0": "small correction in gui and filemant type processing",
     '--- RELEASE INFORMATION': 'END'
 }
 

@@ -32,11 +32,12 @@ def create_command(gcode_line, is_comment=False, userclass=0):
     if is_comment:
         return_value[COMMENT] = gcode_line
     else:
-        comsplit = gcode_line.split(";",1)
+
+        comsplit = gcode_line.split(";",1 )
         if len(comsplit) == 2:
             return_value[COMMENT] = comsplit[1]
 
-        fields = comsplit[0].split(" ")
+        fields = comsplit[0].strip().split(" ")
 
         if len(fields[0]) > 0:
 
