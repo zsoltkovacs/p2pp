@@ -330,28 +330,23 @@ def parse_gcode():
 
         if v.block_classification != v.previous_block_classification:
 
-            if v.block_classification == CLS_BRIM_END:
-                backpass_line = len(v.parsed_gcode)
-
-            if v.block_classification == CLS_TOOL_START or \
-                    v.block_classification == CLS_TOOL_UNLOAD or \
-                    v.block_classification == CLS_EMPTY:
-                if backpass_line > len(v.parsed_gcode)-11:
-                    while backpass_line < len(v.parsed_gcode):
-                        v.parsed_gcode[backpass_line][gcode.CLASS] = v.block_classification+100
-                        backpass_line += 1
-                    backpass_line = -1
+            if v.block_classification in [CLS_TOOL_START, CLS_TOOL_UNLOAD , CLS_EMPTY, CLS_BRIM]:
+                for idx in range(backpass_line, len(v.parsed_gcode)):
+                    v.parsed_gcode[idx][gcode.CLASS] = v.block_classification
 
         if v.tower_measure:
             add_point_to_tower(code[gcode.X], code[gcode.Y])
 
-        if v.side_wipe_towerdefined and (code[gcode.MOVEMENT] & 3) == 3:
-            if coordinate_in_tower(code[gcode.X], code[gcode.Y]):
-                code[gcode.MOVEMENT] += 256
+        if (code[gcode.MOVEMENT] & 3) == 3:
+            if (code[gcode.MOVEMENT] & 12) == 0:
                 backpass_line = len(v.parsed_gcode) - 1
 
+            if v.side_wipe_towerdefined:
+                if coordinate_in_tower(code[gcode.X], code[gcode.Y]):
+                    code[gcode.MOVEMENT] += 256
+
         if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
-            if ((code[gcode.MOVEMENT] & 3) == 3) and not coordinate_in_tower(code[gcode.X], code[gcode.Y]):
+            if (code[gcode.MOVEMENT] & 259) == 3:
                 v.parsed_gcode[-1][gcode.CLASS] = CLS_NORMAL
                 v.block_classification = CLS_NORMAL
 
@@ -496,13 +491,13 @@ def gcode_parselines():
                     continue
 
                 if current_block_class == CLS_EMPTY and not v.towerskipped:
-                    v.towerskipped = (g[gcode.MOVEMENT] & 256) == 256
+                    v.towerskipped = (g[gcode.MOVEMENT] & 256) == 256 and v.current_layer_is_skippable
                     if not v.towerskipped:
                         entertower(v.last_parsed_layer * v.layer_height + v.first_layer_height)
 
-                if v.previous_block_classification in [CLS_ENDPURGE, CLS_ENDGRID]:
+                if current_block_class == CLS_NORMAL:
                     if v.towerskipped:
-                        gcode.issue_code("G1 Z{:.2f} F10810    ".format(v.keep_z))
+                        gcode.issue_code("G1 Z{:.2f} F10810".format(v.keep_z))
                         v.towerskipped = False
 
             if current_block_class == CLS_TONORMAL:

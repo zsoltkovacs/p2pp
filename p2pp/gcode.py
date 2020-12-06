@@ -99,6 +99,7 @@ def create_commandstring(gcode_tupple):
     #     p = p + ";\t{} - ".format(gcode_tupple[CLASS])+v.classes[gcode_tupple[CLASS]]
     # except KeyError:
     #     p = p + "\tUnknown class {}".format(gcode_tupple[CLASS])
+    # p = p + "[ {} {} ]".format(gcode_tupple[CLASS], gcode_tupple[MOVEMENT])
 
     return p
 
