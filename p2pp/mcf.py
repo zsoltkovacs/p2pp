@@ -500,19 +500,16 @@ def gcode_parselines():
                         gcode.issue_code("G1 Z{:.2f} F10810".format(v.keep_z))
                         v.towerskipped = False
 
-            if current_block_class == CLS_TONORMAL:
-                gcode.move_to_comment(g, "--P2PP-- post block processing")
-                gcode.issue_command(g)
-                continue
-
-            if v.towerskipped:
+            if v.towerskipped or current_block_class == CLS_TONORMAL:
                 gcode.move_to_comment(g, "--P2PP-- tower skipped")
                 gcode.issue_command(g)
                 continue
 
+
             if current_block_class == CLS_TOOL_PURGE:
-                if g[gcode.F] and g[gcode.F] > v.purgetopspeed:
+                if g[gcode.F] is not None and g[gcode.F] > v.purgetopspeed and g[gcode.E]:
                     g[gcode.F] = v.purgetopspeed
+                    g[gcode.COMMENT] += " prugespeed topped"
 
         # --------------------- SIDE WIPE PROCESSING
         elif v.side_wipe:
@@ -527,7 +524,6 @@ def gcode_parselines():
 
             if v.towerskipped and current_block_class == CLS_NORMAL and (g[gcode.MOVEMENT] & 3) == 3:
                 if coordinate_on_bed(g[gcode.X], g[gcode.Y]):
-
                     v.towerskipped = False
                     if v.toolchange_processed and v.side_wipe_length:
                         create_side_wipe()
