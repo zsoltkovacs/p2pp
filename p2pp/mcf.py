@@ -598,11 +598,12 @@ def gcode_parselines():
 
         # --------------------- PING PROCESSING
 
-        if v.accessory_mode and g[gcode.EXTRUDE]:
-            pings.check_accessorymode_second(g[gcode.E])
-        else:
-            if g[gcode.EXTRUDE] and v.side_wipe_length == 0:
-                pings.check_connected_ping()
+        if not v.manual_filament_swap:
+            if v.accessory_mode and g[gcode.EXTRUDE]:
+                pings.check_accessorymode_second(g[gcode.E])
+            else:
+                if g[gcode.EXTRUDE] and v.side_wipe_length == 0:
+                    pings.check_connected_ping()
 
         v.previous_position_x = v.current_position_x
         v.previous_position_y = v.current_position_y
@@ -747,18 +748,20 @@ def generate(input_file, output_file, printer_profile, splice_offset):
         gui.create_logitem("Generating GCODE file: " + output_file)
         opf = open(output_file, "w")
         if not v.accessory_mode:
-            opf.writelines(header)
-            opf.write("\n\n;--------- START PROCESSED GCODE ----------\n\n")
+            if not v.manual_filament_swap:
+                opf.writelines(header)
+                opf.write("\n\n;--------- START PROCESSED GCODE ----------\n\n")
         if v.accessory_mode:
             opf.write("M0\n")
             opf.write("T0\n")
 
-        if v.splice_offset == 0:
-            gui.log_warning("SPLICE_OFFSET not defined")
-        for line in v.processed_gcode:
-            opf.write(line)
-            opf.write("\n")
-        opf.close()
+        if not v.manual_filament_swap:
+            if v.splice_offset == 0:
+                gui.log_warning("SPLICE_OFFSET not defined")
+            for line in v.processed_gcode:
+                opf.write(line)
+                opf.write("\n")
+            opf.close()
 
         if v.accessory_mode:
 

@@ -10,8 +10,8 @@ __status__ = 'BETA'
 
 
 # general version info
-MajorVersion = 5
-MinorVersion = 23
+MajorVersion = 6
+MinorVersion = 0
 Build = 0
 
 releaseinfo = {
@@ -41,6 +41,7 @@ releaseinfo = {
     "5.21.0": "small correction in gui and filemant type processing",
     "5.22.0": "corrected tower delta",
     "5.23.0": "better tower detection",
+    "6.6.0":  "manual filament swap",
     '--- RELEASE INFORMATION': 'END'
 }
 
