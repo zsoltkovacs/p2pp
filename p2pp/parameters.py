@@ -80,7 +80,7 @@ def check_config_parameters(keyword, value):
         v.filament_type[v.current_tool] = floatparameter(value)
         return
 
-    if keyword == "MANUALSWAP":
+    if keyword == "MANUAL_SWAP":
         v.manual_filament_swap = True
         gui.create_logitem("Manual filament swap in place.".format(v.extra_runout_filament))
         return

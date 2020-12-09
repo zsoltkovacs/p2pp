@@ -291,13 +291,13 @@ def purge_generate_sequence():
             retract(v.current_tool)
         gcode.issue_code("G1 X{} Y{} F8640".format(last_posx, last_posy))
 
-
     if v.manual_filament_swap:
         gcode.issue_code("G91")
         gcode.issue_code("G1 Z20 F10800")
         gcode.issue_code("M25")
         gcode.issue_code("G1 Z-20 F10800")
         gcode.issue_code("G90")
+
     gcode.issue_code("G1 Z{:.2f} F10800")
 
     unretract(v.current_tool)

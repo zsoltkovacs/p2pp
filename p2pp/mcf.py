@@ -758,10 +758,10 @@ def generate(input_file, output_file, printer_profile, splice_offset):
         if not v.manual_filament_swap:
             if v.splice_offset == 0:
                 gui.log_warning("SPLICE_OFFSET not defined")
-            for line in v.processed_gcode:
-                opf.write(line)
-                opf.write("\n")
-            opf.close()
+        for line in v.processed_gcode:
+            opf.write(line)
+            opf.write("\n")
+        opf.close()
 
         if v.accessory_mode:
 
