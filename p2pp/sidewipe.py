@@ -105,8 +105,9 @@ def create_sidewipe_bb3d(length):
     if v.manual_filament_swap:
         issue_code("G91")
         issue_code("G1 Z20 F10800")
-        issue_code("G90")
         issue_code("M25")
+        issue_code("G1 Z-20 F10800")
+        issue_code("G90")
 
     issue_code("G4 S0               ; wait for the print buffer to clear")
     issue_code("M907 X{}           ; increase motor power".format(v.bigbrain3d_motorpower_high))
@@ -152,8 +153,9 @@ def create_side_wipe():
         if v.manual_filament_swap:
             issue_code("G91")
             issue_code("G1 Z20 F10800")
-            issue_code("G90")
             issue_code("M25")
+            issue_code("G1 Z-20 F10800")
+            issue_code("G90")
 
         delta_y = abs(v.sidewipe_maxy - v.sidewipe_miny)
 
