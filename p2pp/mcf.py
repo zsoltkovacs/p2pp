@@ -114,6 +114,13 @@ def entertower(layer_hght):
         if v.retraction >= 0:
             purgetower.retract(v.current_tool)
         gcode.issue_code("G1 X{} Y{} F8640".format(v.current_position_x, v.current_position_y))
+
+        if v.manual_filament_swap:
+            gcode.issue_code("G91")
+            gcode.issue_code("G1 Z20 F10800")
+            gcode.issue_code("G90")
+            gcode.issue_code("M25")
+
         gcode.issue_code("G1 Z{:.2f} F10810".format(purgeheight))
 
         if purgeheight <= 0.21:
@@ -372,6 +379,14 @@ def gcode_parselines():
         elif g[gcode.MOVEMENT] == 0:
 
             if g[gcode.COMMAND].startswith('T'):
+
+                if not v.side_wipe and not v.full_purge_reduction and not v.tower_delta:
+                    if v.manual_filament_swap:
+                        gcode.issue_code("G91")
+                        gcode.issue_code("G1 Z20 F10800")
+                        gcode.issue_code("G90")
+                        gcode.issue_code("M25")
+
                 ct = v.current_tool
                 gcode_process_toolchange(int(g[gcode.COMMAND][1:]))
                 if ct != -1:

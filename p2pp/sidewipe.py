@@ -12,6 +12,7 @@ import p2pp.variables as v
 from p2pp.gcode import issue_code
 
 
+
 #
 # to be implemented - Big Brain 3D purge mechanism support
 #
@@ -100,6 +101,13 @@ def create_sidewipe_bb3d(length):
         issue_code("\nG1 Y{:.3f} F8640    ; change Y position to purge equipment".format(v.bigbrain3d_y_position))
 
     issue_code("G1 X{:.3f} F10800  ; go near edge of bed".format(v.bigbrain3d_x_position - 30))
+
+    if v.manual_filament_swap:
+        issue_code("G91")
+        issue_code("G1 Z20 F10800")
+        issue_code("G90")
+        issue_code("M25")
+
     issue_code("G4 S0               ; wait for the print buffer to clear")
     issue_code("M907 X{}           ; increase motor power".format(v.bigbrain3d_motorpower_high))
     issue_code("; -- P2PP -- Generating {} blobs for {}mm of purge".format(purgeblobs, length), True)
@@ -140,6 +148,12 @@ def create_side_wipe():
 
         issue_code("G1 F8640")
         issue_code("G0 {} Y{}".format(v.side_wipe_loc, v.sidewipe_miny))
+
+        if v.manual_filament_swap:
+            issue_code("G91")
+            issue_code("G1 Z20 F10800")
+            issue_code("G90")
+            issue_code("M25")
 
         delta_y = abs(v.sidewipe_maxy - v.sidewipe_miny)
 
