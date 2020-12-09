@@ -85,7 +85,6 @@ toolchange_processed = False
 enterpurge = False
 variable_layer = False
 save_unprocessed = False
-side_wipe_towerdefined = False
 
 purge_keep_x = None
 purge_keep_y = None

@@ -18,7 +18,33 @@ import p2pp.purgetower as purgetower
 import p2pp.variables as v
 from p2pp.gcodeparser import parse_prusaslicer_config
 from p2pp.omega import header_generate_omega
-from p2pp.sidewipe import create_side_wipe, create_sidewipe_bb3d
+from p2pp.sidewipe import create_side_wipe
+
+# GCODE BLOCK CLASSES
+CLS_UNDEFINED = 0
+CLS_NORMAL = 1
+CLS_TOOL_START = 2
+CLS_TOOL_UNLOAD = 4
+CLS_TOOL_PURGE = 8
+CLS_EMPTY = 16
+CLS_BRIM = 32
+CLS_BRIM_END = 64
+CLS_ENDGRID = 128
+CLS_COMMENT = 256
+CLS_ENDPURGE = 512
+CLS_TOOLCOMMAND = 1024
+
+# HASH CODES FOR KEY COMMENTS
+hash_FIRST_LAYER_BRIM_START = hash("WIPE TOWER FIRST LAYER BRIM START")
+hash_FIRST_LAYER_BRIM_END = hash("WIPE TOWER FIRST LAYER BRIM END")
+hash_EMPTY_GRID_START = hash("EMPTY GRID START")
+hash_EMPTY_GRID_END = hash("EMPTY GRID END")
+hash_TOOLCHANGE_START = hash("TOOLCHANGE START")
+hash_TOOLCHANGE_UNLOAD = hash("TOOLCHANGE UNLOAD")
+hash_TOOLCHANGE_WIPE = hash("TOOLCHANGE WIPE")
+hash_TOOLCHANGE_END = hash("TOOLCHANGE END")
+
+#  delta tower strategy: try to delay the delta as long as possible to minimize the extra print time
 
 
 def optimize_tower_skip(max_layers):
@@ -44,7 +70,7 @@ def gcode_process_toolchange(new_tool):
 
     location = v.total_material_extruded + v.splice_offset
 
-    if new_tool == -1:
+    if new_tool == -1:      # LAST SLICE PROCESSING
         location += v.extra_runout_filament
         v.material_extruded_per_color[v.current_tool] += v.extra_runout_filament
         v.total_material_extruded += v.extra_runout_filament
@@ -53,7 +79,7 @@ def gcode_process_toolchange(new_tool):
 
     length = location - v.previous_toolchange_location
 
-    if v.current_tool != -1:
+    if v.current_tool != -1:  # FIRST SLICE PROCESSING
 
         v.splice_extruder_position.append(location)
         v.splice_length.append(length)
@@ -61,16 +87,16 @@ def gcode_process_toolchange(new_tool):
 
         if len(v.splice_extruder_position) == 1:
             min_length = v.min_start_splice_length
-            gui_format = "Warning : Short first splice (<{}mm) Length:{:-3.2f} Layer {} Input {}"
+            gui_format = "SHORT FIRST SPLICE (<{}mm) Length:{:-3.2f} Input {}"
         else:
             min_length = v.min_splice_length
-            gui_format = "Warning: Short splice (<{}mm) Length:{:-3.2f} Layer:{} Input:{}"
+            gui_format = "SHORT SPLICE (<{}mm) Length:{:-3.2f} Layer:{} Input:{}"
 
         if v.splice_length[-1] < min_length:
             if v.autoaddsplice and (v.full_purge_reduction or v.side_wipe):
                 v.autoadded_purge = v.min_start_splice_length - length
                 v.side_wipe_length += v.autoadded_purge
-                v.splice_extruder_position[-1] += v.autoadded_purge
+                v.splice_extruder_position[-1] += v.autoadded_purge * v.extrusion_multiplier
                 v.splice_length[-1] += v.autoadded_purge
             else:
                 gui.log_warning(gui_format.format(length, min_length, v.last_parsed_layer, v.current_tool + 1))
@@ -84,6 +110,7 @@ def gcode_process_toolchange(new_tool):
 
 
 def calculate_temp_wait_position():
+
     x_offset = 2 + 4 * v.extrusion_width
     y_offset = 2 + 8 * v.extrusion_width
 
@@ -116,54 +143,10 @@ def entertower(layer_hght):
         gcode.issue_code("G1 X{} Y{} F8640".format(v.current_position_x, v.current_position_y))
         gcode.issue_code("G1 Z{:.2f} F10810".format(purgeheight))
 
-        if purgeheight <= 0.21:
+        if purgeheight <= (v.first_layer_height+0.02): # FIRST LAYER PURGES SLOWER
             gcode.issue_code("G1 F{}".format(min(1200, v.wipe_feedrate)))
         else:
             gcode.issue_code("G1 F{}".format(v.wipe_feedrate))
-
-
-def add_point_to_tower(x, y):
-    if x:
-        v.wipe_tower_info_minx = min(v.wipe_tower_info_minx, x)
-        v.wipe_tower_info_maxx = max(v.wipe_tower_info_maxx, x)
-    if y:
-        v.wipe_tower_info_miny = min(v.wipe_tower_info_miny, y)
-        v.wipe_tower_info_maxy = max(v.wipe_tower_info_maxy, y)
-
-
-def create_tower_gcode():
-    purgetower.purge_create_layers(v.wipe_tower_info_minx, v.wipe_tower_info_miny, v.wipe_tower_xsize,
-                                   v.wipe_tower_ysize)
-    gui.create_logitem(
-        " Purge Tower :X{:.2f} Y{:.2f}  W{:.2f} H{:.2f}".format(v.wipe_tower_info_minx, v.wipe_tower_info_miny,
-                                                                v.wipe_tower_xsize, v.wipe_tower_ysize))
-    gui.create_logitem(
-        " Layer Length Solid={:.2f}mm   Sparse={:.2f}mm".format(purgetower.sequence_length_solid,
-                                                                purgetower.sequence_length_empty))
-
-
-CLS_UNDEFINED = 0
-CLS_NORMAL = 1
-CLS_TOOL_START = 2
-CLS_TOOL_UNLOAD = 4
-CLS_TOOL_PURGE = 8
-CLS_EMPTY = 16
-CLS_BRIM = 32
-CLS_BRIM_END = 64
-CLS_ENDGRID = 128
-CLS_COMMENT = 256
-CLS_ENDPURGE = 512
-CLS_TONORMAL = 1024
-CLS_TOOLCOMMAND = 2048
-
-hash_FIRST_LAYER_BRIM_START = hash("WIPE TOWER FIRST LAYER BRIM START")
-hash_FIRST_LAYER_BRIM_END = hash("WIPE TOWER FIRST LAYER BRIM END")
-hash_EMPTY_GRID_START = hash("EMPTY GRID START")
-hash_EMPTY_GRID_END = hash("EMPTY GRID END")
-hash_TOOLCHANGE_START = hash("TOOLCHANGE START")
-hash_TOOLCHANGE_UNLOAD = hash("TOOLCHANGE UNLOAD")
-hash_TOOLCHANGE_WIPE = hash("TOOLCHANGE WIPE")
-hash_TOOLCHANGE_END = hash("TOOLCHANGE END")
 
 
 def update_class(line_hash):
@@ -186,13 +169,7 @@ def update_class(line_hash):
         v.block_classification = CLS_TOOL_PURGE
 
     elif line_hash == hash_TOOLCHANGE_END:
-        if v.previous_block_classification == CLS_TOOL_UNLOAD:
-            v.block_classification = CLS_NORMAL
-        else:
-            if v.previous_block_classification == CLS_TOOL_PURGE:
-                v.block_classification = CLS_ENDPURGE
-            else:
-                v.block_classification = CLS_TONORMAL
+        v.block_classification = CLS_ENDPURGE
 
     elif line_hash == hash_FIRST_LAYER_BRIM_START:
         v.block_classification = CLS_BRIM
@@ -210,6 +187,7 @@ def update_class(line_hash):
 
 
 def parse_gcode():
+
     v.layer_toolchange_counter = 0
     v.layer_emptygrid_counter = 0
 
@@ -223,12 +201,13 @@ def parse_gcode():
 
     backpass_line = -1
     jndex = 0
-    v.side_wipe_towerdefined = False
+    side_wipe_towerdefined = False
 
     for index in range(total_line_count):
 
         v.previous_block_classification = v.block_classification
 
+        # memory management, reduce size of data structures when data is processed
         line = v.input_gcode[jndex]
         jndex += 1
 
@@ -237,6 +216,7 @@ def parse_gcode():
             v.input_gcode = v.input_gcode[jndex:]
             jndex = 0
 
+        # actual line processing
         if line.startswith(';'):
 
             is_comment = True
@@ -255,7 +235,7 @@ def parse_gcode():
                     except (ValueError, IndexError):
                         pass
 
-                elif fields[0][6:] == 'HEIGHT':
+                elif fields[0][6:].startswith('HEIGHT'):
                     try:
                         lv = int((float(fields[1]) + 0.001) * 100)
                         lv = lv - flh
@@ -296,28 +276,36 @@ def parse_gcode():
                 for idx in range(backpass_line, len(v.parsed_gcode)):
                     v.parsed_gcode[idx][gcode.CLASS] = v.block_classification
 
+        # determine tower size
         if v.tower_measure:
-            add_point_to_tower(code[gcode.X], code[gcode.Y])
+            if code[gcode.X]:
+                v.wipe_tower_info_minx = min(v.wipe_tower_info_minx, code[gcode.X])
+                v.wipe_tower_info_maxx = max(v.wipe_tower_info_maxx, code[gcode.X])
+            if code[gcode.Y]:
+                v.wipe_tower_info_miny = min(v.wipe_tower_info_miny, code[gcode.Y])
+                v.wipe_tower_info_maxy = max(v.wipe_tower_info_maxy, code[gcode.Y])
 
+        # determine block separators by looking at the last full XY positioning move
         if (code[gcode.MOVEMENT] & 3) == 3:
             if (code[gcode.MOVEMENT] & 12) == 0:
                 backpass_line = len(v.parsed_gcode) - 1
 
-            if v.side_wipe_towerdefined:
-                if ((v.wipe_tower_info_minx <= code[gcode.X] <= v.wipe_tower_info_maxx) and \
-                                                     (v.wipe_tower_info_miny <= code[gcode.Y] <= v.wipe_tower_info_maxy)):
-                    code[gcode.MOVEMENT] += 256
+            # add
+            if side_wipe_towerdefined:
+                if ((v.wipe_tower_info_minx <= code[gcode.X] <= v.wipe_tower_info_maxx) and\
+                   (v.wipe_tower_info_miny <= code[gcode.Y] <= v.wipe_tower_info_maxy)):
+                    code[gcode.MOVEMENT] += gcode.INTOWER
 
         if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
-            if (code[gcode.MOVEMENT] & 259) == 3:
+            if (code[gcode.MOVEMENT] & gcode.INTOWER + 3 ) == 3:
                 v.parsed_gcode[-1][gcode.CLASS] = CLS_NORMAL
                 v.block_classification = CLS_NORMAL
 
         if v.block_classification == CLS_BRIM_END:
             v.block_classification = CLS_NORMAL
-            v.side_wipe_towerdefined = True
+            side_wipe_towerdefined = True
 
-    v.side_wipe_towerdefined = False
+    v.input_gcode = []
 
 
 def gcode_parselines():
@@ -344,6 +332,8 @@ def gcode_parselines():
 
         idx = idx + 1
 
+        # ----- MEMORY MANAGEMENT - when 10K lines are processed, remove the top of the list
+
         if idx > 100000:
             v.parsed_gcode = v.parsed_gcode[idx:]
             idx = 0
@@ -364,7 +354,8 @@ def gcode_parselines():
         if g[gcode.COMMAND] is None:
             if v.needpurgetower and g[gcode.COMMENT].endswith("BRIM END"):
                 v.needpurgetower = False
-                create_tower_gcode()
+                purgetower.purge_create_layers(v.wipe_tower_info_minx, v.wipe_tower_info_miny, v.wipe_tower_xsize,
+                                               v.wipe_tower_ysize)
                 purgetower.purge_generate_brim()
             gcode.issue_command(g)
             continue
@@ -439,7 +430,7 @@ def gcode_parselines():
 
         # this goes for all situations: START and UNLOAD are not needed
         if current_block_class in [CLS_TOOL_START, CLS_TOOL_UNLOAD]:
-            gcode.move_to_comment(g, "--P2PP-- tool unload2")
+            gcode.move_to_comment(g, "--P2PP-- tool unload")
             gcode.issue_command(g)
             continue
 
@@ -454,7 +445,7 @@ def gcode_parselines():
                     continue
 
                 if current_block_class == CLS_EMPTY and not v.towerskipped:
-                    v.towerskipped = (g[gcode.MOVEMENT] & 256) == 256 and v.current_layer_is_skippable
+                    v.towerskipped = (g[gcode.MOVEMENT] & gcode.INTOWER) == gcode.INTOWER and v.current_layer_is_skippable
                     if not v.towerskipped:
                         entertower(v.last_parsed_layer * v.layer_height + v.first_layer_height)
 
@@ -463,26 +454,27 @@ def gcode_parselines():
                         gcode.issue_code("G1 Z{:.2f} F10810".format(v.keep_z))
                         v.towerskipped = False
 
-            if v.towerskipped or current_block_class == CLS_TONORMAL:
-                gcode.move_to_comment(g, "--P2PP-- tower skipped")
-                gcode.issue_command(g)
-                continue
-
             if current_block_class == CLS_TOOL_PURGE:
                 if g[gcode.F] is not None and g[gcode.F] > v.purgetopspeed and g[gcode.E]:
                     g[gcode.F] = v.purgetopspeed
                     g[gcode.COMMENT] += " prugespeed topped"
 
+            if v.towerskipped:
+                gcode.move_to_comment(g, "--P2PP-- tower skipped")
+                gcode.issue_command(g)
+                continue
         # --------------------- SIDE WIPE PROCESSING
         elif v.side_wipe:
 
             if classupdate:
 
-                if current_block_class == CLS_BRIM and v.bigbrain3d_purge_enabled:
-                    create_sidewipe_bb3d(v.bigbrain3d_prime * v.bigbrain3d_blob_size)
+                if current_block_class == CLS_BRIM:
+                    if v.bigbrain3d_purge_enabled:
+                        create_side_wipe(v.bigbrain3d_prime * v.bigbrain3d_blob_size)
+                    v.towerskipped = True
 
             if not v.towerskipped and (g[gcode.MOVEMENT] & 3) == 3:
-                v.towerskipped = (g[gcode.MOVEMENT] & 256) == 256
+                v.towerskipped = (g[gcode.MOVEMENT] & gcode.INTOWER) == gcode.INTOWER
 
             if v.towerskipped and current_block_class == CLS_NORMAL and (g[gcode.MOVEMENT] & 3) == 3:
                 if (v.bed_origin_x <= g[gcode.X] <= v.bed_max_x) and (v.bed_origin_y <= g[gcode.Y] <= v.bed_max_y):
@@ -490,12 +482,6 @@ def gcode_parselines():
                     if v.toolchange_processed and v.side_wipe_length:
                         create_side_wipe()
                         v.toolchange_processed = False
-
-            if not v.side_wipe_towerdefined:
-                if (g[gcode.MOVEMENT] & 7) == 3 and ((v.wipe_tower_info_minx <= g[gcode.X] <= v.wipe_tower_info_maxx) and
-                                                     (v.wipe_tower_info_miny <= g[gcode.Y] <= v.wipe_tower_info_maxy)):
-                    v.towerskipped = True
-                    v.side_wipe_towerdefined = True
 
             if v.towerskipped:
                 if current_block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE]:
@@ -510,13 +496,13 @@ def gcode_parselines():
 
             if classupdate:
 
-                if v.previous_block_classification == CLS_ENDGRID:
+                if current_block_class == CLS_NORMAL:
                     v.towerskipped = False
 
             if not v.towerskipped and current_block_class == CLS_EMPTY and v.current_layer_is_skippable:
-                v.towerskipped = (g[gcode.MOVEMENT] & 256) == 256
+                v.towerskipped = (g[gcode.MOVEMENT] & gcode.INTOWER) == gcode.INTOWER
 
-            if v.towerskipped or current_block_class in [CLS_TONORMAL, CLS_BRIM, CLS_ENDGRID]:
+            if v.towerskipped or current_block_class in [CLS_BRIM, CLS_ENDGRID]:
                 gcode.move_to_comment(g, "--P2PP-- full purge skipped")
                 gcode.issue_command(g)
                 continue
@@ -529,9 +515,10 @@ def gcode_parselines():
                 continue
 
             if v.toolchange_processed and current_block_class == CLS_NORMAL:
-                if v.side_wipe_length and (g[gcode.MOVEMENT] & 3) == 3 and not (g[gcode.MOVEMENT] & 256) == 256:
+                if v.side_wipe_length and (g[gcode.MOVEMENT] & 3) == 3 and not (g[gcode.MOVEMENT] & gcode.INTOWER) == gcode.INTOWER:
                     purgetower.purge_generate_sequence()
                     v.toolchange_processed = False
+                    # do not issue code here as the next code might require further processing such as retractioncorrection
                 else:
                     gcode.move_to_comment(g, "--P2PP-- full purge skipped")
                     gcode.issue_command(g)
