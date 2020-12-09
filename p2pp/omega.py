@@ -247,7 +247,8 @@ def header_generate_omega_palette2(job_name):
             header.append("O1 D{} {}\n"
                           .format(job_name, hexify_long(int(v.total_material_extruded + 0.5 + v.autoloadingoffset))))
 
-        header.append("M0\n")
+        if v.generate_M0:
+            header.append("M0\n")
         header.append("T0\n")
         summary = generatesummary()
         warnings = generatewarnings()

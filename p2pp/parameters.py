@@ -269,6 +269,10 @@ def check_config_parameters(keyword, value):
         v.gui = False
         return
 
+    if keyword == "DO_NOT_GENERATE_M0":
+        v.generate_M0 = False
+        return
+
     if keyword == "CONSOLEWAIT":
         v.consolewait = True
         return

@@ -737,7 +737,8 @@ def generate(input_file, output_file, printer_profile, splice_offset):
             opf.writelines(header)
             opf.write("\n\n;--------- START PROCESSED GCODE ----------\n\n")
         if v.accessory_mode:
-            opf.write("M0\n")
+            if v.generate_M0:
+                header.append("M0\n")
             opf.write("T0\n")
 
         if v.splice_offset == 0:
