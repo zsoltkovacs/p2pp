@@ -408,6 +408,9 @@ def gcode_parselines():
                     elif g[gcode.COMMAND] == "M220":
                         gcode.move_to_comment(g, "--P2PP-- Feed Rate Adjustments are removed")
 
+                    elif not v.generate_M0 and g[gcode.COMMAND] == "M0":
+                        gcode.move_to_comment(g, "--P2PP-- remove M0 command")
+
             gcode.issue_command(g)
             continue
 
