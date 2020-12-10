@@ -365,9 +365,8 @@ def gcode_parselines():
             if g[gcode.COMMAND].startswith('T'):
                 ct = v.current_tool
                 gcode_process_toolchange(int(g[gcode.COMMAND][1:]))
-                if ct != -1:
-                    if not v.debug_leaveToolCommands:
-                        gcode.move_to_comment(g, "--P2PP-- Color Change")
+                if not v.debug_leaveToolCommands:
+                    gcode.move_to_comment(g, "--P2PP-- Color Change")
                     v.toolchange_processed = True
             else:
                 if current_block_class == CLS_TOOL_UNLOAD:
