@@ -120,7 +120,11 @@ def create_sidewipe_bb3d(length):
     issue_code("\n;-------------------------------\n", True)
 
 
-def create_side_wipe():
+def create_side_wipe(length=0):
+
+    if length != 0:
+        v.side_wipe_length = length
+
     if not v.side_wipe or v.side_wipe_length == 0:
         return
 
@@ -139,7 +143,7 @@ def create_side_wipe():
             purgetower.retract(v.current_tool)
 
         issue_code("G1 F8640")
-        issue_code("G0 {} Y{}".format(v.side_wipe_loc, v.sidewipe_miny))
+        issue_code("G1 {} Y{}".format(v.side_wipe_loc, v.sidewipe_miny))
 
         delta_y = abs(v.sidewipe_maxy - v.sidewipe_miny)
 

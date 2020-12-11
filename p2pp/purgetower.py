@@ -10,7 +10,7 @@ __email__ = 'P2PP@pandora.be'
 import math
 
 import p2pp.gcode as gcode
-import p2pp.gcodeparser as gcodeparser
+import p2pp.psconfig as gcodeparser
 import p2pp.variables as v
 
 solidlayer = []
@@ -192,8 +192,8 @@ def _purge_generate_tower_brim(x, y, w, h):
     h += 2 * ew
 
     brimlayer.append(gcode.create_command("; P2PP - BRIM CODE"))
-    brimlayer.append(gcode.create_command("G0 X{:.3f} Y{:.3f} F8640".format(x, y)))
-    brimlayer.append(gcode.create_command("G0 Z{:.3f}".format(v.layer_height)))
+    brimlayer.append(gcode.create_command("G1 X{:.3f} Y{:.3f} F8640".format(x, y)))
+    brimlayer.append(gcode.create_command("G1 Z{:.3f}".format(v.layer_height)))
 
     for i in range(4):
         brimlayer.append(

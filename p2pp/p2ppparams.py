@@ -73,7 +73,7 @@ def check_config_parameters(keyword, value):
 
     if keyword == "SPLICEOFFSET":
         v.splice_offset = floatparameter(value)
-        gui.create_logitem("Splice Offset set tofiloverride {:-5.2f}mm".format(v.splice_offset))
+        gui.create_logitem("SPLICE OFFSET: {:-5.2f}mm".format(v.splice_offset))
         return
 
     if keyword == "EXTRUSIONMULTIPLIERCORRECTION":

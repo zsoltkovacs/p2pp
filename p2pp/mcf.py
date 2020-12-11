@@ -16,7 +16,7 @@ import p2pp.p2_m4c as m4c
 import p2pp.pings as pings
 import p2pp.purgetower as purgetower
 import p2pp.variables as v
-from p2pp.gcodeparser import parse_prusaslicer_config
+from p2pp.psconfig import parse_prusaslicer_config
 from p2pp.omega import header_generate_omega
 from p2pp.sidewipe import create_side_wipe
 
@@ -111,39 +111,31 @@ def gcode_process_toolchange(new_tool):
 
 def calculate_temp_wait_position():
 
-    x_offset = 2 + 4 * v.extrusion_width
-    y_offset = 2 + 8 * v.extrusion_width
-
-    if abs(v.wipe_tower_info_minx - v.purge_keep_x) < abs(v.wipe_tower_info_maxx - v.purge_keep_x):
-        pos_x = v.wipe_tower_info_minx + x_offset
-    else:
-        pos_x = v.wipe_tower_info_maxx - x_offset
-
-    if abs(v.wipe_tower_info_miny - v.purge_keep_y) < abs(v.wipe_tower_info_maxy - v.purge_keep_y):
-        pos_y = v.wipe_tower_info_miny + y_offset
-    else:
-        pos_y = v.wipe_tower_info_maxy - y_offset
-
+    pos_x = v.wipe_tower_info_minx + v.tx_offset * 1 if abs(v.wipe_tower_info_minx - v.purge_keep_x) < abs(v.wipe_tower_info_maxx - v.purge_keep_x) else -1
+    pos_y = v.wipe_tower_info_miny + v.ty_offset * 1 if abs(v.wipe_tower_info_miny - v.purge_keep_y) < abs(v.wipe_tower_info_maxy - v.purge_keep_y) else -1
     return [pos_x, pos_y]
 
 
 def entertower(layer_hght):
+
     purgeheight = layer_hght - v.cur_tower_z_delta
+
     if v.current_position_z != purgeheight:
         v.max_tower_delta = max(v.cur_tower_z_delta, v.max_tower_delta)
         gcode.issue_code(";------------------------------", True)
         gcode.issue_code(";  P2PP DELTA ENTER", True)
-        gcode.issue_code(";  Current Z-Height = {:.2f}".format(v.current_position_z), True)
-        gcode.issue_code(";  Tower height = {:.2f}".format(purgeheight), True)
-        gcode.issue_code(";  Tower delta = {:.2f} ".format(v.current_position_z - purgeheight), True)
+        gcode.issue_code(";  Current printing Z = {:.2f}".format(v.current_position_z), True)
+        gcode.issue_code(";  Tower Z = {:.2f}".format(purgeheight), True)
+        gcode.issue_code(";  Ddelta = {:.2f} ".format(v.current_position_z - purgeheight), True)
         gcode.issue_code(";------------------------------", True)
 
         if v.retraction >= 0:
             purgetower.retract(v.current_tool)
+
         gcode.issue_code("G1 X{} Y{} F8640".format(v.current_position_x, v.current_position_y))
         gcode.issue_code("G1 Z{:.2f} F10810".format(purgeheight))
 
-        if purgeheight <= (v.first_layer_height+0.02): # FIRST LAYER PURGES SLOWER
+        if purgeheight <= (v.first_layer_height+0.02):  # FIRST LAYER PURGES SLOWER
             gcode.issue_code("G1 F{}".format(min(1200, v.wipe_feedrate)))
         else:
             gcode.issue_code("G1 F{}".format(v.wipe_feedrate))
@@ -176,14 +168,10 @@ def update_class(line_hash):
         v.tower_measure = True
 
     elif line_hash == hash_FIRST_LAYER_BRIM_END:
+        v.block_classification = CLS_BRIM_END
         v.tower_measure = False
-        v.wipe_tower_info_minx -= 2 * v.extrusion_width
-        v.wipe_tower_info_maxx += 2 * v.extrusion_width
-        v.wipe_tower_info_miny -= 4 * v.extrusion_width
-        v.wipe_tower_info_maxy += 4 * v.extrusion_width
         v.wipe_tower_xsize = v.wipe_tower_info_maxx - v.wipe_tower_info_minx
         v.wipe_tower_ysize = v.wipe_tower_info_maxy - v.wipe_tower_info_miny
-        v.block_classification = CLS_BRIM_END
 
 
 def parse_gcode():
@@ -279,11 +267,11 @@ def parse_gcode():
         # determine tower size
         if v.tower_measure:
             if code[gcode.X]:
-                v.wipe_tower_info_minx = min(v.wipe_tower_info_minx, code[gcode.X])
-                v.wipe_tower_info_maxx = max(v.wipe_tower_info_maxx, code[gcode.X])
+                v.wipe_tower_info_minx = min(v.wipe_tower_info_minx, code[gcode.X] - 2 * v.extrusion_width)
+                v.wipe_tower_info_maxx = max(v.wipe_tower_info_maxx, code[gcode.X] + 2 * v.extrusion_width)
             if code[gcode.Y]:
-                v.wipe_tower_info_miny = min(v.wipe_tower_info_miny, code[gcode.Y])
-                v.wipe_tower_info_maxy = max(v.wipe_tower_info_maxy, code[gcode.Y])
+                v.wipe_tower_info_miny = min(v.wipe_tower_info_miny, code[gcode.Y] - 4 * 2 * v.extrusion_width)
+                v.wipe_tower_info_maxy = max(v.wipe_tower_info_maxy, code[gcode.Y] + 4 * 2 * v.extrusion_width)
 
         # determine block separators by looking at the last full XY positioning move
         if (code[gcode.MOVEMENT] & 3) == 3:
@@ -292,12 +280,12 @@ def parse_gcode():
 
             # add
             if side_wipe_towerdefined:
-                if ((v.wipe_tower_info_minx <= code[gcode.X] <= v.wipe_tower_info_maxx) and\
+                if ((v.wipe_tower_info_minx <= code[gcode.X] <= v.wipe_tower_info_maxx) and
                    (v.wipe_tower_info_miny <= code[gcode.Y] <= v.wipe_tower_info_maxy)):
                     code[gcode.MOVEMENT] += gcode.INTOWER
 
         if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
-            if (code[gcode.MOVEMENT] & gcode.INTOWER + 3 ) == 3:
+            if (code[gcode.MOVEMENT] & gcode.INTOWER + 3) == 3:
                 v.parsed_gcode[-1][gcode.CLASS] = CLS_NORMAL
                 v.block_classification = CLS_NORMAL
 
@@ -363,7 +351,6 @@ def gcode_parselines():
         elif g[gcode.MOVEMENT] == 0:
 
             if g[gcode.COMMAND].startswith('T'):
-                ct = v.current_tool
                 gcode_process_toolchange(int(g[gcode.COMMAND][1:]))
                 if not v.debug_leaveToolCommands:
                     gcode.move_to_comment(g, "--P2PP-- Color Change")
@@ -575,12 +562,9 @@ def gcode_parselines():
         if g[gcode.UNRETRACT]:
             g[gcode.E] = min(-v.retraction, g[gcode.E])
             v.retraction += g[gcode.E]
-
-        if g[gcode.RETRACT]:
-            g[gcode.E] = +g[gcode.E]
+        elif g[gcode.RETRACT]:
             v.retraction += g[gcode.E]
-
-        if (g[gcode.MOVEMENT] & 3) and g[gcode.EXTRUDE] and v.retraction < -0.01:
+        elif (g[gcode.MOVEMENT] & 3) and g[gcode.EXTRUDE] and v.retraction < -0.01:
             purgetower.unretract(v.current_tool, -1, ";--- P2PP --- fixup retracts")
 
         gcode.issue_command(g)

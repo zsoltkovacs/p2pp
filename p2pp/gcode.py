@@ -63,7 +63,7 @@ def create_command(gcode_line, is_comment=False, userclass=0):
                     return_value[OTHER] = return_value[OTHER] + " " + param
 
             check = (param_coefficient & 31)
-            if check and return_value[COMMAND] in ['G0', 'G1']:
+            if check and return_value[COMMAND] == "G1":
                 return_value[MOVEMENT] = check
                 if param_coefficient & 8:
                     if return_value[E] < 0:

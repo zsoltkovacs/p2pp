@@ -12,7 +12,7 @@ import re
 
 import p2pp.gui as gui
 import p2pp.variables as v
-import p2pp.parameters as parameters
+import p2pp.p2ppparams as parameters
 from p2pp.omega import algorithm_process_material_configuration
 
 
@@ -193,6 +193,8 @@ def parse_prusaslicer_config():
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 v.extrusion_width = float(gcode_line[parameter_start + 1:].strip())
+                v.tx_offset = 2 + 4 * v.extrusion_width
+                v.yy_offset = 2 + 8 * v.extrusion_width
             continue
 
         if gcode_line.startswith("; infill_speed"):
