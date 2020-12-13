@@ -57,11 +57,7 @@ def optimize_tower_skip(max_layers):
             skippable -= 1
         idx += 1
 
-    if skippable > 0:
-        gui.log_warning(
-            "TOWERDELTA in effect for {} Layers or {:.2f}mm".format(skippable, skippable * v.layer_height))
-    else:
-        gui.create_logitem("TOWERDELTA could not be applied to this print")
+    return skippable
 
 
 def gcode_process_toolchange(new_tool):
@@ -174,6 +170,14 @@ def update_class(line_hash):
         v.wipe_tower_ysize = v.wipe_tower_info_maxy - v.wipe_tower_info_miny
 
 
+def process_layer(layer, index):
+    v.last_parsed_layer = layer
+    v.layer_end.append(index)
+    if layer > 0:
+        v.skippable_layer.append((v.layer_emptygrid_counter > 0) and (v.layer_toolchange_counter == 0))
+        v.layer_toolchange_counter = 0
+        v.layer_emptygrid_counter = 0
+
 def parse_gcode():
 
     v.layer_toolchange_counter = 0
@@ -215,30 +219,19 @@ def parse_gcode():
             elif line.startswith(';LAYER'):  # Layer instructions
 
                 fields = line.split(' ')
-                layer = None
 
-                if use_layer_instead_of_layerheight and len(fields[0]) == 6:
-                    try:
-                        layer = int(fields[1])
-                    except (ValueError, IndexError):
-                        pass
+                try:
+                    lv = float(fields[1])
+                    if use_layer_instead_of_layerheight and len(fields[0]) == 6:
+                        process_layer(int(lv), index)
 
-                elif fields[0][6:].startswith('HEIGHT'):
-                    try:
-                        lv = int((float(fields[1]) + 0.001) * 100)
-                        lv = lv - flh
+                    elif fields[0][6:].startswith('HEIGHT'):
+                        lv = int((lv + 0.001) * 100) - flh
                         if lv % olh == 0:
-                            layer = int(lv / olh)
-                    except (ValueError, IndexError):
-                        pass
+                            process_layer(int(lv / olh), index)
 
-                if layer is not None:
-                    v.last_parsed_layer = layer
-                    v.layer_end.append(index)
-                    if layer > 0:
-                        v.skippable_layer.append((v.layer_emptygrid_counter > 0) and (v.layer_toolchange_counter == 0))
-                        v.layer_toolchange_counter = 0
-                        v.layer_emptygrid_counter = 0
+                except (ValueError, IndexError):
+                    pass
 
         else:
             is_comment = False
@@ -252,7 +245,7 @@ def parse_gcode():
                     v.set_tool = cur_tool
                     v.m4c_toolchanges.append(cur_tool)
                     v.m4c_toolchange_source_positions.append(len(v.parsed_gcode))
-            except (TypeError, IndexError):
+            except (TypeError, IndexError, ValueError):
                 pass
 
         code = gcode.create_command(line, is_comment, v.block_classification)
@@ -284,10 +277,10 @@ def parse_gcode():
                    (v.wipe_tower_info_miny <= code[gcode.Y] <= v.wipe_tower_info_maxy)):
                     code[gcode.MOVEMENT] += gcode.INTOWER
 
-        if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
-            if (code[gcode.MOVEMENT] & gcode.INTOWER + 3) == 3:
-                v.parsed_gcode[-1][gcode.CLASS] = CLS_NORMAL
-                v.block_classification = CLS_NORMAL
+            if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
+                if not (code[gcode.MOVEMENT] & gcode.INTOWER):
+                    v.parsed_gcode[-1][gcode.CLASS] = CLS_NORMAL
+                    v.block_classification = CLS_NORMAL
 
         if v.block_classification == CLS_BRIM_END:
             v.block_classification = CLS_NORMAL
@@ -704,7 +697,12 @@ def generate(input_file, output_file, printer_profile, splice_offset):
     else:
         if v.tower_delta:
             v.skippable_layer[0] = False
-        optimize_tower_skip(int(v.max_tower_z_delta / v.layer_height))
+        skippable = optimize_tower_skip(int(v.max_tower_z_delta / v.layer_height))
+
+        if skippable > 0:
+            gui.log_warning("TOWERDELTA in effect for {} Layers or {:.2f}mm".format(skippable, skippable * v.layer_height))
+        else:
+            gui.create_logitem("TOWERDELTA could not be applied to this print")
 
         gui.create_logitem("Generate processed GCode")
         gcode_parselines()
