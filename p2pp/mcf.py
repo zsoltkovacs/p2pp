@@ -24,7 +24,7 @@ from p2pp.sidewipe import create_side_wipe, create_sidewipe_bb3d
 def optimize_tower_skip(max_layers):
     skippable = v.skippable_layer.count(True)
 
-    idx = 1
+    idx = 0
     while skippable > max_layers:
         if v.skippable_layer[idx]:
             v.skippable_layer[idx] = False
