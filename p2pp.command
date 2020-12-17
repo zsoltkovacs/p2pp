@@ -3,7 +3,7 @@ DIRECTORY=`dirname $0`
 
 if [ $# -eq -0 ]
 then
-     python $DIRECTORY/P2PP.py
+     python3.7 $DIRECTORY/P2PP.py
 else
-     python $DIRECTORY/P2PP.py -i "$1"
+     python3.7 $DIRECTORY/P2PP.py -i "$1"
 fi

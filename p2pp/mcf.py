@@ -50,10 +50,11 @@ hash_TOOLCHANGE_END = hash("TOOLCHANGE END")
 def optimize_tower_skip(max_layers):
     skippable = v.skippable_layer.count(True)
 
-    idx = 1
+    idx = 0
     while skippable > max_layers:
         if v.skippable_layer[idx]:
             v.skippable_layer[idx] = False
+
             skippable -= 1
         idx += 1
 

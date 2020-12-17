@@ -11,7 +11,7 @@ __status__ = 'BETA'
 
 # general version info
 MajorVersion = 5
-MinorVersion = 26
+MinorVersion = 27
 Build = 0
 
 releaseinfo = {
@@ -44,6 +44,7 @@ releaseinfo = {
     "5.24.0": "DO_NOT_GENERATE_M0 option added",
     "5.25.0": "possible incorrect tool select - corrected",
     "5.26.0": "remove M0 from existing output",
+    "5.27.0": "correction in the tower delta calculation",
     '--- RELEASE INFORMATION': 'END'
 }
 
