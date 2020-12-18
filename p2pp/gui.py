@@ -108,11 +108,10 @@ def create_emptyline():
 def close_button_enable():
     create_emptyline()
 
-    if sys.version_info[0] == 3:
-        print()
-        input("Press enter to terminate....")
-    else:
+    try:
         raw_input("Press enter to terminate....")
+    except:
+        input("Press enter to terminate....")
     exit()
 
 
