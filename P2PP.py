@@ -97,6 +97,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] == "-i"):
         platformD = platform.system()
 
+        gui.setfilename('')
         MASTER_VERSION = checkversion.get_version(checkversion.MASTER)
         DEV_VERSION = checkversion.get_version(checkversion.DEV)
 
@@ -118,7 +119,6 @@ if __name__ == "__main__":
                     color = "green"
             gui.create_logitem(v.version, color, True)
 
-        gui.configinfo()
         gui.create_emptyline()
         gui.create_logitem("Line to be used in PrusaSlicer [Print Settings][Output Options][Post Processing Script]",
                            "blue")

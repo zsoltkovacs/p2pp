@@ -99,13 +99,6 @@ def header_generate_omega(job_name):
 
     if len(v.splice_extruder_position) == 0:
         gui.log_warning("This does not look like a multi-colour file.\n")
-        if v.gui:
-            if gui.ask_yes_no('Not a Multi-Colour file?',
-                              "This doesn't look like a multi-colour file. Skip processing?"):
-                exit(1)
-        else:
-            if yes_or_no("This does not look like a multi-colour file.. Skip P2PP Processing?\n"):
-                exit(1)
 
     algorithm_create_table()
     if not v.palette_plus:

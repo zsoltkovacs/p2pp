@@ -7,28 +7,28 @@ __license__ = 'GPLv3'
 __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 
-try:
-    # p ython version 2.x
-    import Tkinter as tkinter
-    import ttk
-    import tkMessageBox
-except ImportError:
-    # python version 3.x
-    import tkinter
-    from tkinter import ttk
-    from tkinter import messagebox as tkMessageBox
+from PyQt5 import uic
+from PyQt5.QtWidgets import QApplication
 
-import os
-import sys
-from platform import system
-
-import p2pp.colornames as colornames
 import p2pp.variables as v
+import p2pp.colornames as colornames
 import version
+import sys
 
-platformD = system()
 
 last_pct = -1
+
+Form, Window = uic.loadUiType("p2pp.ui")
+app = QApplication([])
+window = Window()
+form = Form()
+form.setupUi(window)
+form.version.setText(version.Version)
+form.pythonversion.setText(sys.version.split(' ')[0])
+window.show()
+
+
+
 
 
 def print_summary(summary):
@@ -75,39 +75,31 @@ def progress_string(pct):
     global last_pct
     if pct - last_pct < 2:
         return
+
     if pct >= 100:
         if len(v.process_warnings) == 0:
-            completed("  COMPLETED OK", '#008000')
+            form.label_6.setText("COMPLETED OK")
+            form.label_6.setStyleSheet("color: #00FF00")
         else:
-            completed("  COMPLETED WITH WARNINGS", '#800000')
+            form.label_6.setText("COMPLETED WITH WARNINGS")
+            form.label_6.setStyleSheet("color: #FF0000")
+        close_button_enable()
     else:
-        progress.set(pct)
-    mainwindow.update()
+        form.progress.setProperty("value", pct)
+        app.sync()
+
     last_pct = pct
 
 
-def completed(text, color):
-    progressbar.destroy()
-    progress_field = tkinter.Label(infosubframe, text=text, font=boldfont, foreground=color,  background="#808080")
-    progress_field.grid(row=3, column=2, sticky="ew")
 
+def create_logitem(text, color="#000000", force_update=True, position=0):
+    word = '<span style=\" color: {}\">  {}</span>'.format(color, text)
+    print(word)
+    form.textBrowser.append( word )
 
-color_count = 0
-
-
-def create_logitem(text, color="black", force_update=True, position=tkinter.END):
-    text = text.strip()
-    global color_count
-    color_count += 1
-    tagname = "color"+str(color_count)
-    loglist.tag_configure(tagname, foreground=color)
-    loglist.insert(position, "  " + text + "\n", tagname)
-    if force_update:
-        mainwindow.update()
 
 
 def create_colordefinition(reporttype, p2_input, filament_type, color_code, filamentused):
-    global color_count
 
     name = "----"
     if reporttype == 0:
@@ -115,27 +107,18 @@ def create_colordefinition(reporttype, p2_input, filament_type, color_code, fila
     if reporttype == 1:
         name = "Filament"
 
-    color_count += 1
-    tagname = "color" + str(color_count)
-    color_count += 1
-    tagname2 = "color" + str(color_count)
-    loglist.tag_configure(tagname, foreground='black')
-    loglist.tag_configure(tagname2, foreground="#"+color_code)
-
     try:
         filament_id = v.filament_ids[p2_input - 1]
     except IndexError:
         filament_id = ""
 
     if reporttype == 0:
-        loglist.insert(tkinter.END, "  \t{}  {} {:-8.2f}mm - {}".format(name, p2_input, filamentused, filament_type),
-                       tagname)
-    if reporttype == 1:
-        loglist.insert(tkinter.END, "  \t{}  {}  - {}".format(name, p2_input, filament_type), tagname)
+        word = "  \t{}  {} {:-8.2f}mm - {} <span style=\" color: #{};\">[######]]</span>   \t{:15} {} ".format(name, p2_input, filamentused, filament_type, color_code, colornames.find_nearest_colour(color_code), filament_id )
 
-    loglist.insert(tkinter.END, "  \t[####]\t", tagname2)
-    loglist.insert(tkinter.END, "  \t{:15} {} \n".format(colornames.find_nearest_colour(color_code), filament_id),
-                   tagname)
+    if reporttype == 1:
+        word = "  \t{}  {}  - {} <span style=\" color: #{};\">[######]]</span>   \t{:15} {}".format(name, p2_input, filament_type, color_code, colornames.find_nearest_colour(color_code), filament_id)
+
+    form.textBrowser.append( word )
 
 
 def create_emptyline():
@@ -143,151 +126,31 @@ def create_emptyline():
 
 
 def close_window():
-    mainwindow.destroy()
+    app.quit()
 
 
-def update_button_pressed():
-    v.upgradeprocess(version.latest_stable_version, [])
+def on_click():
+    exit()
 
 
 def close_button_enable():
-    closebutton.config(state=tkinter.NORMAL)
-    # WIP disable upgrade for now
-    # if not (v.upgradeprocess == None):
-    #     tkinter.Button(buttonframe, text='Upgrade to '+version.latest_stable_version, command=update_button_pressed).pack(side=tkinter.RIGHT)
-    mainwindow.mainloop()
-
-
-def center(win, width, height):
-    win.update_idletasks()
-    x = (win.winfo_screenwidth() // 2) - (width // 2)  # center horizontally in screen
-    y = (win.winfo_screenheight() // 2) - (height // 2)  # center vertically in screen
-    win.geometry('{}x{}+{}+{}'.format(width, height, x, y))
-    win.minsize(int(width / 1.2), int(height / 1.2))
-    win.maxsize(width * 4, height * 4)
+    form.exitButton.clicked.connect(on_click)
+    form.exitButton.setEnabled(True)
+    app.exec_()
 
 
 def set_printer_id(text):
-    printerid.set(text)
-    mainwindow.update()
+        pass
 
 
 def setfilename(text):
-    filename.set(text)
-    mainwindow.update()
-
-
-def user_error(header, body_text):
-    tkMessageBox.showinfo(header, body_text)
-
-
-def ask_yes_no(title, message):
-    return tkMessageBox.askquestion(title, message).upper() == "YES"
+    form.filename.setText(text)
+    if text == "":
+        form.filename.setText('')
+        form.label_5.setText('')
 
 
 def log_warning(text):
     v.process_warnings.append(";" + text)
-    create_logitem(text, "red")
+    create_logitem(text, "#FF0000")
 
-
-def configinfo():
-    global infosubframe
-    infosubframe.destroy()
-    infosubframe = tkinter.Frame(infoframe, border=3, relief='sunken', background="#909090")
-    infosubframe.pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
-    tkinter.Label(infosubframe, text='CONFIGURATION  INFO', font=boldfontlarge, background="#909090").pack(side=tkinter.TOP, expand=1)
-
-    tkinter.Label(infosubframe, text="P2PP Version "+version.Version+"\n", font=boldfont, background="#909090").pack(side=tkinter.BOTTOM)
-
-
-mainwindow = tkinter.Tk()
-mainwindow.title("Palette2 Post Processing for PrusaSliceer")
-center(mainwindow, 800, 620)
-
-if platformD == 'Windows':
-    logo_image = os.path.dirname(sys.argv[0]) + '\\favicon.ico'
-    mainwindow.iconbitmap(logo_image)
-    mainwindow.update()
-
-mainwindow['padx'] = 10
-mainwindow['pady'] = 10
-boldfontlarge = 'Helvetica 30 bold'
-normalfont = 'Helvetica 15'
-boldfont = 'Helvetica 15 bold'
-fixedfont = 'Courier 14'
-fixedsmallfont = 'Courier 12'
-
-# Top Information Frqme
-infoframe = tkinter.Frame(mainwindow, border=3, relief='flat', background="#808080")
-infoframe.pack(side=tkinter.TOP, fill=tkinter.X)
-
-# logo
-logoimage = tkinter.PhotoImage(file=os.path.dirname(sys.argv[0]) + "/appicon.ppm")
-logofield = tkinter.Label(infoframe, image=logoimage)
-logofield.pack(side=tkinter.LEFT, fill=tkinter.Y)
-
-infosubframe = tkinter.Frame(infoframe, relief='flat', background="#808080")
-infosubframe.pack(side=tkinter.LEFT, fill=tkinter.X, )
-infosubframe["padx"] = 20
-
-# file name display
-tkinter.Label(infosubframe, text='Filename:', font=boldfont, background="#808080").grid(row=0, column=1, sticky="w")
-filename = tkinter.StringVar()
-setfilename("-----")
-tkinter.Label(infosubframe, textvariable=filename, font=normalfont, background="#808080").grid(row=0, column=2,
-                                                                                               sticky="w")
-
-# printer ID display
-printerid = tkinter.StringVar()
-set_printer_id("-----")
-
-tkinter.Label(infosubframe, text='Printer ID:', font=boldfont, background="#808080").grid(row=1, column=1, sticky="w")
-tkinter.Label(infosubframe, textvariable=printerid, font=normalfont, background="#808080").grid(row=1, column=2,
-                                                                                                sticky="w")
-
-
-tkinter.Label(infosubframe, text="P2PP Version:", font=boldfont, background="#808080").grid(row=2, column=1,
-                                                                                            sticky="w")
-tkinter.Label(infosubframe, text=version.Version, font=normalfont, background="#808080").grid(row=2, column=2,
-                                                                                              sticky="w")
-
-# progress bar
-progress = tkinter.IntVar()
-progress.set(0)
-tkinter.Label(infosubframe, text='Progress:', font=boldfont, background="#808080").grid(row=3, column=1, sticky="w")
-progressbar = ttk.Progressbar(infosubframe, orient='horizontal', mode='determinate', length=500, maximum=100, variable=progress)
-progressbar.grid(row=3, column=2,  sticky='ew')
-
-
-# Log frame
-logframe = tkinter.Frame(mainwindow, border=3, relief="sunken")
-logframe.pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
-
-yloglistscroll = tkinter.Scrollbar(logframe, orient=tkinter.VERTICAL)
-yloglistscroll.pack(side='right', fill=tkinter.Y)
-
-xloglistscroll = tkinter.Scrollbar(logframe, orient=tkinter.HORIZONTAL)
-xloglistscroll.pack(side='bottom', fill=tkinter.X)
-
-loglist = tkinter.Text(logframe, yscrollcommand=yloglistscroll.set, xscrollcommand=xloglistscroll.set, wrap="none",
-                       font=fixedsmallfont)
-loglist.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
-
-yloglistscroll.config(command=loglist.yview)
-xloglistscroll.config(command=loglist.xview)
-
-# Button frame
-buttonframe = tkinter.Frame(mainwindow, border=1, relief="flat")
-buttonframe.pack(side=tkinter.BOTTOM, fill=tkinter.X)
-
-closebutton = tkinter.Button(buttonframe, text="Exit", state=tkinter.DISABLED, command=close_window, height=2)
-closebutton.pack(fill=tkinter.BOTH, expand=True)
-
-mainwindow.rowconfigure(0, weight=1000)
-mainwindow.rowconfigure(1, weight=2)
-mainwindow.rowconfigure(2, weight=1000)
-
-mainwindow.lift()
-mainwindow.attributes('-topmost', True)
-mainwindow.after_idle(mainwindow.attributes, '-topmost', False)
-mainwindow.update()

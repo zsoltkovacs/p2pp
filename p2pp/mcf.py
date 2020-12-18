@@ -84,10 +84,10 @@ def gcode_process_toolchange(new_tool):
 
         if len(v.splice_extruder_position) == 1:
             min_length = v.min_start_splice_length
-            gui_format = "SHORT FIRST SPLICE (<{}mm) Length:{:-3.2f} Input {}"
+            gui_format = "SHORT FIRST SPLICE (min {}mm) Length:{:-3.2f} Input {}"
         else:
             min_length = v.min_splice_length
-            gui_format = "SHORT SPLICE (<{}mm) Length:{:-3.2f} Layer:{} Input:{}"
+            gui_format = "SHORT SPLICE (min {}mm) Length:{:-3.2f} Layer:{} Input:{}"
 
         if v.splice_length[-1] < min_length:
             if v.autoaddsplice and (v.full_purge_reduction or v.side_wipe):
@@ -96,7 +96,7 @@ def gcode_process_toolchange(new_tool):
                 v.splice_extruder_position[-1] += v.autoadded_purge * v.extrusion_multiplier
                 v.splice_length[-1] += v.autoadded_purge
             else:
-                gui.log_warning(gui_format.format(length, min_length, v.last_parsed_layer, v.current_tool + 1))
+                gui.log_warning(gui_format.format(min_length, length, v.last_parsed_layer, v.current_tool + 1))
                 v.filament_short[new_tool] = max(v.filament_short[new_tool],
                                                  v.min_start_splice_length - v.splice_length[-1])
 
@@ -600,16 +600,11 @@ def generate(input_file, output_file, printer_profile, splice_offset):
             # python 2.x
             opf = open(input_file)
         except IOError:
-            if v.gui:
-                gui.user_error("P2PP - Error Occurred", "Could not read input file\n'{}'".format(input_file))
-            else:
-                print ("Could not read input file\n'{}".format(input_file))
+            gui.log_warning("Could not read input file\n'{}'".format(input_file))
             return
     except IOError:
-        if v.gui:
-            gui.user_error("P2PP - Error Occurred", "Could not read input file\n'{}'".format(input_file))
-        else:
-            print ("Could not read input file\n'{}".format(input_file))
+        gui.log_warning("Could not read input file\n'{}'".format(input_file))
+
         return
 
     gui.setfilename(input_file)
