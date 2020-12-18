@@ -105,40 +105,39 @@ if __name__ == "__main__":
             if v.version > MASTER_VERSION:
                 if v.version < DEV_VERSION:
                     v.version += " (New dev version {} available)".format(DEV_VERSION)
-                    color = "red"
+                    color = gui.CRED
                 else:
                     v.version += " (Dev version up to date)"
-                    color = "green"
+                    color = gui.CGREEN
             else:
                 if v.version < MASTER_VERSION:
                     v.version += " (New stable version {} available)".format(MASTER_VERSION)
-                    color = "red"
+                    color = gui.CRED
                 else:
                     v.version += " (Version up to date)"
-                    color = "green"
-            gui.create_logitem(v.version, color, True)
+                    color = gui.CGREEN
+            gui.create_logitem(v.version, color)
 
-        gui.configinfo()
         gui.create_emptyline()
         gui.create_logitem("Line to be used in PrusaSlicer [Print Settings][Output Options][Post Processing Script]",
-                           "blue")
+                           gui.CBLUE)
         gui.create_emptyline()
 
         if platformD == 'Darwin':
-            gui.create_logitem("{}/p2pp.command".format(os.path.dirname(sys.argv[0])), "red")
+            gui.create_logitem("{}/p2pp.command".format(os.path.dirname(sys.argv[0])), gui.CRED)
         elif platformD == 'Windows':
             pathname = os.path.dirname(sys.argv[0])
             pathname = pathname.replace(" ", "! ")
-            gui.create_logitem("{}\\p2pp.bat".format(os.path.dirname(sys.argv[0])), "red")
+            gui.create_logitem("{}\\p2pp.bat".format(os.path.dirname(sys.argv[0])), gui.CRED)
 
         gui.create_emptyline()
-        gui.create_logitem("This requires ADVANCED/EXPERT settings to be enabled", "blue")
+        gui.create_logitem("This requires ADVANCED/EXPERT settings to be enabled", gui.CBLUE)
         gui.create_emptyline()
         gui.create_emptyline()
-        gui.create_logitem("Don't forget to complete the remaining Prusaslicer Configuration", "blue")
-        gui.create_logitem("More info on: https://github.com/tomvandeneede/p2pp", "blue")
+        gui.create_logitem("Don't forget to complete the remaining Prusaslicer Configuration", gui.CBLUE)
+        gui.create_logitem("More info on: https://github.com/tomvandeneede/p2pp", gui.CBLUE)
         gui.close_button_enable()
     else:
         gui.create_logitem("Python Version Information: "+platform.python_version(),
-                           "blue")
+                           gui.CBLUE)
         main(vars(arguments.parse_args()))

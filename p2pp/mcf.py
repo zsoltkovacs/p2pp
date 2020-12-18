@@ -205,7 +205,6 @@ def parse_gcode():
         jndex += 1
 
         if jndex == 100000:
-            gui.progress_string(4 + 46 * index // total_line_count)
             v.input_gcode = v.input_gcode[jndex:]
             jndex = 0
 
@@ -319,9 +318,6 @@ def gcode_parselines():
         if idx > 100000:
             v.parsed_gcode = v.parsed_gcode[idx:]
             idx = 0
-
-        if process_line_count % 10000 == 0:
-            gui.progress_string(50 + 50 * process_line_count // total_line_count)
 
         current_block_class = g[gcode.CLASS]
 
@@ -612,10 +608,8 @@ def generate(input_file, output_file, printer_profile, splice_offset):
             print ("Could not read input file\n'{}".format(input_file))
         return
 
-    gui.setfilename(input_file)
-    gui.set_printer_id(v.printer_profile_string)
-    gui.create_logitem("Reading File " + input_file)
-    gui.progress_string(1)
+    print("Input File: ", input_file)
+    print("Printer ID: ", v.printer_profile_string)
     v.input_gcode = opf.readlines()
     opf.close()
 
@@ -630,11 +624,9 @@ def generate(input_file, output_file, printer_profile, splice_offset):
     v.input_gcode = [item.strip() for item in v.input_gcode]
 
     gui.create_logitem("Analyzing Prusa Slicer Configuration")
-    gui.progress_string(2)
     parse_prusaslicer_config()
 
     gui.create_logitem("Analyzing Layers / Functional blocks")
-    gui.progress_string(4)
     parse_gcode()
 
     v.input_gcode = None
@@ -677,7 +669,7 @@ def generate(input_file, output_file, printer_profile, splice_offset):
             gui.log_warning("SIDE WIPE mode not compatible with sparse wipe tower in PS")
             gui.log_warning("Use Tower Delta instead")
 
-        gui.create_logitem("Side wipe activated", "blue")
+        gui.create_logitem("Side wipe activated", gui.CBLUE)
 
         if v.full_purge_reduction:
             gui.log_warning("FULLURGEREDUCTION is incompatible with SIDEWIPE, parameter ignored")
@@ -688,7 +680,7 @@ def generate(input_file, output_file, printer_profile, splice_offset):
         if v.tower_delta:
             gui.log_warning("FULLPURGEREDUCTION is incompatible with TOWERDELTA")
             v.tower_delta = False
-        gui.create_logitem("FULLPURGEREDUCTION activated", "blue")
+        gui.create_logitem("FULLPURGEREDUCTION activated", gui.CBLUE)
 
     if v.autoaddsplice and not v.full_purge_reduction and not v.side_wipe:
         gui.log_warning("AUTOADDPURGE only works with SIDEWIPE and FULLPURGEREDUCTION")
@@ -753,6 +745,5 @@ def generate(input_file, output_file, printer_profile, splice_offset):
 
         gui.print_summary(omega_result['summary'])
 
-    gui.progress_string(101)
     if (len(v.process_warnings) > 0 and not v.ignore_warnings) or v.consolewait:
         gui.close_button_enable()

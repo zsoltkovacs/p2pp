@@ -11,7 +11,7 @@ __status__ = 'BETA'
 
 # general version info
 MajorVersion = 5
-MinorVersion = 27
+MinorVersion = 28
 Build = 0
 
 releaseinfo = {
@@ -45,6 +45,7 @@ releaseinfo = {
     "5.25.0": "possible incorrect tool select - corrected",
     "5.26.0": "remove M0 from existing output",
     "5.27.0": "correction in the tower delta calculation",
+    "5.28.0": "removed GUI - tkinter issue",
     '--- RELEASE INFORMATION': 'END'
 }
 

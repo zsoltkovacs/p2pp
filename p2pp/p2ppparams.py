@@ -49,7 +49,6 @@ def check_config_parameters(keyword, value):
 
         if len(value) == 16:
             v.printer_profile_string = value
-            gui.set_printer_id(v.printer_profile_string)
         return
 
     if keyword == "ACCESSORYMODE_MAF":
@@ -256,13 +255,12 @@ def check_config_parameters(keyword, value):
         import version
         latest = cv.get_version(cv.MASTER)
         if latest > version.Version:
-            gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False, "2.0")
+            gui.create_logitem("New master version of P2PP available ({})".format(latest), gui.CRED)
         else:
             if latest < version.Version:
                 latest = cv.get_version(cv.DEV)
                 if latest > version.Version:
-                    gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False,
-                                       "2.0")
+                    gui.create_logitem("New development version of P2PP available ({})".format(latest), gui.CRED)
 
     # Program parameters
     if keyword == "NOGUI":
