@@ -107,11 +107,10 @@ def create_emptyline():
 
 def close_button_enable():
     create_emptyline()
-
     try:
-        raw_input("Press enter to terminate....")
-    except:
         input("Press enter to terminate....")
+    except:
+        pass
     exit()
 
 
