@@ -16,8 +16,8 @@ import p2pp.p2_m4c as m4c
 import p2pp.pings as pings
 import p2pp.purgetower as purgetower
 import p2pp.variables as v
-from p2pp.psconfig import parse_prusaslicer_config
 from p2pp.omega import header_generate_omega
+from p2pp.psconfig import parse_prusaslicer_config
 from p2pp.sidewipe import create_side_wipe
 
 # GCODE BLOCK CLASSES
@@ -44,6 +44,7 @@ hash_TOOLCHANGE_UNLOAD = hash("TOOLCHANGE UNLOAD")
 hash_TOOLCHANGE_WIPE = hash("TOOLCHANGE WIPE")
 hash_TOOLCHANGE_END = hash("TOOLCHANGE END")
 
+
 #  delta tower strategy: try to delay the delta as long as possible to minimize the extra print time
 
 
@@ -67,7 +68,7 @@ def gcode_process_toolchange(new_tool):
 
     location = v.total_material_extruded + v.splice_offset
 
-    if new_tool == -1:      # LAST SLICE PROCESSING
+    if new_tool == -1:  # LAST SLICE PROCESSING
         location += v.extra_runout_filament
         v.material_extruded_per_color[v.current_tool] += v.extra_runout_filament
         v.total_material_extruded += v.extra_runout_filament
@@ -107,14 +108,14 @@ def gcode_process_toolchange(new_tool):
 
 
 def calculate_temp_wait_position():
-
-    pos_x = v.wipe_tower_info_minx + v.tx_offset * 1 if abs(v.wipe_tower_info_minx - v.purge_keep_x) < abs(v.wipe_tower_info_maxx - v.purge_keep_x) else -1
-    pos_y = v.wipe_tower_info_miny + v.ty_offset * 1 if abs(v.wipe_tower_info_miny - v.purge_keep_y) < abs(v.wipe_tower_info_maxy - v.purge_keep_y) else -1
+    pos_x = v.wipe_tower_info_minx + v.tx_offset * 1 if abs(v.wipe_tower_info_minx - v.purge_keep_x) < abs(
+        v.wipe_tower_info_maxx - v.purge_keep_x) else -1
+    pos_y = v.wipe_tower_info_miny + v.ty_offset * 1 if abs(v.wipe_tower_info_miny - v.purge_keep_y) < abs(
+        v.wipe_tower_info_maxy - v.purge_keep_y) else -1
     return [pos_x, pos_y]
 
 
 def entertower(layer_hght):
-
     purgeheight = layer_hght - v.cur_tower_z_delta
 
     if v.current_position_z != purgeheight:
@@ -132,14 +133,13 @@ def entertower(layer_hght):
         gcode.issue_code("G1 X{} Y{} F8640".format(v.current_position_x, v.current_position_y))
         gcode.issue_code("G1 Z{:.2f} F10810".format(purgeheight))
 
-        if purgeheight <= (v.first_layer_height+0.02):  # FIRST LAYER PURGES SLOWER
+        if purgeheight <= (v.first_layer_height + 0.02):  # FIRST LAYER PURGES SLOWER
             gcode.issue_code("G1 F{}".format(min(1200, v.wipe_feedrate)))
         else:
             gcode.issue_code("G1 F{}".format(v.wipe_feedrate))
 
 
 def update_class(line_hash):
-
     if line_hash == hash_EMPTY_GRID_START:
         v.block_classification = CLS_EMPTY
         v.layer_emptygrid_counter += 1
@@ -179,8 +179,8 @@ def process_layer(layer, index):
         v.layer_toolchange_counter = 0
         v.layer_emptygrid_counter = 0
 
-def parse_gcode():
 
+def parse_gcode():
     v.layer_toolchange_counter = 0
     v.layer_emptygrid_counter = 0
 
@@ -274,7 +274,7 @@ def parse_gcode():
             # add
             if side_wipe_towerdefined:
                 if ((v.wipe_tower_info_minx <= code[gcode.X] <= v.wipe_tower_info_maxx) and
-                   (v.wipe_tower_info_miny <= code[gcode.Y] <= v.wipe_tower_info_maxy)):
+                        (v.wipe_tower_info_miny <= code[gcode.Y] <= v.wipe_tower_info_maxy)):
                     code[gcode.MOVEMENT] += gcode.INTOWER
 
             if v.block_classification in [CLS_ENDGRID, CLS_ENDPURGE]:
@@ -290,7 +290,6 @@ def parse_gcode():
 
 
 def gcode_parselines():
-
     idx = 0
     total_line_count = len(v.parsed_gcode)
     v.retraction = 0
@@ -323,7 +322,8 @@ def gcode_parselines():
 
         # ---- FIRST SECTION HANDLES DELAYED TEMPERATURE COMMANDS ----
 
-        if current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START, CLS_TOOL_UNLOAD] and v.current_temp != v.new_temp:
+        if current_block_class not in [CLS_TOOL_PURGE, CLS_TOOL_START,
+                                       CLS_TOOL_UNLOAD] and v.current_temp != v.new_temp:
             gcode.issue_code(v.temp1_stored_command)
             v.temp1_stored_command = ""
 
@@ -364,15 +364,17 @@ def gcode_parselines():
                                     g[gcode.COMMAND] = "M109"
                                     v.temp2_stored_command = gcode.create_commandstring(g)
                                     gcode.move_to_comment(g,
-                                                          "--P2PP-- delayed temp rise until after purge {}-->{}".format(v.current_temp,
-                                                                                                                        v.new_temp))
+                                                          "--P2PP-- delayed temp rise until after purge {}-->{}".format(
+                                                              v.current_temp,
+                                                              v.new_temp))
                                     v.current_temp = v.new_temp
 
                                 else:
                                     v.temp1_stored_command = gcode.create_commandstring(g)
                                     gcode.move_to_comment(g,
-                                                          "--P2PP-- delayed temp drop until after purge {}-->{}".format(v.current_temp,
-                                                                                                                        v.new_temp))
+                                                          "--P2PP-- delayed temp drop until after purge {}-->{}".format(
+                                                              v.current_temp,
+                                                              v.new_temp))
                     elif g[gcode.COMMAND] == "M107":
                         v.saved_fanspeed = 0
 
@@ -380,7 +382,8 @@ def gcode_parselines():
                         v.saved_fanspeed = gcode.get_parameter(g, gcode.S, v.saved_fanspeed)
 
                     elif g[gcode.COMMAND] == "M221":
-                        v.extrusion_multiplier = float(gcode.get_parameter(g, gcode.S, v.extrusion_multiplier * 100.0)) / 100.0
+                        v.extrusion_multiplier = float(
+                            gcode.get_parameter(g, gcode.S, v.extrusion_multiplier * 100.0)) / 100.0
 
                     elif g[gcode.COMMAND] == "M220":
                         gcode.move_to_comment(g, "--P2PP-- Feed Rate Adjustments are removed")
@@ -424,7 +427,8 @@ def gcode_parselines():
                     continue
 
                 if current_block_class == CLS_EMPTY and not v.towerskipped:
-                    v.towerskipped = (g[gcode.MOVEMENT] & gcode.INTOWER) == gcode.INTOWER and v.current_layer_is_skippable
+                    v.towerskipped = (g[
+                                          gcode.MOVEMENT] & gcode.INTOWER) == gcode.INTOWER and v.current_layer_is_skippable
                     if not v.towerskipped:
                         entertower(v.last_parsed_layer * v.layer_height + v.first_layer_height)
 
@@ -494,7 +498,8 @@ def gcode_parselines():
                 continue
 
             if v.toolchange_processed and current_block_class == CLS_NORMAL:
-                if v.side_wipe_length and (g[gcode.MOVEMENT] & 3) == 3 and not (g[gcode.MOVEMENT] & gcode.INTOWER) == gcode.INTOWER:
+                if v.side_wipe_length and (g[gcode.MOVEMENT] & 3) == 3 and not (g[
+                                                                                    gcode.MOVEMENT] & gcode.INTOWER) == gcode.INTOWER:
                     purgetower.purge_generate_sequence()
                     v.toolchange_processed = False
                     # do not issue code here as the next code might require further processing such as retractioncorrection
@@ -573,12 +578,12 @@ def gcode_parselines():
     # LAST STEP IS ADDING AN EXTRA TOOL UNLOAD TO DETERMINE THE LENGTH OF THE LAST SPLICE
     gcode_process_toolchange(-1)
 
+
 # -- MAIN ROUTINE --- GLUES ALL THE PROCESSING ROUTINED
 # -- FILE READING / FIRST PASS / SECOND PASS / FILE WRITING
 
 
 def generate(input_file, output_file, printer_profile, splice_offset):
-
     starttime = time.time()
     v.printer_profile_string = printer_profile
     basename = os.path.basename(input_file)
@@ -597,15 +602,15 @@ def generate(input_file, output_file, printer_profile, splice_offset):
             opf = open(input_file)
         except IOError:
             if v.gui:
-                gui.user_error("P2PP - Error Occurred", "Could not read input file\n'{}'".format(input_file))
+                gui.log_warning("Could not read input file\n'{}'".format(input_file))
             else:
-                print ("Could not read input file\n'{}".format(input_file))
+                print("Could not read input file\n'{}".format(input_file))
             return
     except IOError:
         if v.gui:
-            gui.user_error("P2PP - Error Occurred", "Could not read input file\n'{}'".format(input_file))
+            gui.log_warning("Could not read input file\n'{}'".format(input_file))
         else:
-            print ("Could not read input file\n'{}".format(input_file))
+            print("Could not read input file\n'{}".format(input_file))
         return
 
     print("Input File: ", input_file)
@@ -654,7 +659,8 @@ def generate(input_file, output_file, printer_profile, splice_offset):
         if v.palette_plus_loading_offset == -9:
             gui.log_warning("P+ parameter P+LOADINGOFFSET incorrectly set up in startup GCODE")
 
-    v.side_wipe = not ((v.bed_origin_x <= v.wipetower_posx <= v.bed_max_x) and (v.bed_origin_y <= v.wipetower_posy <= v.bed_max_y))
+    v.side_wipe = not ((v.bed_origin_x <= v.wipetower_posx <= v.bed_max_x) and (
+                v.bed_origin_y <= v.wipetower_posy <= v.bed_max_y))
     v.tower_delta = v.max_tower_z_delta > 0
 
     gui.create_logitem("`Analyzing tool loading scheme`")
@@ -693,7 +699,8 @@ def generate(input_file, output_file, printer_profile, splice_offset):
         skippable = optimize_tower_skip(int(v.max_tower_z_delta / v.layer_height))
 
         if skippable > 0:
-            gui.log_warning("TOWERDELTA in effect for {} Layers or {:.2f}mm".format(skippable, skippable * v.layer_height))
+            gui.log_warning(
+                "TOWERDELTA in effect for {} Layers or {:.2f}mm".format(skippable, skippable * v.layer_height))
         else:
             gui.create_logitem("TOWERDELTA could not be applied to this print")
 
@@ -745,5 +752,11 @@ def generate(input_file, output_file, printer_profile, splice_offset):
 
         gui.print_summary(omega_result['summary'])
 
+    if len(v.process_warnings) > 0:
+        gui.create_emptyline()
+        gui.create_logitem("TERMINATED WITH WARNINGS", gui.CRED)
+    else:
+        gui.create_emptyline()
+        gui.create_logitem("\nTERMINATED WITHOUT WARNINGS", gui.CGREEN)
     if (len(v.process_warnings) > 0 and not v.ignore_warnings) or v.consolewait:
         gui.close_button_enable()
