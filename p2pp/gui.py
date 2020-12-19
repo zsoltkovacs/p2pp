@@ -81,7 +81,6 @@ def progress_string(pct):
         return
 
     form.progress.setProperty("value", min(100,pct))
-    app.sync()
 
     if pct >= 100:
         if len(v.process_warnings) == 0:
@@ -123,19 +122,21 @@ def create_colordefinition(reporttype, p2_input, filament_type, color_code, fila
 
     form.textBrowser.append( word )
 
-
 def create_emptyline():
     create_logitem('')
 
 
 def on_click():
-    app.quit()
+    app.exit(0)
 
 
 def close_button_enable():
-    form.exitButton.clicked.connect(on_click)
-    form.exitButton.setEnabled(True)
-    app.exec_()
+    if not v.exit_enabled:
+        form.exitButton.clicked.connect(on_click)
+        form.exitButton.setEnabled(True)
+        v.exit_enabled = True
+        app.exec_()
+
 
 
 

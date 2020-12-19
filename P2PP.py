@@ -89,7 +89,7 @@ else:
         for line in tb:
             gui.create_logitem("{}".format(line))
 
-    gui.progress_string(0)
-    gui.close_button_enable()
+        gui.progress_string(0)
+        gui.close_button_enable()
 
 

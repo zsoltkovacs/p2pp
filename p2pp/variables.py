@@ -303,3 +303,5 @@ layer_toolchange_counter = 0
 layer_emptygrid_counter = 0
 
 generate_M0 = True
+
+exit_enabled = False

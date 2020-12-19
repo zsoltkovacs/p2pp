@@ -10,8 +10,10 @@ from setuptools import setup
 APP = ['P2PP.py']
 DATA_FILES = ['p2pp.ui']
 OPTIONS = {'argv_emulation': True,
-           "iconfile": "favicon.icns",
-           "includes": ['PyQt5._qt']}
+           "iconfile": "icons/icon.icns",
+           "includes": ['PyQt5._qt'],
+           }
+
 setup(
     app=APP,
     data_files=DATA_FILES,
