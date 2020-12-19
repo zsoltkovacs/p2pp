@@ -53,7 +53,5 @@ latest_stable_version = ""
 
 Version = "{}.{:02}.{:03}".format(MajorVersion, MinorVersion, Build)
 
-##################################
-# UPDATE FILES FOR CURRENT VERSION
-##################################
-# zip_file=p2pp_mac.zip
+if __name__ == "__main__":
+    print(Version)

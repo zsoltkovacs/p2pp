@@ -81,7 +81,7 @@ def progress_string(pct):
         return
 
     form.progress.setProperty("value", min(100,pct))
-
+    app.sync()
     if pct >= 100:
         if len(v.process_warnings) == 0:
             form.label_6.setText("COMPLETED OK")
