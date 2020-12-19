@@ -165,7 +165,6 @@ extra_runout_filament = 150  # type: int  # Provide extra filament at the end of
 min_splice_length = 70  # type: int  # Minimum overall splice length.
 min_start_splice_length = 100  # type: int  # Minimum first splice length.
 
-gui = True  # Enabled/Disabled by --gui switch - enables GUI Mode which requires tkinter.
 consolewait = False
 
 version = "0.0.0"

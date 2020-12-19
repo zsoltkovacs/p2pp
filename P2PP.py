@@ -9,7 +9,6 @@ __maintainer__ = 'Tom Van den Eede'
 __email__ = 'P2PP@pandora.be'
 __status__ = 'Beta'
 
-import argparse
 import os
 import platform
 import sys
@@ -19,126 +18,78 @@ import p2pp.gui as gui
 import p2pp.mcf as mcf
 import p2pp.variables as v
 import version as ver
+import traceback
 
-arguments = argparse.ArgumentParser(description='Generates MCF/Omega30 headers from an multi-tool/multi-extruder'
-                                                ' GCODE derived from Slic3r.')
+v.version = ver.Version
 
-arguments.add_argument('-i',
-                       '--input-file',
-                       required=True)
-arguments.add_argument('-d',
-                       '--output-file',
-                       required=False)
-arguments.add_argument('-o',
-                       '--splice-offset',
-                       type=float,
-                       required=False,
-                       default=40.00,
-                       help='Offset position in the purge tower '
-                            'where transition occurs. Similar to transition offset in Chroma.'
-                            ' GCODE ;P2PP SPLICEOFFSET=xxx takes precedence over anything set here'
-                       )
-arguments.add_argument('-n',
-                       '--nogui',
-                       action='store_true',
-                       required=False
-                       )
+if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] == "-i"):
+    platformD = platform.system()
 
-arguments.add_argument('-p',
-                       '--printer-profile',
-                       required=False,
-                       default='',
-                       help='A unique ID linked to a printer configuration'
-                            ' profile in the Palette 2 hardware.'
-                       )
-arguments.add_argument('-s',
-                       '--silent',
-                       default=False,
-                       help='Omits Summary page after processing from being printed to STDOUT'
-                       )
+    gui.setfilename('')
+    MASTER_VERSION = checkversion.get_version(checkversion.MASTER)
+    DEV_VERSION = checkversion.get_version(checkversion.DEV)
 
-arguments.add_argument('-v',
-                       '--versioncheck',
-                       default=False,
-                       help='Check and reports new online versions of P2PP [-v 0|1]'
-                       )
+    if MASTER_VERSION and DEV_VERSION:
 
-arguments.add_argument('-w',
-                       '--wait',
-                       required=False,
-                       help='Wait for the user to press enter after processing the file. -w [0|1]'
-                       )
-
-
-def main(args):
-    if not args['nogui']:
-        v.gui = True
-    else:
-        v.gui = False
-
-    v.filename = args['input_file']
-
-    if args["versioncheck"] == "1":
-        v.versioncheck = True
-
-    if args['wait'] == "1":
-        v.consolewait = True
-
-    mcf.generate(v.filename,
-                 args['output_file'],
-                 args['printer_profile'],
-                 args['splice_offset'],
-                 )
-
-
-if __name__ == "__main__":
-    v.version = ver.Version
-
-    if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] == "-i"):
-        platformD = platform.system()
-
-        gui.setfilename('')
-        MASTER_VERSION = checkversion.get_version(checkversion.MASTER)
-        DEV_VERSION = checkversion.get_version(checkversion.DEV)
-
-        if MASTER_VERSION and DEV_VERSION:
-
-            if v.version > MASTER_VERSION:
-                if v.version < DEV_VERSION:
-                    v.version += " (New dev version {} available)".format(DEV_VERSION)
-                    color = "red"
-                else:
-                    v.version += " (Dev version up to date)"
-                    color = "green"
+        if v.version > MASTER_VERSION:
+            if v.version < DEV_VERSION:
+                v.version += " (New dev version {} available)".format(DEV_VERSION)
+                color = "red"
             else:
-                if v.version < MASTER_VERSION:
-                    v.version += " (New stable version {} available)".format(MASTER_VERSION)
-                    color = "red"
-                else:
-                    v.version += " (Version up to date)"
-                    color = "green"
-            gui.create_logitem(v.version, color, True)
+                v.version += " (Dev version up to date)"
+                color = "green"
+        else:
+            if v.version < MASTER_VERSION:
+                v.version += " (New stable version {} available)".format(MASTER_VERSION)
+                color = "red"
+            else:
+                v.version += " (Version up to date)"
+                color = "green"
+        gui.create_logitem(v.version, color, True)
 
-        gui.create_emptyline()
-        gui.create_logitem("Line to be used in PrusaSlicer [Print Settings][Output Options][Post Processing Script]",
-                           "blue")
-        gui.create_emptyline()
+    gui.create_emptyline()
+    gui.create_logitem("Line to be used in PrusaSlicer [Print Settings][Output Options][Post Processing Script]",
+                       "blue")
+    gui.create_emptyline()
 
-        if platformD == 'Darwin':
-            gui.create_logitem("{}/p2pp.command".format(os.path.dirname(sys.argv[0])), "red")
-        elif platformD == 'Windows':
-            pathname = os.path.dirname(sys.argv[0])
-            pathname = pathname.replace(" ", "! ")
-            gui.create_logitem("{}\\p2pp.bat".format(os.path.dirname(sys.argv[0])), "red")
+    if platformD == 'Darwin':
+        gui.create_logitem("open P2PP.app --args ".format(os.path.dirname(sys.argv[0])), "red")
+    elif platformD == 'Windows':
+        pathname = os.path.dirname(sys.argv[0])
+        pathname = pathname.replace(" ", "! ")
+        gui.create_logitem("{}\\p2pp.bat".format(os.path.dirname(sys.argv[0])), "red")
 
-        gui.create_emptyline()
-        gui.create_logitem("This requires ADVANCED/EXPERT settings to be enabled", "blue")
-        gui.create_emptyline()
-        gui.create_emptyline()
-        gui.create_logitem("Don't forget to complete the remaining Prusaslicer Configuration", "blue")
-        gui.create_logitem("More info on: https://github.com/tomvandeneede/p2pp", "blue")
-        gui.close_button_enable()
+    gui.create_emptyline()
+    gui.create_logitem("This requires ADVANCED/EXPERT settings to be enabled", "blue")
+    gui.create_emptyline()
+    gui.create_emptyline()
+    gui.create_logitem("Don't forget to complete the remaining Prusaslicer Configuration", "blue")
+    gui.create_logitem("More info on: https://github.com/tomvandeneede/p2pp", "blue")
+    gui.progress_string(101)
+    gui.close_button_enable()
+
+else:
+
+    filename = sys.argv[1]
+    if len(sys.argv) > 2:
+        outputfile = sys.argv[2]
     else:
-        gui.create_logitem("Python Version Information: "+platform.python_version(),
-                           "blue")
-        main(vars(arguments.parse_args()))
+        outputfile = None
+    try:
+        mcf.generate(filename, outputfile)
+    except Exception as e:
+        gui.create_emptyline()
+        gui.log_warning("We're sorry but an unexpected error occurred while processing your file")
+        gui.log_warning("Please sumbit an issue report on https://github.com/tomvandeneede/p2pp")
+        gui.create_emptyline()
+        gui.create_logitem("<b>Error:</b> {}".format(e))
+        tb = traceback.format_tb(e.__traceback__)
+        gui.create_emptyline()
+        gui.create_logitem("<b>Traceback Info:</b>")
+        for line in tb:
+            gui.create_logitem("{}".format(line))
+
+    gui.progress_string(0)
+    gui.close_button_enable()
+
+

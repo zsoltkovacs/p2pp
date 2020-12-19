@@ -9,14 +9,14 @@ __email__ = 'P2PP@pandora.be'
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication
-
+import image_rc
 import p2pp.variables as v
 import p2pp.colornames as colornames
 import version
 import sys
 
-
 last_pct = -1
+
 
 Form, Window = uic.loadUiType("p2pp.ui")
 app = QApplication([])
@@ -92,7 +92,6 @@ def progress_string(pct):
             form.label_6.setStyleSheet("color: #FF0000")
         close_button_enable()
 
-
     last_pct = pct
 
 
@@ -129,12 +128,8 @@ def create_emptyline():
     create_logitem('')
 
 
-def close_window():
-    app.quit()
-
-
 def on_click():
-    exit()
+    app.quit()
 
 
 def close_button_enable():

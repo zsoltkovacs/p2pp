@@ -10,8 +10,8 @@ __status__ = 'BETA'
 
 
 # general version info
-MajorVersion = 5
-MinorVersion = 27
+MajorVersion = 6
+MinorVersion = 0
 Build = 0
 
 releaseinfo = {

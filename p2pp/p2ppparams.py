@@ -254,19 +254,15 @@ def check_config_parameters(keyword, value):
         import p2pp.checkversion as cv
         import version
         latest = cv.get_version(cv.MASTER)
-        if latest > version.Version:
-            gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False, "2.0")
-        else:
-            if latest < version.Version:
-                latest = cv.get_version(cv.DEV)
-                if latest > version.Version:
-                    gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False,
-                                       "2.0")
-
-    # Program parameters
-    if keyword == "NOGUI":
-        v.gui = False
-        return
+        if latest:
+            if latest > version.Version:
+                gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False, "2.0")
+            else:
+                if latest < version.Version:
+                    latest = cv.get_version(cv.DEV)
+                    if latest > version.Version:
+                        gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False,
+                                           "2.0")
 
     if keyword == "DO_NOT_GENERATE_M0":
         v.generate_M0 = False

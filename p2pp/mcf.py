@@ -579,15 +579,13 @@ def gcode_parselines():
 # -- FILE READING / FIRST PASS / SECOND PASS / FILE WRITING
 
 
-def generate(input_file, output_file, printer_profile, splice_offset):
+def generate(input_file, output_file):
 
     starttime = time.time()
-    v.printer_profile_string = printer_profile
     basename = os.path.basename(input_file)
     _taskName = os.path.splitext(basename)[0].replace(" ", "_")
     _taskName = _taskName.replace(".mcf", "")
 
-    v.splice_offset = splice_offset
 
     try:
         # python 3.x
@@ -706,7 +704,7 @@ def generate(input_file, output_file, printer_profile, splice_offset):
         # write the output file
         ######################
 
-        if not output_file:
+        if output_file == None:
             output_file = input_file
         gui.create_logitem("Generating GCODE file: " + output_file)
         opf = open(output_file, "w")
