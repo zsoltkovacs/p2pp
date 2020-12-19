@@ -46,8 +46,9 @@ def print_summary(summary):
     create_emptyline()
 
     if v.m4c_numberoffilaments <= 4:
-
-        create_logitem("Inputs/Materials used:")
+        create_logitem("-" * 22, "blue")
+        create_logitem("Inputs/Materials used:", "blue")
+        create_logitem("-" * 22, "blue")
 
         for i in range(len(v.palette_inputs_used)):
             if v.palette_inputs_used[i]:
@@ -55,13 +56,16 @@ def print_summary(summary):
                                        v.material_extruded_per_color[i])
 
     else:
+        create_logitem("-" * 14, "blue")
         create_logitem("Materials used:")
+        create_logitem("-" * 14, "blue")
         for i in range(v.m4c_numberoffilaments):
             create_colordefinition(1, i + 1, v.filament_type[0], v.filament_color_code[i], 0)
 
         create_emptyline()
-
+        create_logitem("-" * 27, "blue")
         create_logitem("Required Toolchanges: {}".format(len(v.m4c_headerinfo)))
+        create_logitem("-" * 27, "blue")
         for i in v.m4c_headerinfo:
             create_logitem("      " + i)
 
@@ -76,6 +80,9 @@ def progress_string(pct):
     if pct - last_pct < 2:
         return
 
+    form.progress.setProperty("value", min(100,pct))
+    app.sync()
+
     if pct >= 100:
         if len(v.process_warnings) == 0:
             form.label_6.setText("COMPLETED OK")
@@ -84,9 +91,7 @@ def progress_string(pct):
             form.label_6.setText("COMPLETED WITH WARNINGS")
             form.label_6.setStyleSheet("color: #FF0000")
         close_button_enable()
-    else:
-        form.progress.setProperty("value", pct)
-        app.sync()
+
 
     last_pct = pct
 
@@ -94,7 +99,6 @@ def progress_string(pct):
 
 def create_logitem(text, color="#000000", force_update=True, position=0):
     word = '<span style=\" color: {}\">  {}</span>'.format(color, text)
-    print(word)
     form.textBrowser.append( word )
 
 
@@ -138,9 +142,6 @@ def close_button_enable():
     form.exitButton.setEnabled(True)
     app.exec_()
 
-
-def set_printer_id(text):
-        pass
 
 
 def setfilename(text):

@@ -11,7 +11,7 @@ APP = ['P2PP.py']
 DATA_FILES = []
 OPTIONS = {'argv_emulation': True,
            "iconfile": "favicon.icns",
-           "includes": ['PyQt5._qt']}
+           "includes": ['PyQt5._qt', 'p2pp']}
 setup(
     app=APP,
     data_files=DATA_FILES,

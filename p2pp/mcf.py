@@ -190,7 +190,7 @@ def parse_gcode():
 
     flh = int(v.first_layer_height * 100)
     olh = int(v.layer_height * 100)
-    use_layer_instead_of_layerheight = v.synced_support or not v.support_material
+    use_layer_instead_of_layerheight = v.synced_support or not v.support_material or not (v.tower_delta or v.full_purge_reduction)
 
     backpass_line = -1
     jndex = 0
@@ -218,14 +218,12 @@ def parse_gcode():
                 update_class(hash(line[5:]))
 
             elif line.startswith(';LAYER'):  # Layer instructions
-
                 fields = line.split(' ')
 
                 try:
                     lv = float(fields[1])
                     if use_layer_instead_of_layerheight and len(fields[0]) == 6:
                         process_layer(int(lv), index)
-
                     elif fields[0][6:].startswith('HEIGHT'):
                         lv = int((lv + 0.001) * 100) - flh
                         if lv % olh == 0:
@@ -608,7 +606,6 @@ def generate(input_file, output_file, printer_profile, splice_offset):
         return
 
     gui.setfilename(input_file)
-    gui.set_printer_id(v.printer_profile_string)
     gui.create_logitem("Reading File " + input_file)
     gui.progress_string(1)
     v.input_gcode = opf.readlines()

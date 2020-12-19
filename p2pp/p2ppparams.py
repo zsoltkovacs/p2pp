@@ -49,7 +49,6 @@ def check_config_parameters(keyword, value):
 
         if len(value) == 16:
             v.printer_profile_string = value
-            gui.set_printer_id(v.printer_profile_string)
         return
 
     if keyword == "ACCESSORYMODE_MAF":
