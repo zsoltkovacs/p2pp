@@ -45,6 +45,7 @@ releaseinfo = {
     "5.25.0": "possible incorrect tool select - corrected",
     "5.26.0": "remove M0 from existing output",
     "5.27.0": "correction in the tower delta calculation",
+    "6.0.0":  "Switched to Qt gui + corrected variable layer"
     '--- RELEASE INFORMATION': 'END'
 }
 
