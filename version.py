@@ -45,6 +45,7 @@ releaseinfo = {
     "5.25.0": "possible incorrect tool select - corrected",
     "5.26.0": "remove M0 from existing output",
     "5.27.0": "correction in the tower delta calculation",
+    "5.29.0": "correction variable layer support",
     '--- RELEASE INFORMATION': 'END'
 }
 

@@ -190,7 +190,7 @@ def parse_gcode():
 
     flh = int(v.first_layer_height * 100)
     olh = int(v.layer_height * 100)
-    use_layer_instead_of_layerheight = v.synced_support or not v.support_material
+    use_layer_instead_of_layerheight = v.synced_support or not v.support_material or not (v.full_purge_reduction or v.tower_delta)
 
     backpass_line = -1
     jndex = 0
