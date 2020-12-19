@@ -5,19 +5,45 @@ Usage:
     python setup.py py2app
 """
 
-from setuptools import setup
+import sys
 
-APP = ['P2PP.py']
-DATA_FILES = ['p2pp.ui']
-OPTIONS = {'argv_emulation': True,
-           "iconfile": "icons/icon.icns",
-           "includes": ['PyQt5._qt'],
-           }
 
-setup(
-    app=APP,
-    data_files=DATA_FILES,
-    options={'py2app': OPTIONS},
-    setup_requires=['py2app']
-)
+if sys.platform=="darwin":
+    from setuptools import setup
+
+    APP = ['P2PP.py']
+    DATA_FILES = ['p2pp.ui']
+    OPTIONS = {'argv_emulation': True,
+               "iconfile": "icons/icon.icns",
+               "includes": ['PyQt5._qt'],
+               }
+
+    setup(
+        app=APP,
+        data_files=DATA_FILES,
+        options={'py2app': OPTIONS},
+        setup_requires=['py2app']
+    )
+
+else:
+    from distutils.core import setup
+    import py2exe
+
+    APP = ['P2PP.py']
+    DATA_FILES = ['p2pp.ui']
+    OPTIONS = {'compressed': 2,
+               'optimize': 2,
+               'bundle_files': 1,
+               'argv_emulation': True,
+               "iconfile": "icons/icon.png",
+               'includes': ['PyQt5._qt']
+               }
+
+    setup(
+        app=APP,
+        data_files=DATA_FILES,
+        options={'py2exe': OPTIONS},
+        zipfile=None,
+        windows=['P2PP.py']
+    )
 
