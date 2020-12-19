@@ -685,6 +685,8 @@ def generate(input_file, output_file):
 
     if len(v.skippable_layer) == 0:
         gui.log_warning("LAYER configuration is missing.")
+        gui.close_button_enable()
+        exit()
     else:
         if v.tower_delta:
             v.skippable_layer[0] = False

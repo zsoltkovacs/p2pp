@@ -79,9 +79,10 @@ def progress_string(pct):
     global last_pct
     if pct - last_pct < 2:
         return
+    if int(last_pct/10) != int(pct/10):
+        app.sync()
 
-    form.progress.setProperty("value", min(100,pct))
-    app.sync()
+    form.progress.setProperty("value", min(100, pct))
     if pct >= 100:
         if len(v.process_warnings) == 0:
             form.label_6.setText("COMPLETED OK")
@@ -89,8 +90,6 @@ def progress_string(pct):
         else:
             form.label_6.setText("COMPLETED WITH WARNINGS")
             form.label_6.setStyleSheet("color: #FF0000")
-        close_button_enable()
-
     last_pct = pct
 
 
