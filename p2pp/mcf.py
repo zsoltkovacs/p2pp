@@ -585,7 +585,7 @@ def generate(input_file, output_file):
     basename = os.path.basename(input_file)
     _taskName = os.path.splitext(basename)[0].replace(" ", "_")
     _taskName = _taskName.replace(".mcf", "")
-
+    gui.setfilename(input_file)
 
     try:
         # python 3.x
@@ -603,7 +603,7 @@ def generate(input_file, output_file):
 
         return
 
-    gui.setfilename(input_file)
+
     gui.create_logitem("Reading File " + input_file)
     gui.progress_string(1)
     v.input_gcode = opf.readlines()
