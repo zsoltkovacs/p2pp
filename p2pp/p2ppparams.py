@@ -263,6 +263,8 @@ def check_config_parameters(keyword, value):
                     if latest > version.Version:
                         gui.create_logitem("New development version of P2PP available ({})".format(latest), "red", False,
                                            "2.0")
+        else:
+            gui.create_logitem("Could not check for latest online version")
 
     if keyword == "DO_NOT_GENERATE_M0":
         v.generate_M0 = False
