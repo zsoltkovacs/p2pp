@@ -113,13 +113,14 @@ def create_colordefinition(reporttype, p2_input, filament_type, color_code, fila
     except IndexError:
         filament_id = ""
 
+    word = ''
     if reporttype == 0:
         word = "  \t{}  {} {:-8.2f}mm - {} <span style=\" color: #{};\">[######]]</span>   \t{:15} {} ".format(name, p2_input, filamentused, filament_type, color_code, colornames.find_nearest_colour(color_code), filament_id )
 
     if reporttype == 1:
         word = "  \t{}  {}  - {} <span style=\" color: #{};\">[######]]</span>   \t{:15} {}".format(name, p2_input, filament_type, color_code, colornames.find_nearest_colour(color_code), filament_id)
 
-    form.textBrowser.append( word )
+    form.textBrowser.append(word)
 
 def create_emptyline():
     create_logitem('')
@@ -135,8 +136,6 @@ def close_button_enable():
         form.exitButton.setEnabled(True)
         v.exit_enabled = True
         app.exec_()
-
-
 
 
 def setfilename(text):

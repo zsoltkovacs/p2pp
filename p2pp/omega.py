@@ -67,7 +67,7 @@ def algorithm_create_table():
                                          v.used_filament_types.index(v.filament_type[j]) + 1)
                 if algo_key in splice_list:
                     continue
-            except (IndexError, KeyError):
+            except:
                 continue
 
             if not algorithm_transition_used(i, j):

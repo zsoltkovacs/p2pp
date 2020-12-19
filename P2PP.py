@@ -67,6 +67,7 @@ if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] == "-i"):
     gui.create_logitem("More info on: https://github.com/tomvandeneede/p2pp", "blue")
     gui.progress_string(101)
     gui.close_button_enable()
+    exit()
 
 else:
 
@@ -91,5 +92,6 @@ else:
 
         gui.progress_string(0)
         gui.close_button_enable()
+        exit()
 
-
+gui.close_button_enable()
