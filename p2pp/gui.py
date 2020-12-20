@@ -15,6 +15,7 @@ import p2pp.variables as v
 import p2pp.colornames as colornames
 import version
 import sys
+import os
 
 last_pct = -10
 
@@ -142,7 +143,13 @@ def log_warning(text):
     create_logitem(text, "#FF0000")
 
 
-Form, Window = uic.loadUiType("p2pp.ui")
+
+if sys.platform == 'Windows':
+        ui = "{}\\p2pp.ui".format(os.path.dirname(sys.argv[0]))
+else:
+    ui = "p2pp.ui"
+
+Form, Window = uic.loadUiType(ui)
 app = QApplication([])
 window = Window()
 form = Form()
