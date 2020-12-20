@@ -11,8 +11,8 @@ __status__ = 'BETA'
 
 # general version info
 MajorVersion = 6
-MinorVersion = 0
-Build = 4
+MinorVersion = 1
+Build = 0
 
 releaseinfo = {
     '4.16.0': "final release for PrusaSlicer 2.2.0",
@@ -50,12 +50,13 @@ releaseinfo = {
     "6.0.2":  "OMEGA Error generation caused exception",
     "6.0.3":  "Updated internal logo / some minor corrections",
     "6.0.4":  "general changes to what is error vs information",
+    "6.1.0":  "correction for asynchronous call ion MACOS + exist statements ",
     '--- RELEASE INFORMATION': 'END'
 }
 
 latest_stable_version = ""
 
-Version = "{}.{:02}.{:03}".format(MajorVersion, MinorVersion, Build)
+Version = "{}.{:02}.{:02}".format(MajorVersion, MinorVersion, Build)
 
 if __name__ == "__main__":
     print(Version)

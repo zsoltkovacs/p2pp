@@ -53,7 +53,7 @@ if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] == "-i"):
     gui.create_emptyline()
 
     if platformD == 'Darwin':
-        gui.create_logitem("open -a P2PP.app --args ".format(os.path.dirname(sys.argv[0])), "red")
+        gui.create_logitem("open -W -a P2PP.app --args ".format(os.path.dirname(sys.argv[0])), "red")
     elif platformD == 'Windows':
         pathname = os.path.dirname(sys.argv[0])
         pathname = pathname.replace(" ", "! ")
@@ -67,7 +67,7 @@ if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] == "-i"):
     gui.create_logitem("More info on: https://github.com/tomvandeneede/p2pp", "blue")
     gui.progress_string(101)
     gui.close_button_enable()
-    exit()
+    sys.exit()
 
 else:
 
