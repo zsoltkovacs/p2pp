@@ -59,7 +59,7 @@ if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] == "-i"):
     elif platformD == 'Windows':
         pathname = os.path.dirname(sys.argv[0])
         pathname = pathname.replace(" ", "! ")
-        gui.create_logitem("<b>{}\\p2pp.exe</b>".format(os.path.dirname(sys.argv[0])), "red")
+        gui.create_logitem("<b>{}\\p2pp.exe</b>".format(os.path.dirname(sys.argv[0]).replace(" ", "! ")), "red")
 
     gui.create_emptyline()
     gui.create_logitem("This requires ADVANCED/EXPERT settings to be enabled", "blue")
