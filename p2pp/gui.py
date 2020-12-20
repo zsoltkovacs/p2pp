@@ -18,20 +18,6 @@ import sys
 last_pct = -1
 
 
-Form, Window = uic.loadUiType("p2pp.ui")
-app = QApplication([])
-window = Window()
-form = Form()
-form.setupUi(window)
-form.version.setText(version.Version)
-form.pythonversion.setText(sys.version.split(' ')[0])
-window.show()
-app.sync()
-
-
-
-
-
 def print_summary(summary):
     create_logitem("")
     create_logitem("-" * 19, "blue")
@@ -85,18 +71,16 @@ def progress_string(pct):
 
     form.progress.setProperty("value", min(100, pct))
     if pct >= 100:
+        form.label_5.setText("")
         if len(v.process_warnings) == 0:
-            window.setStyleSheet("background-color: #DDFFDD;")
-            form.textBrowser.setStyleSheet("background-color: #F0F0F0;")
+            form.textBrowser.setStyleSheet("background-color: #DDFFDD;")
             form.label_6.setText("COMPLETED OK")
-            form.label_6.setStyleSheet("color: #00FF00")
-            form.exitButton.setStyleSheet("background-color: #F0F0F0;")
+            form.label_6.setStyleSheet("color: #008000")
         else:
-            window.setStyleSheet("background-color: #FFDDDD;")
-            form.textBrowser.setStyleSheet("background-color: #F0F0F0;")
+            form.textBrowser.setStyleSheet("background-color: #FFDDDD;")
             form.label_6.setText("COMPLETED WITH WARNINGS")
             form.label_6.setStyleSheet("color: #FF0000")
-            form.exitButton.setStyleSheet("background-color: #F0F0F0;")
+
     last_pct = pct
 
 
@@ -149,10 +133,21 @@ def setfilename(text):
     form.filename.setText(text)
     if text == "":
         form.filename.setText('')
-        form.label_5.setText('')
+        form.label_4.setText('')
 
 
 def log_warning(text):
     v.process_warnings.append(";" + text)
     create_logitem(text, "#FF0000")
 
+
+
+Form, Window = uic.loadUiType("p2pp.ui")
+app = QApplication([])
+window = Window()
+form = Form()
+form.setupUi(window)
+create_logitem("P2PP Version: {}".format(version.Version))
+create_logitem("Python Version: {}".format(sys.version.split(' ')[0]))
+window.show()
+app.sync()

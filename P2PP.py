@@ -26,6 +26,8 @@ if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] == "-i"):
     platformD = platform.system()
 
     gui.setfilename('')
+    gui.form.label_5.setText("")
+
     MASTER_VERSION = checkversion.get_version(checkversion.MASTER)
     DEV_VERSION = checkversion.get_version(checkversion.DEV)
 
@@ -33,17 +35,17 @@ if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] == "-i"):
 
         if v.version > MASTER_VERSION:
             if v.version < DEV_VERSION:
-                v.version += " (New dev version {} available)".format(DEV_VERSION)
+                v.version = "Version Check: Current version {} (New dev version {} available)".format(ver.Version, DEV_VERSION)
                 color = "red"
             else:
-                v.version += " (Dev version up to date)"
+                v.version = "Version Check: Current version {} (Dev version up to date)".format(ver.Version)
                 color = "green"
         else:
             if v.version < MASTER_VERSION:
-                v.version += " (New stable version {} available)".format(MASTER_VERSION)
+                v.version = "VVersion Check: Current version {} (New stable version {} available)".format(ver.Version, MASTER_VERSION)
                 color = "red"
             else:
-                v.version += " (Version up to date)"
+                v.version = "Version Check: Current version {} (Version up to date)".format(ver.Version)
                 color = "green"
         gui.create_logitem(v.version, color, True)
 
