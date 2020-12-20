@@ -150,7 +150,7 @@ form.setupUi(window)
 create_logitem("P2PP Version: {}".format(version.Version))
 create_logitem("Python Version: {}".format(sys.version.split(' ')[0]))
 
-if sys.platform != "Darwin":
+if sys.platform != "darwin":
     form.filename.setFont(QFont("Courier", 8))
     form.label_6.setFont(QFont("Courier", 10))
     form.label_5.setFont(QFont("Courier", 8))
