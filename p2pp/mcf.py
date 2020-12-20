@@ -598,8 +598,10 @@ def generate(input_file, output_file):
             opf = open(input_file)
         except IOError:
             gui.log_warning("Error Reading:'{}'".format(input_file))
+            return
     except IOError:
         gui.log_warning("Error Reading: '{}'".format(input_file))
+        return
 
 
 
