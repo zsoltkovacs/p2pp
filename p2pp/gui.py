@@ -9,13 +9,14 @@ __email__ = 'P2PP@pandora.be'
 
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtGui import QFont
 import image_rc
 import p2pp.variables as v
 import p2pp.colornames as colornames
 import version
 import sys
 
-last_pct = -1
+last_pct = -10
 
 
 def print_summary(summary):
@@ -140,6 +141,7 @@ def log_warning(text):
     v.process_warnings.append(";" + text)
     create_logitem(text, "#FF0000")
 
+def resizefont( widget ):
 
 
 Form, Window = uic.loadUiType("p2pp.ui")
@@ -149,5 +151,15 @@ form = Form()
 form.setupUi(window)
 create_logitem("P2PP Version: {}".format(version.Version))
 create_logitem("Python Version: {}".format(sys.version.split(' ')[0]))
+
+if sys.platform != "Darwin":
+    form.filename.setFont(QFont("Courier", 8))
+    form.label_6.setFont(QFont("Courier", 8))
+    form.label_5.setFont(QFont("Courier", 8))
+    form.label_4.setFont(QFont("Courier", 8))
+    form.label.setFont(QFont("Courier", 8))
+    form.exitButton.setFont(QFont("Courier", 8))
+    form.textBrowser.setFont(QFont("Courier", 8))
+
 window.show()
 app.sync()

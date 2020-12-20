@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <author>Tom Van den Eede</author>
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1041</width>
-    <height>784</height>
+    <width>998</width>
+    <height>750</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>P2PP - Palette 2 Post Processing Script</string>
   </property>
   <widget class="QWidget" name="verticalLayoutWidget">
-   <layout class="QVBoxLayout" name="v" stretch="0,1,0">
+   <layout class="QVBoxLayout" name="v" stretch="0,0,1,0,0">
     <property name="spacing">
      <number>5</number>
     </property>
@@ -80,7 +81,7 @@
         <property name="lineWidth">
          <number>0</number>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout">
+        <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1,1,1">
          <item>
           <widget class="QLabel" name="label_4">
            <property name="font">
@@ -165,6 +166,13 @@
      </layout>
     </item>
     <item>
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QTextBrowser" name="textBrowser">
       <property name="palette">
        <palette>
@@ -213,6 +221,13 @@
       </property>
       <property name="frameShadow">
        <enum>QFrame::Plain</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="Line" name="line_2">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
       </property>
      </widget>
     </item>
