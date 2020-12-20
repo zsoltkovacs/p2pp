@@ -31,14 +31,15 @@ else:
     from cx_Freeze import setup, Executable
 
     build_exe_options = {"packages": ["os"], "excludes": ["tkinter"]}
-    base = "Win32GUI"
 
     setup(name="p2pp",
           version=version.Version,
           description="P2PP - Palette 2 Post Processing tool for Prusa Slicer",
+          data_files = [ ("p2pp.ui","p2pp.ui"), ("icons/icon.ico","icons/icon.ico")],
           options={"build_exe": build_exe_options},
-          executables=[Executable("p2pp.py", base=base)]
+          executables=[Executable("p2pp.py", base="Win32GUI", icon="icons/icon.ico")]
           )
+
 
 
 

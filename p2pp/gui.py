@@ -26,6 +26,7 @@ form.setupUi(window)
 form.version.setText(version.Version)
 form.pythonversion.setText(sys.version.split(' ')[0])
 window.show()
+app.sync()
 
 
 

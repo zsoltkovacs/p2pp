@@ -586,30 +586,21 @@ def generate(input_file, output_file):
     _taskName = os.path.splitext(basename)[0].replace(" ", "_")
     _taskName = _taskName.replace(".mcf", "")
     gui.setfilename(input_file)
-
-    file_open = 2
-    while file_open:
+    gui.app.sync()
+    try:
+        # python 3.x
+        # noinspection PyArgumentList
+        opf = open(input_file, encoding='utf-8')
+        file_open = 0
+    except TypeError:
         try:
-            # python 3.x
-            # noinspection PyArgumentList
-            opf = open(input_file, encoding='utf-8')
-            file_open = 0
-        except TypeError:
-            try:
-                # python 2.x
-                opf = open(input_file)
-                file_open = 0
-            except IOError:
-                gui.log_warning("Error Reading:'{}'".format(input_file))
-                if file_open == 1:
-                    return
+            # python 2.x
+            opf = open(input_file)
         except IOError:
-            gui.log_warning("Error Reading: '{}'".format(input_file))
-            if file_open == 1:
-                return
-        if file_open:
-            time.sleep(2)
-            file_open -= 1
+            gui.log_warning("Error Reading:'{}'".format(input_file))
+    except IOError:
+        gui.log_warning("Error Reading: '{}'".format(input_file))
+
 
 
 

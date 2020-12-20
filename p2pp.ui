@@ -51,6 +51,43 @@
       <height>501</height>
      </rect>
     </property>
+    <property name="palette">
+     <palette>
+      <active>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>243</red>
+          <green>243</green>
+          <blue>243</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </active>
+      <inactive>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>243</red>
+          <green>243</green>
+          <blue>243</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </inactive>
+      <disabled>
+       <colorrole role="Base">
+        <brush brushstyle="SolidPattern">
+         <color alpha="255">
+          <red>236</red>
+          <green>236</green>
+          <blue>236</blue>
+         </color>
+        </brush>
+       </colorrole>
+      </disabled>
+     </palette>
+    </property>
     <property name="font">
      <font>
       <family>Courier New</family>
@@ -69,7 +106,7 @@
       <x>10</x>
       <y>630</y>
       <width>781</width>
-      <height>51</height>
+      <height>41</height>
      </rect>
     </property>
     <property name="text">
@@ -86,7 +123,13 @@
      </rect>
     </property>
     <property name="text">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/newPrefix/appicon.ppm&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap resource="image.qrc">:/newPrefix/icons/icon.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -108,7 +151,7 @@
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>420</x>
+      <x>580</x>
       <y>10</y>
       <width>92</width>
       <height>16</height>
@@ -122,13 +165,16 @@
     <property name="geometry">
      <rect>
       <x>140</x>
-      <y>40</y>
-      <width>101</width>
-      <height>16</height>
+      <y>30</y>
+      <width>641</width>
+      <height>20</height>
      </rect>
     </property>
     <property name="text">
-     <string>Input filename: </string>
+     <string>Input File</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <widget class="QLabel" name="label_6">
@@ -156,9 +202,9 @@
     <property name="geometry">
      <rect>
       <x>230</x>
-      <y>70</y>
+      <y>73</y>
       <width>541</width>
-      <height>23</height>
+      <height>16</height>
      </rect>
     </property>
     <property name="value">
@@ -194,10 +240,10 @@
    <widget class="QLabel" name="pythonversion">
     <property name="geometry">
      <rect>
-      <x>590</x>
+      <x>690</x>
       <y>10</y>
-      <width>181</width>
-      <height>20</height>
+      <width>91</width>
+      <height>16</height>
      </rect>
     </property>
     <property name="text">
@@ -207,14 +253,17 @@
    <widget class="QLabel" name="filename">
     <property name="geometry">
      <rect>
-      <x>240</x>
-      <y>40</y>
-      <width>531</width>
+      <x>140</x>
+      <y>50</y>
+      <width>641</width>
       <height>16</height>
      </rect>
     </property>
     <property name="text">
      <string>&lt; filename will come here &gt;</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
   </widget>
