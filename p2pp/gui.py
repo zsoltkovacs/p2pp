@@ -141,8 +141,6 @@ def log_warning(text):
     v.process_warnings.append(";" + text)
     create_logitem(text, "#FF0000")
 
-def resizefont( widget ):
-
 
 Form, Window = uic.loadUiType("p2pp.ui")
 app = QApplication([])
