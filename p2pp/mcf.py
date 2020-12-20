@@ -587,21 +587,31 @@ def generate(input_file, output_file):
     _taskName = _taskName.replace(".mcf", "")
     gui.setfilename(input_file)
 
-    try:
-        # python 3.x
-        # noinspection PyArgumentList
-        opf = open(input_file, encoding='utf-8')
-    except TypeError:
+    file_open = 2
+    while file_open:
         try:
-            # python 2.x
-            opf = open(input_file)
+            # python 3.x
+            # noinspection PyArgumentList
+            opf = open(input_file, encoding='utf-8')
+            file_open = 0
+        except TypeError:
+            try:
+                # python 2.x
+                opf = open(input_file)
+                file_open = 0
+            except IOError:
+                gui.log_warning("Error Reading:'{}'".format(input_file))
+                if file_open == 1:
+                    return
         except IOError:
-            gui.log_warning("Could not read input file\n'{}'".format(input_file))
-            return
-    except IOError:
-        gui.log_warning("Could not read input file\n'{}'".format(input_file))
+            gui.log_warning("Error Reading: '{}'".format(input_file))
+            if file_open == 1:
+                return
+        if file_open:
+            time.sleep(2)
+            file_open -= 1
 
-        return
+
 
 
     gui.create_logitem("Reading File " + input_file)

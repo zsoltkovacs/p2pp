@@ -26,24 +26,20 @@ if sys.platform=="darwin":
     )
 
 else:
-    from distutils.core import setup
-    import py2exe
+    import sys
+    import version
+    from cx_Freeze import setup, Executable
 
-    APP = ['P2PP.py']
-    DATA_FILES = ['p2pp.ui']
-    OPTIONS = {'compressed': 2,
-               'optimize': 2,
-               'bundle_files': 1,
-               'argv_emulation': True,
-               "iconfile": "icons/icon.png",
-               'includes': ['PyQt5._qt']
-               }
+    build_exe_options = {"packages": ["os"], "excludes": ["tkinter"]}
+    base = "Win32GUI"
 
-    setup(
-        app=APP,
-        data_files=DATA_FILES,
-        options={'py2exe': OPTIONS},
-        zipfile=None,
-        windows=['P2PP.py']
-    )
+    setup(name="p2pp",
+          version=version.Version,
+          description="P2PP - Palette 2 Post Processing tool for Prusa Slicer",
+          options={"build_exe": build_exe_options},
+          executables=[Executable("p2pp.py", base=base)]
+          )
+
+
+
 
