@@ -86,7 +86,7 @@ def progress_string(pct):
     form.progress.setProperty("value", min(100, pct))
     if pct >= 100:
         if len(v.process_warnings) == 0:
-            window.setStyleSheet("background-color: #FDDFFDD;")
+            window.setStyleSheet("background-color: #DDFFDD;")
             form.textBrowser.setStyleSheet("background-color: #F0F0F0;")
             form.label_6.setText("COMPLETED OK")
             form.label_6.setStyleSheet("color: #00FF00")
