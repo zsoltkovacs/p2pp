@@ -633,7 +633,7 @@ def generate(input_file, output_file):
     v.input_gcode = None
 
     if v.bed_size_x == -9999 or v.bed_size_y == -9999 or v.bed_origin_x == -9999 or v.bed_origin_y == -9999:
-        gui.log_warning("Bedsize incorrectly defined.")
+        gui.log_warning("Bedsize nor or incorrectly defined.")
     else:
         if v.bed_shape_rect and v.bed_shape_warning:
             gui.create_logitem("Manual bed size override, PrusaSlicer Bedshape configuration ignored.")

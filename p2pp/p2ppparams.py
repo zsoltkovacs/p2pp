@@ -174,9 +174,9 @@ def check_config_parameters(keyword, value):
     if keyword == "BIGBRAIN3D_ENABLE":
         if not v.wipe_remove_sparse_layers:
             v.bigbrain3d_purge_enabled = True
-            gui.log_warning("BIGBRAIN3D Will only work with installed hardware on a Prusa Printer")
+            gui.create_logitem("<b>BIGBRAIN3D Will only work with installed hardware on a Prusa Printer</b>")
         else:
-            gui.log_warning("BIGBRAIN3D mode not compatible with sparse wipe tower in PS")
+            gui.log_warning("<b>BIGBRAIN3D mode not compatible with sparse wipe tower in PS</b>")
         return
 
     if keyword == "BIGBRAIN3D_SMARTFAN":

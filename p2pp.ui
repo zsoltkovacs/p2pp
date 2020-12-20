@@ -104,9 +104,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>630</y>
-      <width>781</width>
-      <height>41</height>
+      <y>635</y>
+      <width>780</width>
+      <height>39</height>
      </rect>
     </property>
     <property name="text">

@@ -126,7 +126,7 @@ def parse_prusaslicer_config():
                 v.ps_version = s2[-1]
                 gui.create_logitem("File was created with PS version:{}".format(v.ps_version))
                 if v.ps_version < "2.2":
-                    gui.log_warning("This version of P2PP is optimized to work with PS2.2 and higher!")
+                    gui.create_logitem("<b>This version of P2PP is optimized to work with PS2.2 and higher!<b>")
             except [ValueError, IndexError]:
                 pass
             continue
@@ -141,6 +141,7 @@ def parse_prusaslicer_config():
                 except [ValueError, IndexError]:
                     pass
             continue
+
         if gcode_line.startswith("; wipe_tower_no_sparse_layers"):
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
@@ -357,8 +358,8 @@ def parse_prusaslicer_config():
             parameter_start = gcode_line.find("=")
             if parameter_start != -1:
                 gcode_line = gcode_line[parameter_start + 1:].replace(";", "")
-                if not  "1" in gcode_line:
-                    gui.log_warning("P2PP reauires input file with RELATIVE extrusion")
+                if not "1" in gcode_line:
+                    gui.log_warning("P2PP requires input file with RELATIVE extrusion")
             continue
 
         # TVDE: needs to be expanded to be able to support more than 4 colors
@@ -379,5 +380,5 @@ def parse_prusaslicer_config():
             v.max_wipe = max(wiping_info)
             v.wiping_info = wiping_info
             if _warning:
-                gui.log_warning("All purge lenghts 70/70 OR 140.  Purge lenghts may not have been set correctly.")
+                gui.create_logitem("<b>All purge lenghts 70/70 OR 140.  Purge lenghts may not have been set correctly.</b>")
             continue
