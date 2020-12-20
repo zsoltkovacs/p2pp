@@ -154,7 +154,7 @@ create_logitem("Python Version: {}".format(sys.version.split(' ')[0]))
 
 if sys.platform != "Darwin":
     form.filename.setFont(QFont("Courier", 8))
-    form.label_6.setFont(QFont("Courier", 8))
+    form.label_6.setFont(QFont("Courier", 10))
     form.label_5.setFont(QFont("Courier", 8))
     form.label_4.setFont(QFont("Courier", 8))
     form.label.setFont(QFont("Courier", 8))
