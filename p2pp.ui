@@ -14,6 +14,10 @@
   <property name="windowTitle">
    <string>P2PP - Palette 2 Post Processing Script</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="image.qrc">
+    <normaloff>:/newPrefix/icons/icon.png</normaloff>:/newPrefix/icons/icon.png</iconset>
+  </property>
   <widget class="QWidget" name="verticalLayoutWidget">
    <layout class="QVBoxLayout" name="v" stretch="0,0,1,0,0">
     <property name="spacing">

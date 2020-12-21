@@ -144,7 +144,7 @@ def log_warning(text):
 
 
 
-if sys.platform == 'Windows':
+if sys.platform != 'darwin':
         ui = "{}\\p2pp.ui".format(os.path.dirname(sys.argv[0]))
 else:
     ui = "p2pp.ui"

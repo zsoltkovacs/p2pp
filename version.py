@@ -12,7 +12,7 @@ __status__ = 'BETA'
 # general version info
 MajorVersion = 6
 MinorVersion = 1
-Build = 2
+Build = 3
 
 releaseinfo = {
     '4.16.0': "final release for PrusaSlicer 2.2.0",
@@ -53,6 +53,7 @@ releaseinfo = {
     "6.1.0":  "correction for asynchronous call ion MACOS + exist statements ",
     "6.1.1":  "resizable form",
     "6.1.2":  "windows version update - added ! in the outut path so it can be copied directly",
+    "6.1.3":  "correction empty grid after tool purge should not be dropped (sidewipe)",
     '--- RELEASE INFORMATION': 'END'
 }
 

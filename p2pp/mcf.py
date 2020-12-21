@@ -454,22 +454,29 @@ def gcode_parselines():
                     if v.bigbrain3d_purge_enabled:
                         create_side_wipe(v.bigbrain3d_prime * v.bigbrain3d_blob_size)
                     v.towerskipped = True
+                    v.side_wipe_state = 0
 
             if not v.towerskipped and (g[gcode.MOVEMENT] & 3) == 3:
-                v.towerskipped = (g[gcode.MOVEMENT] & gcode.INTOWER) == gcode.INTOWER
+                if (g[gcode.MOVEMENT] & gcode.INTOWER) == gcode.INTOWER:
+                    v.towerskipped = True
+                    v.side_wipe_state = 1 if (current_block_class == CLS_TOOL_PURGE) else 0
 
             if v.towerskipped and current_block_class == CLS_NORMAL and (g[gcode.MOVEMENT] & 3) == 3:
                 if (v.bed_origin_x <= g[gcode.X] <= v.bed_max_x) and (v.bed_origin_y <= g[gcode.Y] <= v.bed_max_y):
                     v.towerskipped = False
+                    v.side_wipe_state = 0
                     if v.toolchange_processed and v.side_wipe_length:
                         create_side_wipe()
                         v.toolchange_processed = False
 
             if v.towerskipped:
-                if current_block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE]:
+                inc = "NO_E"
+                if current_block_class in [CLS_TOOL_PURGE, CLS_ENDPURGE] or (current_block_class == CLS_EMPTY and v.side_wipe_state == 1):
                     if g[gcode.EXTRUDE]:
                         v.side_wipe_length += g[gcode.E]
-                gcode.move_to_comment(g, "--P2PP-- side wipe skipped")
+                        inc = "INC_E"
+
+                gcode.move_to_comment(g, "--P2PP-- side wipe skipped ({})".format(inc))
                 gcode.issue_command(g)
                 continue
 

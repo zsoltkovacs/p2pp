@@ -305,3 +305,5 @@ layer_emptygrid_counter = 0
 generate_M0 = True
 
 exit_enabled = False
+
+side_wipe_state = 0
